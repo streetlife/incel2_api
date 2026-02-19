@@ -18,8 +18,7 @@ class RezliveServices {
         $this->username = config("rezlive.rezlive_username");
         $this->password = config("rezlive.relive_password");
         $this->content_url = config("rezlive.content_url");
-        
-    
+         
     }
      public function searchHotels(
         array $params,
@@ -29,7 +28,7 @@ class RezliveServices {
 
         $xml = $this->buildSearchXml($params, $arrivalDate, $departureDate);
 
-        Log::info('Rezlive Request', ['xml' => $xml]);
+        Log::info('Rezlive Requests', ['xml' => $xml]);
 
         $response = Http::asForm()->post(
             $this->url . 'findhotel',

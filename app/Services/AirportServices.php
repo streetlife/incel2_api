@@ -62,11 +62,10 @@ class AirportServices
             }
         );
     }
-
     public function getAirportCountry(string $countryCode)
     {
         return Cache::remember(
-            "airport_country_$countryCode",
+            "airport_country",
             3600,
             function () use ($countryCode) {
                 return Airports::where('countryCode', $countryCode)
