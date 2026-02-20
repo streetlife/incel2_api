@@ -12,16 +12,25 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    protected $table = 'users';
+    public $timestamps = false;
     /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
-        'email',
+        'usercode',
+        'full_names',
+        'email_address',
+        'mobile_number',
         'password',
+        'access_level',
+        'activation_status',
+        'registration_date',
     ];
+
+
 
     /**
      * The attributes that should be hidden for serialization.
@@ -42,4 +51,9 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function scopeFindByEmail($query, $email)
+    {
+        return $query->where('email_address', $email);
+    }
 }

@@ -1,9 +1,12 @@
 <?php
 
 use App\Http\Controllers\AirportController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FlightController;
 use App\Http\Controllers\CountryController;
 use App\Http\Controllers\HotelController;
+use App\Http\Controllers\TourController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -18,9 +21,18 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::middleware('auth:sanctum')->group(function () {
+
+    Route::post("/changePassword", [AuthController::class, 'changePassword']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::prefix('users')->group(function () {
+        Route::get('/users-by-code/{userCode}', [UserController::class, 'getUserByUserCode']);
+        Route::get('/auth-users-by-email', [UserController::class, 'getAuthenticatedUserByEmail']);
+    });
 });
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/check-user', [AuthController::class, 'checkUser']);
 
 Route::prefix('flights')->group(function () {
     Route::post('/search', [FlightController::class, 'search']);
@@ -49,4 +61,7 @@ Route::prefix('hotels')->group(function () {
     Route::get('/{hotelCode}', [HotelController::class, 'show']);
     Route::get('/{hotelCode}/amenities', [HotelController::class, 'amenities']);
     Route::post('/search', [HotelController::class, 'search']);
+});
+Route::prefix('tours')->group(function () {
+    Route::post('/search', [TourController::class, 'search']);
 });
