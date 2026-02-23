@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AirportController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\FlightController;
 use App\Http\Controllers\CountryController;
 use App\Http\Controllers\HotelController;
@@ -64,4 +65,13 @@ Route::prefix('hotels')->group(function () {
 });
 Route::prefix('tours')->group(function () {
     Route::post('/search', [TourController::class, 'search']);
+});
+Route::prefix('bookings')->group(function () {
+    Route::post('/', [BookingController::class, 'create']);
+    Route::get('/{bookingCode}', [BookingController::class, 'show']);
+    Route::post('/tour', [BookingController::class, 'addTour']);
+    Route::post('/visa', [BookingController::class, 'addVisa']);
+    Route::post('/flight', [BookingController::class, 'addFlight']);
+    Route::post('/hotel', [BookingController::class, 'addHotel']);
+    Route::post('/hotel/guest', [BookingController::class, 'addHotelGuest']);
 });

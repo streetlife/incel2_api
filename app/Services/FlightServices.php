@@ -472,7 +472,7 @@ public function formatTimeFlight(string $flightTime): string
         float $basePrice,
         float $totalPrice,
         ?string $userCode = null
-    ): array {
+    ) {
 
         $farePrice = $totalPrice - $basePrice;
 
@@ -493,16 +493,7 @@ public function formatTimeFlight(string $flightTime): string
 
         $flightPrice = $basePriceMarkup - $discountAmount + $farePrice;
 
-        return [
-            'base_price' => $basePrice,
-            'taxes' => $farePrice,
-            'total_price' => $totalPrice,
-            'base_price_markup' => $basePriceMarkup,
-            'final_airline_discount' => $finalDiscount,
-            'discount' => $discountAmount,
-            'markup' => $markup,
-            'flight_price' => $flightPrice
-        ];
+        return $flightPrice;
     }
 
 
