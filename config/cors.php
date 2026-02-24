@@ -21,7 +21,7 @@ return [
 
     'allowed_methods' => ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => ['localhost:3000','https://incel2-nine.vercel.app'],
 
     'allowed_origins_patterns' => [],
 
