@@ -49,7 +49,7 @@ class AuthController extends Controller
 
     private function generateUserCode(): string
     {
-        return 'U' . strtoupper(Str::random(8));
+        return 'U' . now()->format('ymdHis') . rand(10, 99);
     }
     public function checkUser(Request $request)
     {

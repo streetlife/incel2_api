@@ -100,7 +100,7 @@ class FlightServices
                 $adults     = $searchParams['adult_number'];
                 $children   = $searchParams['child_number'] ?? 0;
                 $infants    = $searchParams['infants_number'] ?? 0;
-                $travelDate = $searchParams['daterange-single'];
+                $travelDate = $searchParams['dateFrom'];
 
                 session([
                     'flight.oneway' => [
@@ -151,8 +151,8 @@ class FlightServices
                     $travelDateFrom = substr($searchParams['roundtrip-date'], 0, 10);
                     $travelDateTo   = substr($searchParams['roundtrip-date'], 13, 10);
                 } else {
-                    $travelDateFrom = $searchParams['roundtrip-datefrom'];
-                    $travelDateTo   = $searchParams['roundtrip-dateto'];
+                    $travelDateFrom = $searchParams['dateFrom'];
+                    $travelDateTo   = $searchParams['dateTo'];
                 }
 
                 session([
@@ -472,7 +472,7 @@ public function formatTimeFlight(string $flightTime): string
         float $basePrice,
         float $totalPrice,
         ?string $userCode = null
-    ): array {
+    ) {
 
         $farePrice = $totalPrice - $basePrice;
 
@@ -493,16 +493,7 @@ public function formatTimeFlight(string $flightTime): string
 
         $flightPrice = $basePriceMarkup - $discountAmount + $farePrice;
 
-        return [
-            'base_price' => $basePrice,
-            'taxes' => $farePrice,
-            'total_price' => $totalPrice,
-            'base_price_markup' => $basePriceMarkup,
-            'final_airline_discount' => $finalDiscount,
-            'discount' => $discountAmount,
-            'markup' => $markup,
-            'flight_price' => $flightPrice
-        ];
+        return $flightPrice;
     }
 
 

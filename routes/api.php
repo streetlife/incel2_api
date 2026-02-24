@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AirportController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\FlightController;
 use App\Http\Controllers\CountryController;
 use App\Http\Controllers\HotelController;
@@ -40,6 +41,7 @@ Route::prefix('flights')->group(function () {
     Route::get('/airport-city/{code}', [FlightController::class, 'getCityFromAirportCode']);
     Route::get('/airline/{iataCode}', [FlightController::class, 'getAirline']);
     Route::post('/search-result', [FlightController::class, 'searchFlights']);
+    Route::post('/book-flight', [FlightController::class, 'bookFlight']);
 });
 Route::prefix('countries')->group(function () {
     Route::get('/dialing-codes', [CountryController::class, 'dialingCodes']);
@@ -64,4 +66,16 @@ Route::prefix('hotels')->group(function () {
 });
 Route::prefix('tours')->group(function () {
     Route::post('/search', [TourController::class, 'search']);
+});
+Route::prefix('bookings')->group(function () {
+    Route::post('/', [BookingController::class, 'create']);
+    Route::get('/{bookingCode}', [BookingController::class, 'show']);
+    Route::post('/tour', [BookingController::class, 'addTour']);
+    Route::post('/visa', [BookingController::class, 'addVisa']);
+    Route::post('/flight', [BookingController::class, 'addFlight']);
+    Route::post('/hotel', [BookingController::class, 'addHotel']);
+    Route::post('/hotel/guest', [BookingController::class, 'addHotelGuest']);
+    Route::post('/visa/update', [BookingController::class, 'updateVisa']);
+    Route::post('/flight/update', [BookingController::class, 'updateFlight']);
+    Route::get('/payment/{paymentCode}', [BookingController::class, 'getPayment']);
 });
