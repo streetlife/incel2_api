@@ -41,6 +41,7 @@ Route::prefix('flights')->group(function () {
     Route::get('/airport-city/{code}', [FlightController::class, 'getCityFromAirportCode']);
     Route::get('/airline/{iataCode}', [FlightController::class, 'getAirline']);
     Route::post('/search-result', [FlightController::class, 'searchFlights']);
+    Route::post('/book-flight', [FlightController::class, 'bookFlight']);
 });
 Route::prefix('countries')->group(function () {
     Route::get('/dialing-codes', [CountryController::class, 'dialingCodes']);
@@ -74,4 +75,7 @@ Route::prefix('bookings')->group(function () {
     Route::post('/flight', [BookingController::class, 'addFlight']);
     Route::post('/hotel', [BookingController::class, 'addHotel']);
     Route::post('/hotel/guest', [BookingController::class, 'addHotelGuest']);
+    Route::post('/visa/update', [BookingController::class, 'updateVisa']);
+    Route::post('/flight/update', [BookingController::class, 'updateFlight']);
+    Route::get('/payment/{paymentCode}', [BookingController::class, 'getPayment']);
 });

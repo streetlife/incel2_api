@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Booking;
+use App\Models\BookingFlights;
+use App\Services\BookingServices;
 use App\Services\FlightServices;
 use Exception;
 use Illuminate\Http\Request;
@@ -13,12 +16,72 @@ use Symfony\Component\HttpFoundation\Response;
 class FlightController extends Controller
 {
     protected $FlightServices;
+    protected $bookingService;
 
-    public function __construct(FlightServices  $FlightServices)
+
+    public function __construct(FlightServices  $FlightServices, BookingServices $bookingService)
     {
         $this->FlightServices = $FlightServices;
+        $this->bookingService = $bookingService;
     }
 
+    public function bookFlight(Request $request)
+    {
+        $request->validate([
+            'booking_code' => 'required|string|exists:bookings,booking_code',
+        ]);
+
+        try {
+
+            $bookingCode = $request->booking_code;
+            $booking = Booking::where('booking_code', $bookingCode)->first();
+
+            if (!$booking) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Booking not found'
+                ], 404);
+            }
+
+            $bookingFlights = BookingFlights::where('booking_code', $bookingCode)
+                ->get()
+                ->toArray();
+
+            if (empty($bookingFlights)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'No flights found for this booking'
+                ], 404);
+            }
+
+
+            $pnr = $this->bookingService->preProcessBookingFlight(
+                $bookingCode,
+                $bookingFlights
+            );
+
+            if (!$pnr) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Flight booking failed'
+                ], 400);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Flight booked successfully',
+                'booking_code' => $bookingCode,
+                'pnr' => $pnr
+            ]);
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Something went wrong',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 
     public function search(Request $request)
     {
@@ -34,10 +97,10 @@ class FlightController extends Controller
                 'flight_class'     => 'nullable|string',
                 'flight_connection' => 'nullable|string',
                 'flexible_dates'   => 'nullable|string',
-                'daterange-single' => 'nullable|string',
+                // 'dateFrom' => 'nullable|string',
                 'roundtrip-date'   => 'nullable|string',
-                'roundtrip-datefrom' => 'nullable|string',
-                'roundtrip-dateto'   => 'nullable|string',
+                'dateFrom' => 'nullable|string',
+                'dateTo'   => 'nullable|string',
             ]);
 
             if ($validator->fails()) {
@@ -65,14 +128,14 @@ class FlightController extends Controller
     public function getFlightSession(string $session_code)
     {
         try {
-          
+
             $response = $this->FlightServices->getFlightSession($session_code);
             return response()->json($response, 200);
         } catch (Exception $e) {
             return response()->json($e->getMessage(), 500);
         }
     }
-    public function getCityFromAirportCode( string $code)
+    public function getCityFromAirportCode(string $code)
     {
         try {
             $response = $this->FlightServices->getCityFromAirportCode($code);
@@ -84,7 +147,7 @@ class FlightController extends Controller
     public function getAirline(string $iataCode)
     {
         try {
-        
+
             $response = $this->FlightServices->getAirline($iataCode);
             return response()->json($response, 200);
         } catch (Exception $e) {

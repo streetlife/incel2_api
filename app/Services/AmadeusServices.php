@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -320,4 +321,48 @@ class AmadeusServices
 
         return $response->json();
     }
+     public function createFlightOrder($payload, $clientRef, $bookingCode, $bookingFlights)
+    {
+        $token = $this->getToken();
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'ama-client-ref' => $clientRef,
+            'Authorization' => 'Bearer ' . $token,
+        ])->post($this->baseUrl . 'v1/booking/flight-orders', $payload);
+
+        Log::info('Amadeus Request', $payload);
+        Log::info('Amadeus Response', $response->json());
+
+        if ($response->failed()) {
+            Log::error('Flight booking failed', $response->json());
+            return null;
+        }
+
+        $result = $response->json();
+
+        $flightBookingId = $result['data']['id'] ?? null;
+        $flightPNR = $result['data']['associatedRecords'][0]['reference'] ?? null;
+
+        if (!$flightBookingId || !$flightPNR) {
+            return null;
+        }
+
+        
+        foreach ($bookingFlights as $flight) {
+            DB::table('booking_flights')
+                ->where('booking_detail_code', $flight['booking_detail_code'])
+                ->update([
+                    'flight_booking_id' => $flightBookingId,
+                    'flight_pnr' => $flightPNR,
+                ]);
+        }
+
+        DB::table('bookings')
+            ->where('booking_code', $bookingCode)
+            ->update(['status' => 'BOOKED']);
+
+        return $flightPNR;
+    }
+
 }

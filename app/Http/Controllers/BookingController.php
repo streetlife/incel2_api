@@ -142,4 +142,46 @@ class BookingController extends Controller
 
         return response()->json(['status' => true, 'data' => $guest]);
     }
+   
+
+    public function updateVisa(Request $request)
+    {
+        $this->bookingService->updateVisaBooking($request->all());
+        return response()->json([
+            'message' => 'Visa booking updated successfully'
+        ]);
+    }
+
+    public function updateFlight(Request $request)
+    {
+        $this->bookingService->updateFlightBooking($request->all());
+        return response()->json([
+            'message' => 'Flight booking updated successfully'
+        ]);
+    }
+
+    public function getPayment($paymentCode)
+    {
+        $payment = $this->bookingService->getPayment($paymentCode);
+        if (!$payment) {
+            return response()->json(['message' => 'Payment not found'], 404);
+        }
+        return response()->json($payment);
+    }
+
+    public function updateHotel(Request $request){
+      $reponse = $this->bookingService->updateHotelBooking($request->all());
+      if (!$reponse) {
+        return response()->json(['message' => 'Updating Failed'], 400);
+      }
+      return response()->json($reponse, 200);
+    }
+      public function updateTourBooking(Request $request){
+        $reponse = $this->bookingService->updateTourBooking($request->all());
+        if (!$reponse) {
+          return response()->json(['message' => 'Updating Failed'], 400);
+        }
+        return response()->json($reponse,200);
+      }
+    
 }

@@ -100,7 +100,7 @@ class FlightServices
                 $adults     = $searchParams['adult_number'];
                 $children   = $searchParams['child_number'] ?? 0;
                 $infants    = $searchParams['infants_number'] ?? 0;
-                $travelDate = $searchParams['daterange-single'];
+                $travelDate = $searchParams['dateFrom'];
 
                 session([
                     'flight.oneway' => [
@@ -151,8 +151,8 @@ class FlightServices
                     $travelDateFrom = substr($searchParams['roundtrip-date'], 0, 10);
                     $travelDateTo   = substr($searchParams['roundtrip-date'], 13, 10);
                 } else {
-                    $travelDateFrom = $searchParams['roundtrip-datefrom'];
-                    $travelDateTo   = $searchParams['roundtrip-dateto'];
+                    $travelDateFrom = $searchParams['dateFrom'];
+                    $travelDateTo   = $searchParams['dateTo'];
                 }
 
                 session([
