@@ -354,7 +354,7 @@ class FlightServices
                 'code' => $carrierCode,
                 'name' => $airlineData['airline'] ?? null,
                 'logo' => isset($airlineData['logo'])
-                    ? asset('storage/airlines/' . $airlineData['logo'])
+                    ? secure_asset('storage/airlines/' . $airlineData['logo'])
                     : null,
             ];
 
