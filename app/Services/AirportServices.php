@@ -73,4 +73,38 @@ class AirportServices
             }
         );
     }
+    public function searchAirports(string $query)
+    {
+        if (strlen($query) < 3) {
+            return collect();
+        }
+
+        $searchParameter = strtoupper($query) . '%';
+        $cacheKey = 'airport_search_' . $query;
+
+        return Cache::remember($cacheKey, 300, function () use ($searchParameter) {
+
+            // Search by code
+            $rows1 = DB::table('airports')
+                ->selectRaw('code as value, CONCAT(name, " ", cityName, " [", code, "]") as label')
+                ->whereRaw('UPPER(code) LIKE ?', [$searchParameter])
+                ->orderBy('name')
+                ->get();
+
+         
+            $rows2 = DB::table('airports')
+                ->selectRaw('code as value, CONCAT(name, " ", cityName, " [", code, "]") as label')
+                ->where(function ($q) use ($searchParameter) {
+                    $q->whereRaw('UPPER(name) LIKE ?', [$searchParameter])
+                      ->orWhereRaw('UPPER(cityName) LIKE ?', [$searchParameter])
+                      ->orWhereRaw('UPPER(countryName) LIKE ?', [$searchParameter]);
+                })
+                ->orderBy('name')
+                ->limit(15)
+                ->get();
+
+            return $rows1->merge($rows2)->values();
+        });
+    }
+
 }

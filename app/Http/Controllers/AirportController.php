@@ -8,23 +8,18 @@ use Illuminate\Http\Request;
 
 class AirportController extends Controller
 {
-    
-    public function __construct(private AirportServices $airportService)
-    {
-      
-    }
+
+    public function __construct(private AirportServices $airportService) {}
     public function airports()
     {
         $data =  $this->airportService->getAirports();
-        return response()->json(['status'=>true,'message'=>'Successfully fetched data','data' => $data], 200);
-          
+        return response()->json(['status' => true, 'message' => 'Successfully fetched data', 'data' => $data], 200);
     }
 
     public function airport($code)
     {
-      $data = $this->airportService->getAirport($code);
-        return response()->json(['status'=>true,'message'=>'Successfully fetched data','data' => $data], 200);
-            
+        $data = $this->airportService->getAirport($code);
+        return response()->json(['status' => true, 'message' => 'Successfully fetched data', 'data' => $data], 200);
     }
 
     public function airportServices(Request $request)
@@ -33,7 +28,7 @@ class AirportController extends Controller
             'airport_code' => 'required|string',
             'direction' => 'required|string'
         ]);
-          
+
         return response()->json(
             $this->airportService->getAirportServices(
                 $validated['airport_code'],
@@ -56,5 +51,18 @@ class AirportController extends Controller
             200
         );
     }
+    public function search(Request $request)
+    {
+        $query = $request->query('q');
 
+        if (!$query) {
+            return response()->json([
+                'message' => 'Search query is required'
+            ], 400);
+        }
+
+        $results = $this->airportService->searchAirports($query);
+
+        return response()->json(['status'=>true,'message'=>'Successfully fetched data','data'=>$results],200);
+    }
 }
