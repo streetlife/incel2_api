@@ -36,7 +36,7 @@ class FlightServices
         return [
             'iataCode' => $airline->iataCode,
             'airline'  => $airline->airline,
-            'logo'     => url('images/airlines/' . $airline->iataCode . '.png'),
+            'logo'     => secure_asset('images/airlines/' . $airline->iataCode . '.png'),
         ];
     }
 
@@ -274,11 +274,7 @@ class FlightServices
             $response
         );
 
-        return [
-            'status' => true,
-            'session_code' => $sessionCode,
-            'data' => $response
-        ];
+        return $this->searchFlightResult($sessionCode);
     }
     public function searchFlightResult(string $session_code): array
     {
@@ -352,8 +348,15 @@ class FlightServices
 
             $filter_stops[$stops] = $stops;
             $filter_flight_classes[$flightClass] = $flightClass;
-            $filter_airlines[$first_itinerary['segments'][0]['carrierCode']] =
-                $this->getAirline($first_itinerary['segments'][0]['carrierCode'])['airline'];
+            $carrierCode = $first_itinerary['segments'][0]['carrierCode'];
+            $airlineData = $this->getAirline($carrierCode);
+            $filter_airlines[$carrierCode] = [
+                'code' => $carrierCode,
+                'name' => $airlineData['airline'] ?? null,
+                'logo' => isset($airlineData['logo'])
+                    ? asset('storage/airlines/' . $airlineData['logo'])
+                    : null,
+            ];
 
             $filter_timefrom[$time_from['date']] = $time_from['date'];
             $filter_timeto[$time_to['date']] = $time_to['date'];
@@ -377,7 +380,6 @@ class FlightServices
         asort($filter_timeto);
 
         return [
-            'status' => true,
             'flight_count' => count($results),
             'payload' => $payload,
             'recommended' => [
@@ -396,7 +398,7 @@ class FlightServices
         ];
     }
 
-public function formatTimeFlight(string $flightTime): string
+    public function formatTimeFlight(string $flightTime): string
     {
         // Remove the "PT" prefix
         $formatted = str_replace('PT', '', $flightTime);

@@ -121,7 +121,7 @@ class FlightController extends Controller
             );
             return response()->json(['status' => true, 'message' => 'Data fetched successfully', 'data' => $response], 200);
         } catch (Exception $e) {
-            return response()->json($e->getMessage(), 500);
+            return response()->json(['status'=>false,'message'=>$e->getMessage()], 500);
         }
     }
 
@@ -149,7 +149,7 @@ class FlightController extends Controller
         try {
 
             $response = $this->FlightServices->getAirline($iataCode);
-            return response()->json(['status' => true, 'message' => 'Data fetched successfully', 'data' => $response], 200);
+            return response()->json(['status' => true, 'message' => 'Data fetched successfully',  $response], 200);
         } catch (Exception $e) {
             return response()->json($e->getMessage(), 500);
         }

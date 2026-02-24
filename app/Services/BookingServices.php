@@ -272,7 +272,7 @@ class BookingServices extends FlightServices
     }
      public function preProcessBookingFlight($booking_code)
     {
-        $bookingFlights = BookingFlight::where('booking_code', $booking_code)
+        $bookingFlights = BookingFlights::where('booking_code', $booking_code)
             ->get()
             ->toArray();
 
