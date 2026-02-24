@@ -119,7 +119,7 @@ class FlightController extends Controller
                 $supplier,
                 $request->all()
             );
-            return response()->json($response, 200);
+            return response()->json(['status' => true, 'message' => 'Data fetched successfully', 'data' => $response], 200);
         } catch (Exception $e) {
             return response()->json($e->getMessage(), 500);
         }
@@ -130,7 +130,7 @@ class FlightController extends Controller
         try {
 
             $response = $this->FlightServices->getFlightSession($session_code);
-            return response()->json($response, 200);
+            return response()->json(['status' => true, 'message' => 'Data fetched successfully', 'data' => $response], 200);
         } catch (Exception $e) {
             return response()->json($e->getMessage(), 500);
         }
@@ -139,7 +139,7 @@ class FlightController extends Controller
     {
         try {
             $response = $this->FlightServices->getCityFromAirportCode($code);
-            return response()->json($response, 200);
+            return response()->json(['status' => true, 'message' => 'Data fetched successfully', 'data' => $response], 200);
         } catch (Exception $e) {
             return response()->json($e->getMessage(), 500);
         }
@@ -149,7 +149,7 @@ class FlightController extends Controller
         try {
 
             $response = $this->FlightServices->getAirline($iataCode);
-            return response()->json($response, 200);
+            return response()->json(['status' => true, 'message' => 'Data fetched successfully', 'data' => $response], 200);
         } catch (Exception $e) {
             return response()->json($e->getMessage(), 500);
         }
@@ -158,7 +158,7 @@ class FlightController extends Controller
     {
         try {
             $response = $this->FlightServices->searchFlightResult($request->input('session_code'));
-            return response()->json($response, 200);
+            return response()->json(['status' => true, 'message' => 'Data fetched successfully', 'data' => $response], 200);
         } catch (Exception $e) {
             return response()->json($e->getMessage(), 500);
         }

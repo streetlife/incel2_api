@@ -16,19 +16,15 @@ class AirportController extends Controller
     public function airports()
     {
         $data =  $this->airportService->getAirports();
-        return response()->json(
-           $data,
-            200
-        );
+        return response()->json(['status'=>true,'message'=>'Successfully fetched data','data' => $data], 200);
+          
     }
 
     public function airport($code)
     {
-      
-        return response()->json(
-            $this->airportService->getAirport($code),
-            200
-        );
+      $data = $this->airportService->getAirport($code);
+        return response()->json(['status'=>true,'message'=>'Successfully fetched data','data' => $data], 200);
+            
     }
 
     public function airportServices(Request $request)
@@ -37,7 +33,7 @@ class AirportController extends Controller
             'airport_code' => 'required|string',
             'direction' => 'required|string'
         ]);
-
+          
         return response()->json(
             $this->airportService->getAirportServices(
                 $validated['airport_code'],
