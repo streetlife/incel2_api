@@ -14,7 +14,7 @@ class PaystackController extends Controller
 {
     protected $paystackService;
 
-    public function __construct(PaystackServices $paystackService,protected PaystackOrderServices $PaystackOrderServices,protected InvoiceServices $invoiceServices)
+    public function __construct(PaystackServices $paystackService, protected PaystackOrderServices $PaystackOrderServices, protected InvoiceServices $invoiceServices)
     {
         $this->paystackService = $paystackService;
     }
@@ -25,10 +25,11 @@ class PaystackController extends Controller
             'amount' => 'required|numeric',
             'invoice_code' => 'required|string',
             'customer_name' => 'required|string',
-            'customer_email' => 'required|email'
+            'customer_email' => 'required|email',
+            'callback_url' => 'required|string'
         ]);
 
-        $payment = $this->paystackService->initializePayment($request->all());
+        $payment = $this->paystackService->initializePayment($request->all(),$request->callback_url);
 
         if (!$payment['status']) {
             Log::info($payment);
@@ -38,7 +39,7 @@ class PaystackController extends Controller
             ], 400);
         }
 
-       $this->invoiceServices->updateTransactionReference(
+        $this->invoiceServices->updateTransactionReference(
             $request->invoice_code,
             $payment['transaction_reference']
         );

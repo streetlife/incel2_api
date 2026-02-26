@@ -8,11 +8,11 @@ use Illuminate\Support\Str;
 
 class FlutterwaveServices
 {
-    public function initializePayment(array $data)
+    public function initializePayment(array $data,string $callbackUrl)
     {
         $transactionReference = 'txn_' . Str::random(12);
 
-        $redirectUrl = 'https://incel2-nine.vercel.app/'.'/api/payment/flutterwave/callback';
+        $redirectUrl = $callbackUrl;
 
         $payload = [
             'tx_ref' => $transactionReference,

@@ -8,12 +8,12 @@ use Illuminate\Support\Str;
 
 class PaystackServices
 {
-    public function initializePayment(array $data)
+    public function initializePayment(array $data,string $callbackUrl)
     {
         $transactionReference = Str::uuid()->toString();
         $amount = $data['amount'] * 100; // convert to kobo
 
-        $redirectUrl = 'https://incel2-nine.vercel.app/'.'/api/payment/paystack/callback';
+        $redirectUrl = $callbackUrl ;
 
         $response = Http::withToken(config('paystack.secret_key'))
             ->post('https://api.paystack.co/transaction/initialize', [

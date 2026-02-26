@@ -26,10 +26,11 @@ class FlutterwaveController extends Controller
             'amount' => 'required|numeric',
             'invoice_code' => 'required|string',
             'customer_name' => 'required|string',
-            'customer_email' => 'required|email'
+            'customer_email' => 'required|email',
+            'callback_url'=> 'required|string'
         ]);
 
-        $payment = $this->flutterwaveService->initializePayment($request->all());
+        $payment = $this->flutterwaveService->initializePayment($request->all(),$request->callback_url);
 
         if (!$payment['status']) {
             return response()->json($payment, 400);
