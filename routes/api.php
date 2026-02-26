@@ -5,7 +5,10 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\FlightController;
 use App\Http\Controllers\CountryController;
+use App\Http\Controllers\CurrencyController;
+use App\Http\Controllers\FlutterwaveController;
 use App\Http\Controllers\HotelController;
+use App\Http\Controllers\PaystackController;
 use App\Http\Controllers\TourController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
@@ -80,3 +83,14 @@ Route::prefix('bookings')->group(function () {
     Route::post('/flight/update', [BookingController::class, 'updateFlight']);
     Route::get('/payment/{paymentCode}', [BookingController::class, 'getPayment']);
 });
+Route::prefix('currencies')->group(function () {
+    Route::get('/', [CurrencyController::class, 'index']);
+    Route::post('/currency/convert', [CurrencyController::class, 'convert']);
+});
+Route::prefix('paystack')->group(function(){
+    Route::post('/payment/initialize', [PaystackController::class, 'initialize']);
+});
+Route::prefix('flutterwave')->group(function(){
+   Route::post('/payment/initialize', [FlutterwaveController::class, 'initialize']);
+});
+

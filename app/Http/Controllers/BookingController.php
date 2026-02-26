@@ -17,14 +17,21 @@ class BookingController extends Controller
 
     public function create(Request $request)
     {
-        $request->validate([
-            'usercode' => 'required|string',
-            'booking_type' => 'required|string'
+        $validated = $request->validate([
+            'sessionCode' => 'required|string',
+            'traveller' => 'nullable|array|min:1',
+            'traveller.*.firstname' => 'nullable|string',
+            'traveller.*.surname' => 'nullable|string',
+            'traveller.*.birth_date' => 'nullable|string',
+            'traveller.*.passport_expiry_date' => 'nullable|string',
+            'traveller.*.passport_nationality' => 'nullable|string',
+            'traveller.*.phone_number' => 'nullable|string',
+            'traveller.*.passport_issuance_date' => 'nullable|string'
         ]);
+        $booking = $this->bookingService->processFlightBooking(
+            $validated['sessionCode'],
+            $validated['traveller']
 
-        $booking = $this->bookingService->createBooking(
-            $request->usercode,
-            $request->booking_type
         );
 
         return response()->json([
@@ -98,29 +105,39 @@ class BookingController extends Controller
 
 
     public function addFlight(Request $request, BookingServices $bookingService)
-{
-    $validated = $request->validate([
-        'bookingCode' => 'required|string',
-        'travelerPricing' => 'required|array',
-        'travelerPricing.travelerId' => 'required|integer',
-        'travelerPricing.travelerType' => 'required|string',
-        'travelerPricing.fareOption' => 'required|string',
-        'travelerPricing.price.total' => 'required|numeric',
-        'travelerPricing.price.base' => 'required|numeric',
-        'payload' => 'required|array',
-        'result' => 'required|string',
-        'amadeusClientRef' => 'required|string',
-    ]);
-    $booking = $bookingService->createFlightBooking(
-        $validated['bookingCode'],
-        $validated['travelerPricing'],
-        $validated['payload'],
-        $validated['result'],
-        $validated['amadeusClientRef']
-    );
+    {
+        $validated = $request->validate([
+            'bookingCode' => 'required|string',
+            'travelerPricing' => 'required|array',
+            'travelerPricing.travelerId' => 'required|integer',
+            'travelerPricing.travelerType' => 'required|string',
+            'travelerPricing.fareOption' => 'required|string',
+            'travelerPricing.price.total' => 'required|numeric',
+            'travelerPricing.price.base' => 'required|numeric',
+            'traveller' => 'nullable|array|min:1',
+            'traveller.*.firstname' => 'nullable|string',
+            'traveller.*.surname' => 'nullable|string',
+            'traveller.*.birth_date' => 'nullable|string',
+            'traveller.*.passport_expiry_date' => 'nullable|string',
+            'traveller.*.passport_nationality' => 'nullable|string',
+            'traveller.*.phone_number' => 'nle|string',
+            'traveller.*.passport_issuance_date' => 'nullable|string',
+            'payload' => 'required|array',
+            'result' => 'required|string',
+            'amadeusClientRef' => 'required|string',
+        ]);
+        $booking = $bookingService->createFlightBooking(
+            $validated['bookingCode'],
+            $validated['travelerPricing'],
+            $validated['payload'],
+            $validated['result'],
+            $validated['amadeusClientRef'],
+            $validated['traveller']
 
-    return response()->json(['success' => true]);
-}
+        );
+
+        return response()->json(['success' => true]);
+    }
 
 
 
@@ -142,7 +159,7 @@ class BookingController extends Controller
 
         return response()->json(['status' => true, 'data' => $guest]);
     }
-   
+
 
     public function updateVisa(Request $request)
     {
@@ -169,19 +186,20 @@ class BookingController extends Controller
         return response()->json($payment);
     }
 
-    public function updateHotel(Request $request){
-      $reponse = $this->bookingService->updateHotelBooking($request->all());
-      if (!$reponse) {
-        return response()->json(['message' => 'Updating Failed'], 400);
-      }
-      return response()->json($reponse, 200);
+    public function updateHotel(Request $request)
+    {
+        $reponse = $this->bookingService->updateHotelBooking($request->all());
+        if (!$reponse) {
+            return response()->json(['message' => 'Updating Failed'], 400);
+        }
+        return response()->json($reponse, 200);
     }
-      public function updateTourBooking(Request $request){
+    public function updateTourBooking(Request $request)
+    {
         $reponse = $this->bookingService->updateTourBooking($request->all());
         if (!$reponse) {
-          return response()->json(['message' => 'Updating Failed'], 400);
+            return response()->json(['message' => 'Updating Failed'], 400);
         }
-        return response()->json($reponse,200);
-      }
-    
+        return response()->json($reponse, 200);
+    }
 }

@@ -380,6 +380,7 @@ class FlightServices
         asort($filter_timeto);
 
         return [
+            'session_code'=>$session?->session_code,
             'flight_count' => count($results),
             'payload' => $payload,
             'recommended' => [
@@ -590,5 +591,63 @@ class FlightServices
             'date' => $formattedDate,
             'time' => $formattedTime,
         ];
+    }
+    public function getAmadeusPriceOfferOWC(
+        string $sessionCode,
+        int $outboundFlightId,
+        int $inboundFlightId
+    ): array {
+
+        $session = SessionFlight::where('session_code', $sessionCode)->first();
+
+        if (!$session) {
+            throw new \Exception('Flight session not found.');
+        }
+
+        $response = json_decode($session->response, true);
+        $results = $response['data'];
+
+        $resultOutbound = $results[$outboundFlightId - 1] ?? null;
+        $resultInbound  = $results[$inboundFlightId - 1] ?? null;
+
+        if (!$resultOutbound || !$resultInbound) {
+            throw new \Exception('Invalid flight selection.');
+        }
+
+        $flightOffers = [
+            $resultOutbound,
+            $resultInbound
+        ];
+
+        return $this->amadeusService->priceOfferOWC(
+            $flightOffers,
+            $session->amadeus_client_ref
+        );
+    }
+    public function getAmadeusPriceOfferFSC(
+        string $sessionCode,
+        int $flightId
+    ) {
+
+        $session = SessionFlight::where('session_code', $sessionCode)->first();
+
+        if (!$session) {
+            throw new \Exception('Flight session not found.');
+        }
+
+        $response = $session->response;
+        $results = $response['data'];
+
+        $selectedFlight = $results[$flightId - 1] ?? null;
+
+        if (!$selectedFlight) {
+            throw new \Exception('Invalid flight selection.');
+        }
+
+        return $this->amadeusService->priceOfferFSC(
+            $selectedFlight,
+            $session->amadeus_client_ref,
+            $flightId
+        );
     }
 }

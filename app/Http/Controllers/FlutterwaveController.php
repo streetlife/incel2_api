@@ -1,0 +1,49 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Controllers\Controller;
+use App\Services\FlutterwaveServices;
+use App\Services\InvoiceServices;
+use Illuminate\Http\Request;
+
+class FlutterwaveController extends Controller
+{
+     protected $flutterwaveService;
+    protected $invoiceService;
+
+    public function __construct(
+        FlutterwaveServices $flutterwaveService,
+        InvoiceServices $invoiceService
+    ) {
+        $this->flutterwaveService = $flutterwaveService;
+        $this->invoiceService = $invoiceService;
+    }
+
+    public function initialize(Request $request)
+    {
+        $request->validate([
+            'amount' => 'required|numeric',
+            'invoice_code' => 'required|string',
+            'customer_name' => 'required|string',
+            'customer_email' => 'required|email'
+        ]);
+
+        $payment = $this->flutterwaveService->initializePayment($request->all());
+
+        if (!$payment['status']) {
+            return response()->json($payment, 400);
+        }
+
+        
+        $this->invoiceService->updateTransactionReference(
+            $request->invoice_code,
+            $payment['transaction_reference']
+        );
+
+        return response()->json([
+            'status' => true,
+            'payment_link' => $payment['payment_link']
+        ]);
+    }
+}

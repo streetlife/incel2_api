@@ -10,6 +10,7 @@ use App\Models\BookingTour;
 use App\Models\BookingVisa;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class BookingServices extends FlightServices
@@ -87,19 +88,21 @@ class BookingServices extends FlightServices
         array $travelerPricing,
         $payload,
         $result,
-        $amadeusClientRef
+        $amadeusClientRef,
+        array $traveller
     ) {
         return DB::transaction(function () use (
             $bookingCode,
             $travelerPricing,
             $payload,
             $result,
-            $amadeusClientRef
+            $amadeusClientRef,
+            $traveller
         ) {
 
-            $resultDecoded = json_decode($result, true);
-
-            $airline = $resultDecoded[0]['validatingAirlineCodes'][0] ?? null;
+            $resultDecoded = $result;
+            log::info($resultDecoded);
+            $airline = isset($resultDecoded[0]['validatingAirlineCodes'][0]) ?? null;
 
             $flightPrice = $travelerPricing['price']['total'];
             $basePrice   = $travelerPricing['price']['base'];
@@ -121,6 +124,14 @@ class BookingServices extends FlightServices
                 'flight_session' => $result,
                 'payload' =>  is_array($payload) ? json_encode($payload) : $payload,
                 'amadeus_client_ref' => $amadeusClientRef,
+                'firstname' => $traveller['firstname'],
+                'surname' => $traveller['surname'] ?? null,
+                'phone_number' => $traveller['phone_number'] ?? null,
+                'passport_nationality'    => $traveller['passport_nationality'] ?? null,
+                'birth_date'       => $traveller['birth_date'] ?? null,
+                'passport_expiry_date'  => $traveller['passport_expiry_date'] ?? null,
+                'passport_issuance_date' => $traveller['passport_issuance_date']
+
             ]);
         });
     }
@@ -270,7 +281,7 @@ class BookingServices extends FlightServices
             ->where('payment_code', $paymentCode)
             ->first();
     }
-     public function preProcessBookingFlight($booking_code)
+    public function preProcessBookingFlight($booking_code)
     {
         $bookingFlights = BookingFlights::where('booking_code', $booking_code)
             ->get()
@@ -401,4 +412,68 @@ class BookingServices extends FlightServices
             default => throw new \Exception('Invalid gender value')
         };
     }
+
+    public function processFlightBooking(string $sessionCode,  $traveller)
+    {
+        $flightSession = $this->getFlightSession($sessionCode);
+
+        if (!$flightSession) {
+            throw new \Exception('Invalid flight session.');
+        }
+        $flightId = 1;
+        $payload = $flightSession['payload'];
+        $response = $flightSession['response'];
+
+        $markup = $this->getMarkup('FLIGHT');
+
+        if (!isset($payload['flight_option'])) {
+            $payload['flight_option'] = 'FSC';
+        }
+
+        Log::info('Flight option is ' . $payload['flight_option']);
+
+        $amadeusClientRef = $flightSession['amadeus_client_ref'];
+
+        if ($payload['flight_option'] === 'FSC') {
+            $priceOffer = $this->getAmadeusPriceOfferFSC($sessionCode, $flightId);
+        } else {
+            throw new \Exception('OWC option not implemented.');
+        }
+
+        $result = $priceOffer;
+
+        if (isset($result['errors'])) {
+            $errorDetail = $result['errors']['detail'] ?? 'Unknown error';
+            Log::error('Unable to fetch pricing: ' . $errorDetail);
+            throw new \Exception('Unable to fetch pricing - ' . $errorDetail);
+        }
+
+        $flightOffers = $result['data']['flightOffers'];
+
+        $userCode = auth()->user()->usercode ?? "temp" . now()->format('ymdHis');
+
+        $bookingCode = $this->createBooking($userCode, 'FLIGHT');
+
+        $travelerPricings = $flightOffers[0]['travelerPricings'];
+        if (!empty($traveller) && array_keys($traveller) !== range(0, count($traveller) - 1)) {
+            $traveller = [$traveller];
+        }
+        foreach ($travelerPricings as $index => $travelerPricing) {
+            $travellerData = $traveller[$index] ?? [];
+            $this->createFlightBooking(
+                $bookingCode['booking_code'],
+                $travelerPricing,
+                $flightSession['payload'],
+                json_encode($flightOffers),
+                $amadeusClientRef,
+                $travellerData
+            );
+        }
+
+        return [
+            'booking_code' => $bookingCode,
+            'message' => 'Flight booking created successfully'
+        ];
+    }
+    public function generateBookingCode() {}
 }

@@ -23,6 +23,13 @@ class BookingFlights extends Model
         'flight_session',
         'payload',
         'amadeus_client_ref',
+        'firstname',
+        'surname',
+        'birth_date',
+        'passport_expiry_date',
+        'passport_nationality',
+        'phone_number',
+        'passport_issuance_date'
     ];
     protected $cast = [
         'flight_session' => 'array',

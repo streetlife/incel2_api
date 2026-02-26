@@ -321,7 +321,7 @@ class AmadeusServices
 
         return $response->json();
     }
-     public function createFlightOrder($payload, $clientRef, $bookingCode, $bookingFlights)
+    public function createFlightOrder($payload, $clientRef, $bookingCode, $bookingFlights)
     {
         $token = $this->getToken();
 
@@ -348,7 +348,7 @@ class AmadeusServices
             return null;
         }
 
-        
+
         foreach ($bookingFlights as $flight) {
             DB::table('booking_flights')
                 ->where('booking_detail_code', $flight['booking_detail_code'])
@@ -364,5 +364,88 @@ class AmadeusServices
 
         return $flightPNR;
     }
+    public function priceOfferOWC(array $flightOffers, string $clientRef): array
+    {
+        $token = $this->getToken();
 
+        $payload = [
+            'data' => [
+                'type' => 'flight-offers-pricing',
+                'flightOffers' => $flightOffers
+            ]
+        ];
+
+        $url = $this->baseUrl . 'v1/shopping/flight-offers/pricing';
+
+        if (isset($flightOffers[0]['price']['additionalServices'])) {
+            $url .= '?include=bags';
+        }
+
+        Log::info('Amadeus Pricing Request', $payload);
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'ama-client-ref' => $clientRef,
+            'Authorization' => 'Bearer ' . $token,
+        ])->post($url, $payload);
+
+        Log::info('Amadeus Pricing Response', [
+            'status' => $response->status(),
+            'body' => $response->json()
+        ]);
+
+        if (!$response->successful()) {
+            throw new \Exception('Amadeus pricing request failed.');
+        }
+
+        return $response->json();
+    }
+    public function priceOfferFSC(
+        array $flightOffer,
+        string $clientRef,
+        int $flightId
+    ): array {
+
+        $token = $this->getToken();
+
+        $payload = [
+            'data' => [
+                'type' => 'flight-offers-pricing',
+                'flightOffers' => [
+                    $flightOffer
+                ],
+                'formOfPayments' => [
+                    [
+                        'other' => [
+                            'method' => 'CASH',
+                            'flightOfferIds' => [
+                                (string) $flightId
+                            ]
+                        ]
+                    ]
+                ],
+                'additionalInformation' => [
+                    'fareRules' => true
+                ]
+            ]
+        ];
+
+        $url = $this->baseUrl . 'v1/shopping/flight-offers/pricing';
+
+        if (isset($flightOffer['price']['additionalServices'])) {
+            $url .= '?include=bags';
+        }
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'ama-client-ref' => $clientRef,
+            'Authorization' => 'Bearer ' . $token,
+        ])->post($url, $payload);
+
+        if (!$response->successful()) {
+            throw new \Exception('Amadeus FSC pricing failed.');
+        }
+
+        return $response->json();
+    }
 }
