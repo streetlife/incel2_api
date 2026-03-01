@@ -26,11 +26,13 @@ class BookingController extends Controller
             'traveller.*.passport_expiry_date' => 'nullable|string',
             'traveller.*.passport_nationality' => 'nullable|string',
             'traveller.*.phone_number' => 'nullable|string',
-            'traveller.*.passport_issuance_date' => 'nullable|string'
+            'traveller.*.passport_issuance_date' => 'nullable|string',
+            'bookingCode' => "nullable|string"
         ]);
         $booking = $this->bookingService->processFlightBooking(
             $validated['sessionCode'],
-            $validated['traveller']
+            $validated['traveller'],
+            $validated['bookingCode']
 
         );
 
@@ -39,7 +41,21 @@ class BookingController extends Controller
             'data'   => $booking
         ]);
     }
-
+    public function generateBookingCode()
+    {
+        $booking = $this->bookingService->generateBookingCode();
+        if (!$booking) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Booking not found'
+            ], 404);
+        }
+         return response()->json([
+                'status' => true,
+                'message' => 'Booking created successfully',
+                'data' =>$booking
+            ], 200);
+    }
     public function show($bookingCode)
     {
         $booking = $this->bookingService->getBooking($bookingCode);
@@ -122,7 +138,7 @@ class BookingController extends Controller
             'traveller.*.passport_nationality' => 'nullable|string',
             'traveller.*.phone_number' => 'nullable|string',
             'traveller.*.passport_issuance_date' => 'nullable|string',
-            'traveller.*.emailaddress'=>'nullable|string',
+            'traveller.*.emailaddress' => 'nullable|string',
             'payload' => 'required|array',
             'result' => 'required|string',
             'amadeusClientRef' => 'required|string',

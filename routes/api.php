@@ -82,6 +82,7 @@ Route::prefix('bookings')->group(function () {
     Route::post('/visa/update', [BookingController::class, 'updateVisa']);
     Route::post('/flight/update', [BookingController::class, 'updateFlight']);
     Route::get('/payment/{paymentCode}', [BookingController::class, 'getPayment']);
+    Route::post('/generate-booking-code',[BookingController::class,'generateBookingCode']);
 });
 Route::prefix('currencies')->group(function () {
     Route::get('/', [CurrencyController::class, 'index']);

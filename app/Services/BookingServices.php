@@ -413,7 +413,7 @@ class BookingServices extends FlightServices
         };
     }
 
-    public function processFlightBooking(string $sessionCode,  $traveller)
+    public function processFlightBooking(string $sessionCode, $traveller, string $bookingCode)
     {
         $flightSession = $this->getFlightSession($sessionCode);
 
@@ -450,9 +450,9 @@ class BookingServices extends FlightServices
 
         $flightOffers = $result['data']['flightOffers'];
 
-        $userCode = auth()->user()->usercode ?? "temp" . now()->format('ymdHis');
+        // $userCode = auth()->user()->usercode ?? "temp" . now()->format('ymdHis');
 
-        $bookingCode = $this->createBooking($userCode, 'FLIGHT');
+        // $bookingCode = $this->createBooking($userCode, 'FLIGHT');
 
         $travelerPricings = $flightOffers[0]['travelerPricings'];
         if (!empty($traveller) && array_keys($traveller) !== range(0, count($traveller) - 1)) {
@@ -461,7 +461,7 @@ class BookingServices extends FlightServices
         foreach ($travelerPricings as $index => $travelerPricing) {
             $travellerData = $traveller[$index] ?? [];
             $this->createFlightBooking(
-                $bookingCode['booking_code'],
+                $bookingCode,
                 $travelerPricing,
                 $flightSession['payload'],
                 json_encode($flightOffers),
@@ -475,5 +475,17 @@ class BookingServices extends FlightServices
             'message' => 'Flight booking created successfully'
         ];
     }
-    public function generateBookingCode() {}
+    public function generateBookingCode()
+    {
+
+        $userCode = auth()->user()->usercode ?? "temp" . now()->format('ymdHis');
+        $bookingCode = $this->createBooking($userCode, 'FLIGHT');
+        if ($bookingCode === 0) {
+            Log::error('Unable to create booking');
+            throw new \Exception('unable to create booking');
+        }
+        return [
+            'bookCode' => $bookingCode['booking_code']
+        ];
+    }
 }
