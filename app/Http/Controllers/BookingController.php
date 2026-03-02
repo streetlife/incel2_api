@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreBookingVisaRequest;
 use App\Services\BookingServices;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class BookingController extends Controller
 {
@@ -50,11 +52,11 @@ class BookingController extends Controller
                 'message' => 'Booking not found'
             ], 404);
         }
-         return response()->json([
-                'status' => true,
-                'message' => 'Booking created successfully',
-                'data' =>$booking
-            ], 200);
+        return response()->json([
+            'status' => true,
+            'message' => 'Booking created successfully',
+            'data' => $booking
+        ], 200);
     }
     public function show($bookingCode)
     {
@@ -104,19 +106,24 @@ class BookingController extends Controller
     }
     // app/Http/Controllers/Api/BookingController.php
 
-    public function addVisa(Request $request)
+    public function addVisa(StoreBookingVisaRequest $request)
     {
-        $request->validate([
-            'booking_code' => 'required|string',
-            'visa_id' => 'required|integer'
-        ]);
 
-        $visa = $this->bookingService->createVisaBooking(
-            $request->booking_code,
-            $request->visa_id
-        );
 
-        return response()->json(['status' => true, 'data' => $visa]);
+        $visa = $this->bookingService->createVisaBooking($request);
+        if (!$visa) {
+            Log::error("error");
+            Log::info($visa);
+            return response()->json([
+                'status' => false,
+                'message' => 'Visa booking was not successfully',
+
+            ], 400);
+        }
+        return response()->json([
+            'message' => 'Visa booking created successfully',
+            'data' => $visa
+        ], 200);
     }
 
 

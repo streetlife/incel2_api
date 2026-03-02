@@ -14,6 +14,17 @@ class BookingVisa extends Model
     protected $fillable = [
         'booking_code',
         'booking_detail_code',
-        'visa_id',
+        'surname',
+        'firstname',
+        'othernames',
+        'passport_expiry_date',
+        'passport_country',
+        'passport_number',
+        'passport_issuance_date',
+        'emailaddress',
+        'birth_date',
+        'document_data_page',
+        'document_passport_photo',
+        'status'
     ];
 }

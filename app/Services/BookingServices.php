@@ -9,6 +9,7 @@ use App\Models\BookingHotelGuest;
 use App\Models\BookingTour;
 use App\Models\BookingVisa;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -35,10 +36,7 @@ class BookingServices extends FlightServices
 
         return $booking;
     }
-    private function generateUserCode(): string
-    {
-        return 'temp' . now()->format('ymdHis') . rand(10, 99);
-    }
+
     public function getBooking($bookingCode)
     {
         return Booking::with([
@@ -75,14 +73,88 @@ class BookingServices extends FlightServices
         return $tour;
     }
 
-    public function createVisaBooking($bookingCode, $visaId)
+    // public function createVisaBooking($data)
+    // {
+    //     $userCode = auth()->user()->usercode ?? "temp" . now()->format('ymdHis');
+    //     $genrateBookingCode = $this->createBooking($userCode, 'VISA');
+    //     $bookingDetailCode = 'BT' . now()->format('ymdHis');
+    //     return BookingVisa::create([
+    //         'booking_code' => $genrateBookingCode['booking_code'],
+    //         'booking_detail_code'     => $bookingDetailCode,
+    //         'surname'                 => $data['lastname'],
+    //         'firstname'               => $data['firstname'],
+    //         'othernames'              => $data['othernames'],
+    //         'passport_expiry_date'    => $data['passport_expiry_date'],
+    //         'passport_country'        => $data['passport_country'],
+    //         'passport_number'         => $data['passport_number'],
+    //         'passport_issuance_date'  => $data['passport_issuance_date'],
+    //         'emailaddress'            => $data['email_address'],
+    //         'birth_date'              => $data['birthdate'],
+    //         'document_passport_photo' => $data['passport_photo_name'],
+    //         'document_data_page'      => $data['passport_data_page_name'],
+    //         'status'                  => 'NEW',
+    //     ]);
+    // }
+    public function createVisaBooking(Request $request): array
     {
-        return BookingVisa::create([
-            'booking_code' => $bookingCode,
-            'booking_detail_code' => 'BV' . now()->format('ymdHis') . rand(10, 99),
-            'visa_id' => $visaId,
+        $data = $request->validated();
+
+        $passportPhotoPath = $this->uploadFile(
+            $request->file('passport_photo'),
+            'visa/passport_photos'
+        );
+
+        $passportDataPagePath = $this->uploadFile(
+            $request->file('passport_data_page'),
+            'visa/passport_data_pages'
+        );
+
+        $userCode = auth()->user()->usercode ?? "temp" . now()->format('ymdHis');
+        $bookingCode = $this->createBooking($userCode, 'VISA');
+        $bookingDetailCode = 'BV' . now()->format('ymdHis');
+
+        $dataObj = BookingVisa::create([
+            'booking_code'             => $bookingCode['booking_code'],
+            'booking_detail_code'      => $bookingDetailCode,
+            'surname'                  => $data['lastname'],
+            'firstname'                => $data['firstname'],
+            'othernames'               => $data['othernames'] ?? null,
+            'passport_expiry_date'     => $data['passport_expiry_date'],
+            'passport_country'         => $data['passport_country'],
+            'passport_number'          => $data['passport_number'],
+            'passport_issuance_date'   => $data['passport_issuance_date'],
+            'emailaddress'             => $data['email_address'],
+            'birth_date'               => $data['birth_date'],
+            'document_passport_photo'  => $passportPhotoPath,
+            'document_data_page'       => $passportDataPagePath,
+            'status'                   => 'NEW',
         ]);
+
+        return [
+            'booking_code'             => $dataObj->booking_code,
+            'booking_detail_code'      => $dataObj->booking_detail_code,
+            'surname'                  => $dataObj->surname,
+            'firstname'                => $dataObj->firstname,
+            'othernames'               => $dataObj->othernames,
+            'passport_expiry_date'     => $dataObj->passport_expiry_date,
+            'passport_country'         =>  $dataObj->passport_country,
+            'passport_number'          =>  $dataObj->passport_number,
+            'passport_issuance_date'   =>  $dataObj->passport_issuance_date,
+            'emailaddress'             => $dataObj?->emailaddress,
+            'birth_date'               =>  $dataObj?->birth_date,
+            'document_passport_photo'  =>  secured_path($dataObj?->document_passport_photo),
+            'document_data_page'       =>  secured_path($dataObj?->document_data_page),
+            'status'                   => $dataObj?->status
+        ];
     }
+
+    private function uploadFile($file, $folder): string
+    {
+        $filename = Str::random(20) . '.' . $file->getClientOriginalExtension();
+        $storage =  $file->storeAs($folder, $filename, 'public');
+        return $storage;
+    }
+
     public function createFlightBooking(
         $bookingCode,
         array $travelerPricing,
