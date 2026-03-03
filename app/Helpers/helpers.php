@@ -5,4 +5,5 @@
     {
         return url($path);
     }
+    
 }

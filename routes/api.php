@@ -11,6 +11,8 @@ use App\Http\Controllers\HotelController;
 use App\Http\Controllers\PaystackController;
 use App\Http\Controllers\TourController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VisaController;
+use App\Http\Controllers\TravelController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -82,16 +84,31 @@ Route::prefix('bookings')->group(function () {
     Route::post('/visa/update', [BookingController::class, 'updateVisa']);
     Route::post('/flight/update', [BookingController::class, 'updateFlight']);
     Route::get('/payment/{paymentCode}', [BookingController::class, 'getPayment']);
-    Route::post('/generate-booking-code',[BookingController::class,'generateBookingCode']);
+    Route::post('/generate-booking-code', [BookingController::class, 'generateBookingCode']);
 });
 Route::prefix('currencies')->group(function () {
     Route::get('/', [CurrencyController::class, 'index']);
     Route::post('/currency/convert', [CurrencyController::class, 'convert']);
 });
-Route::prefix('paystack')->group(function(){
+Route::prefix('paystack')->group(function () {
     Route::post('/payment/initialize', [PaystackController::class, 'initialize']);
 });
-Route::prefix('flutterwave')->group(function(){
-   Route::post('/payment/initialize', [FlutterwaveController::class, 'initialize']);
+Route::prefix('flutterwave')->group(function () {
+    Route::post('/payment/initialize', [FlutterwaveController::class, 'initialize']);
 });
+Route::prefix('visas')->group(function () {
 
+    Route::get('/metadata', [VisaController::class, 'getMetadata']);
+    Route::get('/session/{code}', [VisaController::class, 'showSession']);
+    Route::get('/{id}', [VisaController::class, 'visaById']);
+
+
+    Route::prefix('travellers')->group(function () {
+        Route::get('/', [TravelController::class, 'index']);
+        Route::post('/', [TravelController::class, 'store']);
+        Route::get('/stats/{usercode}', [TravelController::class, 'stats']);
+        Route::get('/{access_code}', [TravelController::class, 'show']);
+        Route::patch('/{access_code}', [TravelController::class, 'update']);
+        Route::get('/generate/booking-code', [TravelController::class, 'generateBookingCode']);
+    });
+});
