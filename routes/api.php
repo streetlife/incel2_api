@@ -101,7 +101,8 @@ Route::prefix('visas')->group(function () {
     Route::get('/metadata', [VisaController::class, 'getMetadata']);
     Route::get('/session/{code}', [VisaController::class, 'showSession']);
     Route::get('/{id}', [VisaController::class, 'visaById']);
-
+    Route::post('/search', [VisaController::class, 'search']);
+    Route::get('/session/{session_code}', [VisaController::class, 'getSession']);
 
     Route::prefix('travellers')->group(function () {
         Route::get('/', [TravelController::class, 'index']);
