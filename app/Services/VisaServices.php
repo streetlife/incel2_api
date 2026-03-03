@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use App\Models\VisaGenderType;
+
 use App\Models\VisaPrice;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
+
 
 class VisaServices extends FlightServices
 {
@@ -20,9 +20,9 @@ class VisaServices extends FlightServices
             'professions'       => DB::table('visas_profession')->get(['profession as value', 'profession_id as lebel']),
             'religions'         => DB::table('visas_religion')->get(['religion as value', 'religion_id as lebel']),
             'visa_types'        => DB::table('visas_visatypes')->get(['visa_type as value', 'visa_type_id as lebel']),
-            'visa_countries' => DB::table('visas_countries')->orderBy('itemsname')->get(['itemsid as value', 'itemsname as lebel']),
+            'visa_countries' => DB::table('visas_countries')->orderBy('itemsname')->get(['itemsid as lebel', 'itemsname as value ','itemsiso_code as code']),
             'visa_gender_types' => DB::table('visas_gendertypes')->get(['gendertype as value', 'gendertype_id as lebel']),
-
+            'visa_prices' => DB::table('visa_prices')->get(['destination_country as value','id as label'])
         ];
     }
 
