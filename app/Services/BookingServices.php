@@ -109,42 +109,56 @@ class BookingServices extends FlightServices
             'visa/passport_data_pages'
         );
 
-        $userCode = auth()->user()->usercode ?? "temp" . now()->format('ymdHis');
-        $bookingCode = $this->createBooking($userCode, 'VISA');
         $bookingDetailCode = 'BV' . now()->format('ymdHis');
 
+        $bookingCode = $data['booking_code'] ?? 'BK' . now()->format('ymdHis');
+
         $dataObj = BookingVisa::create([
-            'booking_code'             => $bookingCode['booking_code'],
-            'booking_detail_code'      => $bookingDetailCode,
-            'surname'                  => $data['lastname'],
-            'firstname'                => $data['firstname'],
-            'othernames'               => $data['othernames'] ?? null,
-            'passport_expiry_date'     => $data['passport_expiry_date'],
-            'passport_country'         => $data['passport_country'],
-            'passport_number'          => $data['passport_number'],
-            'passport_issuance_date'   => $data['passport_issuance_date'],
-            'emailaddress'             => $data['email_address'],
-            'birth_date'               => $data['birth_date'],
-            'document_passport_photo'  => $passportPhotoPath,
-            'document_data_page'       => $passportDataPagePath,
-            'status'                   => 'NEW',
+            'booking_detail_code'     => $bookingDetailCode,
+            'booking_code'            => $bookingCode,
+            'surname'                 => $data['lastname'],
+            'firstname'               => $data['firstname'],
+            'othernames'              => $data['othernames'] ?? null,
+            'passport_expiry_date'    => $data['passport_expiry_date'],
+            'passport_country'        => $data['passport_country'],
+            'passport_number'         => $data['passport_number'],
+            'passport_issuance_date'  => $data['passport_issuance_date'],
+            'emailaddress'            => $data['email_address'],
+            'birth_date'              => $data['birth_date'],
+            'document_passport_photo' => $passportPhotoPath,
+            'document_data_page'      => $passportDataPagePath,
+            'status'                  => "NEW",
+            'nationality_id'          => $data['nationality_id'],
+            'gender'                  => $data['gender'],
+            'group_membership_id'     => $data['group_membership_id'],
+            'marital_status_id'       => $data['marital_status_id'],
+            'profession_id'           => $data['profession_id'],
+            'language_id'             => $data['language_id'],
+            'religion_id'             => $data['religion_id'],
         ]);
 
         return [
-            'booking_code'             => $dataObj->booking_code,
-            'booking_detail_code'      => $dataObj->booking_detail_code,
-            'surname'                  => $dataObj->surname,
-            'firstname'                => $dataObj->firstname,
-            'othernames'               => $dataObj->othernames,
-            'passport_expiry_date'     => $dataObj->passport_expiry_date,
-            'passport_country'         =>  $dataObj->passport_country,
-            'passport_number'          =>  $dataObj->passport_number,
-            'passport_issuance_date'   =>  $dataObj->passport_issuance_date,
-            'emailaddress'             => $dataObj?->emailaddress,
-            'birth_date'               =>  $dataObj?->birth_date,
-            'document_passport_photo'  =>  secured_path($dataObj?->document_passport_photo),
-            'document_data_page'       =>  secured_path($dataObj?->document_data_page),
-            'status'                   => $dataObj?->status
+            'booking_code'            => $dataObj->booking_code,
+            'booking_detail_code'     => $dataObj->booking_detail_code,
+            'surname'                 => $dataObj->surname,
+            'firstname'               => $dataObj->firstname,
+            'othernames'              => $dataObj->othernames,
+            'passport_expiry_date'    => $dataObj->passport_expiry_date,
+            'passport_country'        => $dataObj->passport_country,
+            'passport_number'         => $dataObj->passport_number,
+            'passport_issuance_date'  => $dataObj->passport_issuance_date,
+            'emailaddress'            => $dataObj->emailaddress,
+            'birth_date'              => $dataObj->birth_date,
+            'document_passport_photo' => secured_path($dataObj->document_passport_photo),
+            'document_data_page'      => secured_path($dataObj->document_data_page),
+            'status'                  => $dataObj->status,
+            'nationality_id'          => $dataObj->nationality_id,
+            'gender'                  => $dataObj->gender,
+            'group_membership_id'     => $dataObj->group_membership_id,
+            'marital_status_id'       => $dataObj->marital_status_id,
+            'profession_id'           => $dataObj->profession_id,
+            'language_id'             => $dataObj->language_id,
+            'religion_id'             => $dataObj->religion_id,
         ];
     }
 

@@ -25,6 +25,14 @@ class BookingVisa extends Model
         'birth_date',
         'document_data_page',
         'document_passport_photo',
+        'nationality_id',
+        'gender',
+        'group_membership_id',
+        'marital_status_id',
+        'profession_id',
+        'language_id',
+        'religion_id',
         'status'
     ];
+     
 }

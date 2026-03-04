@@ -21,23 +21,35 @@ class StoreBookingVisaRequest extends FormRequest
      */
     public function rules(): array
     {
-         return [
-            'lastname'                => 'required|string|max:255',
-            'firstname'               => 'required|string|max:255',
-            'othernames'              => 'nullable|string|max:255',
+        return [
 
-            'passport_expiry_date'    => 'required|date',
-            'passport_country'        => 'required|string|max:10',
-            'passport_number'         => 'required|string|max:50',
-            'passport_issuance_date'  => 'required|date',
+        
+        'booking_code'             => 'nullable|string|max:50',
 
-            'email_address'           => 'required|email',
-            'birth_date'               => 'required|date',
+        'lastname'                 => 'required|string|max:255',
+        'firstname'                => 'required|string|max:255',
+        'othernames'               => 'nullable|string|max:255',
 
-            // FILES
-            'passport_photo'          => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
-            'passport_data_page'      => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
-        ];
+        'passport_expiry_date'     => 'nullable|date',
+        'passport_country'         => 'nullable|string|max:10',
+        'passport_number'          => 'nullable|string|max:50',
+        'passport_issuance_date'   => 'nullable|date',
+
+        'email_address'            => 'nullable|email|max:255',
+        'birth_date'               => 'nullable|date',
+
+        
+        'nationality_id'           => 'nullable|integer',
+        'gender'                   => 'nullable|integer',
+        'group_membership_id'      => 'nullable|integer',
+        'marital_status_id'        => 'nullable|integer',
+        'profession_id'            => 'nullable|integer',
+        'language_id'              => 'nullable|integer',
+        'religion_id'              => 'nullable|integer',
+
+        'passport_photo'           => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+        'passport_data_page'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+    ];
     }
 
      public function messages(): array

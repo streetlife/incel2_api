@@ -77,7 +77,7 @@ Route::prefix('bookings')->group(function () {
     Route::post('/', [BookingController::class, 'create']);
     Route::get('/{bookingCode}', [BookingController::class, 'show']);
     Route::post('/tour', [BookingController::class, 'addTour']);
-    Route::post('/visa', [BookingController::class, 'addVisa']);
+
     Route::post('/flight', [BookingController::class, 'addFlight']);
     Route::post('/hotel', [BookingController::class, 'addHotel']);
     Route::post('/hotel/guest', [BookingController::class, 'addHotelGuest']);
@@ -103,6 +103,7 @@ Route::prefix('visas')->group(function () {
     Route::get('/{id}', [VisaController::class, 'visaById']);
     Route::post('/search', [VisaController::class, 'search']);
     Route::get('/session/{session_code}', [VisaController::class, 'getSession']);
+    Route::post('/create-visa', [BookingController::class, 'addVisa']);
 
     Route::prefix('travellers')->group(function () {
         Route::get('/', [TravelController::class, 'index']);
