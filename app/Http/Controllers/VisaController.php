@@ -3,14 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Services\FlutterwaveServices;
+use App\Services\PaystackServices;
 use App\Services\VisaServices;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class VisaController extends Controller
 {
     protected $visaService;
 
-    public function __construct(VisaServices $visaService)
+    public function __construct(VisaServices $visaService, protected FlutterwaveServices $flutterwaveService, protected PaystackServices $paystack)
     {
         $this->visaService = $visaService;
     }
@@ -82,5 +85,36 @@ class VisaController extends Controller
             ],
             $response['code']
         );
+    }
+    public function payment(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'amount' => 'required|numeric',
+                'booking_code' => 'required|string',
+                'customer_name' => 'required|string',
+                'customer_email' => 'required|email',
+                'callback_url' => 'required|string',
+                'payment_type' => 'required|string',
+            ]);
+
+            $paymentData = [
+                'amount' => $validated['amount'],
+                'booking_code' => $validated['booking_code'],
+                'customer_name' => $validated['customer_name'],
+                'customer_email' => $validated['customer_email'],
+            ];
+
+            $getPaymentType = match ($validated['payment_type']) {
+                'flutterwave' => $this->flutterwaveService->initializePaymentForVisa($paymentData, $validated['callback_url']),
+                'paystack' => $this->paystack->initializePaymentforVisa($paymentData, $validated['callback_url']),
+                default => null
+            };
+
+            return response()->json(['status' => true, 'message' => 'Successful', 'data' => $getPaymentType], 200);
+        } catch (\Exception $e) {
+            Log::error('Payment initialization failed: ' . $e->getMessage());
+            return response()->json(["status" => false, "message" => 'Payment failed', "data" => null], 400);
+        }
     }
 }

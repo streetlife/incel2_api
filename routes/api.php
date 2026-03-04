@@ -104,6 +104,7 @@ Route::prefix('visas')->group(function () {
     Route::post('/search', [VisaController::class, 'search']);
     Route::get('/session/{session_code}', [VisaController::class, 'getSession']);
     Route::post('/create-visa', [BookingController::class, 'addVisa']);
+    Route::post('/payment',[VisaController::class,'payment']);
 
     Route::prefix('travellers')->group(function () {
         Route::get('/', [TravelController::class, 'index']);
