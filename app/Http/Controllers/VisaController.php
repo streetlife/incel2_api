@@ -87,34 +87,50 @@ class VisaController extends Controller
         );
     }
     public function payment(Request $request)
-    {
-        try {
-            $validated = $request->validate([
-                'amount' => 'required|numeric',
-                'booking_code' => 'required|string',
-                'customer_name' => 'required|string',
-                'customer_email' => 'required|email',
-                'callback_url' => 'required|string',
-                'payment_type' => 'required|string',
-            ]);
+{
+    try {
+        $validated = $request->validate([
+            'amount' => 'required|numeric',
+            'booking_code' => 'required|string',
+            'customer_name' => 'required|string',
+            'customer_email' => 'required|email',
+            'callback_url' => 'required|string',
+            'payment_type' => 'required|string',
+        ]);
 
-            $paymentData = [
-                'amount' => $validated['amount'],
-                'booking_code' => $validated['booking_code'],
-                'customer_name' => $validated['customer_name'],
-                'customer_email' => $validated['customer_email'],
-            ];
+        $paymentData = [
+            'amount' => $validated['amount'],
+            'booking_code' => $validated['booking_code'],
+            'customer_name' => $validated['customer_name'],
+            'customer_email' => $validated['customer_email'],
+        ];
 
-            $getPaymentType = match ($validated['payment_type']) {
-                'flutterwave' => $this->flutterwaveService->initializePaymentForVisa($paymentData, $validated['callback_url']),
-                'paystack' => $this->paystack->initializePaymentforVisa($paymentData, $validated['callback_url']),
-                default => null
-            };
+        $getPaymentType = match ($validated['payment_type']) {
+            'flutterwave' => $this->flutterwaveService->initializePaymentForVisa($paymentData, $validated['callback_url']),
+            'paystack' => $this->paystack->initializePaymentforVisa($paymentData, $validated['callback_url']),
+            default => null
+        };
 
-            return response()->json(['status' => true, 'message' => 'Successful', 'data' => $getPaymentType], 200);
-        } catch (\Exception $e) {
-            Log::error('Payment initialization failed: ' . $e->getMessage());
-            return response()->json(["status" => false, "message" => 'Payment failed', "data" => null], 400);
-        }
+        $link = $validated['payment_type'] === 'flutterwave'
+            ? $getPaymentType['payment_link']
+            : $getPaymentType['authorization_url'];
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Successful',
+            'data' => [
+                'link' => $link
+            ]
+        ], 200);
+
+    } catch (\Exception $e) {
+        Log::error('Payment initialization failed: ' . $e->getMessage());
+
+        return response()->json([
+            "status" => false,
+            "message" => 'Payment failed',
+            "data" => null
+        ], 400);
     }
+}
 }

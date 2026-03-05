@@ -48,6 +48,7 @@ Route::prefix('flights')->group(function () {
     Route::post('/search-result', [FlightController::class, 'searchFlights']);
     Route::post('/book-flight', [FlightController::class, 'bookFlight']);
     Route::get('/airports/search', [AirportController::class, 'search']);
+    Route::get('/preProcessBookingFlight/{booking_code}',[BookingController::class, 'preProcessBookingFlight']);
 });
 Route::prefix('countries')->group(function () {
     Route::get('/dialing-codes', [CountryController::class, 'dialingCodes']);

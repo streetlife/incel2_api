@@ -99,15 +99,15 @@ class BookingServices extends FlightServices
     {
         $data = $request->validated();
 
-        $passportPhotoPath = $this->uploadFile(
-            $request->file('passport_photo'),
-            'visa/passport_photos'
-        );
+        // $passportPhotoPath = $this->uploadFile(
+        //     $request->file('passport_photo'),
+        //     'visa/passport_photos'
+        // );
 
-        $passportDataPagePath = $this->uploadFile(
-            $request->file('passport_data_page'),
-            'visa/passport_data_pages'
-        );
+        // $passportDataPagePath = $this->uploadFile(
+        //     $request->file('passport_data_page'),
+        //     'visa/passport_data_pages'
+        // );
 
         $bookingDetailCode = 'BV' . now()->format('ymdHis');
 
@@ -125,8 +125,8 @@ class BookingServices extends FlightServices
             'passport_issuance_date'  => $data['passport_issuance_date'],
             'emailaddress'            => $data['email_address'],
             'birth_date'              => $data['birth_date'],
-            'document_passport_photo' => $passportPhotoPath,
-            'document_data_page'      => $passportDataPagePath,
+            // 'document_passport_photo' => $passportPhotoPath,
+            // 'document_data_page'      => $passportDataPagePath,
             'status'                  => "NEW",
             'nationality_id'          => $data['nationality_id'],
             'gender'                  => $data['gender'],
@@ -149,8 +149,8 @@ class BookingServices extends FlightServices
             'passport_issuance_date'  => $dataObj->passport_issuance_date,
             'emailaddress'            => $dataObj->emailaddress,
             'birth_date'              => $dataObj->birth_date,
-            'document_passport_photo' => secured_path($dataObj->document_passport_photo),
-            'document_data_page'      => secured_path($dataObj->document_data_page),
+            'document_passport_photo' => secured_path($dataObj->document_passport_photo) ?? null,
+            'document_data_page'      => secured_path($dataObj->document_data_page) ?? null,
             'status'                  => $dataObj->status,
             'nationality_id'          => $dataObj->nationality_id,
             'gender'                  => $dataObj->gender,
@@ -207,7 +207,7 @@ class BookingServices extends FlightServices
                 'fare_option' => $travelerPricing['fareOption'],
                 'price' => $flightPrice,
                 'price_markup' => $priceMarkup,
-                'flight_session' => $result,
+                'flight_session' => is_array($result) ? json_encode($result) : $result,
                 'payload' =>  is_array($payload) ? json_encode($payload) : $payload,
                 'amadeus_client_ref' => $amadeusClientRef,
                 'firstname' => $traveller['firstname'],
@@ -216,7 +216,13 @@ class BookingServices extends FlightServices
                 'passport_nationality'    => $traveller['passport_nationality'] ?? null,
                 'birth_date'       => $traveller['birth_date'] ?? null,
                 'passport_expiry_date'  => $traveller['passport_expiry_date'] ?? null,
-                'passport_issuance_date' => $traveller['passport_issuance_date']
+                'passport_issuance_date' => $traveller['passport_issuance_date'],
+                'emailaddress' => $traveller['emailaddress'] ?? null,
+                'gender' => $traveller['gender'] ?? null,
+                'passport_country' => $traveller['passport_country'] ?? null,
+                'passport_number' => $traveller['passport_number'] ?? null,
+                'dialling_code' => $traveller['dialling_code']
+
 
             ]);
         });
@@ -390,6 +396,7 @@ class BookingServices extends FlightServices
         ];
 
         if ($flightOption === 'FSC') {
+
             $flightBooking['data']['flightOffers'][] = $flightSearchResult[0];
         }
 
@@ -458,7 +465,9 @@ class BookingServices extends FlightServices
         ];
 
         $clientRef = $bookingFlights[0]['amadeus_client_ref'];
-
+        Log::info('Final Amadeus Payload', [
+            'payload' => $flightBooking
+        ]);
         return $this->amadeusService->createFlightOrder(
             $flightBooking,
             $clientRef,
@@ -550,7 +559,7 @@ class BookingServices extends FlightServices
                 $bookingCode,
                 $travelerPricing,
                 $flightSession['payload'],
-                json_encode($flightOffers),
+                $flightOffers,
                 $amadeusClientRef,
                 $travellerData
             );

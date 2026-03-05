@@ -30,7 +30,11 @@ class BookingFlights extends Model
         'passport_nationality',
         'phone_number',
         'passport_issuance_date',
-        'emailaddress'
+        'emailaddress',
+        'gender',
+        'passport_country',
+        'passport_number',
+        'dialling_code'
     ];
     protected $cast = [
         'flight_session' => 'array',

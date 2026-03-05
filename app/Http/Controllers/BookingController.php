@@ -29,6 +29,11 @@ class BookingController extends Controller
             'traveller.*.passport_nationality' => 'nullable|string',
             'traveller.*.phone_number' => 'nullable|string',
             'traveller.*.passport_issuance_date' => 'nullable|string',
+            'traveller.*.emailaddress' => 'nullable|string',
+            'traveller.*.gender'=>'nullable|string',
+            'traveller.*.passport_number' => 'nullable|string',
+            'traveller.*.passport_country'=>'nullable|string',
+            'traveller.*.dialling_code' => 'nullable|integer',
             'bookingCode' => "nullable|string"
         ]);
         $booking = $this->bookingService->processFlightBooking(
@@ -127,41 +132,41 @@ class BookingController extends Controller
     }
 
 
-    public function addFlight(Request $request, BookingServices $bookingService)
-    {
-        $validated = $request->validate([
-            'bookingCode' => 'required|string',
-            'travelerPricing' => 'required|array',
-            'travelerPricing.travelerId' => 'required|integer',
-            'travelerPricing.travelerType' => 'required|string',
-            'travelerPricing.fareOption' => 'required|string',
-            'travelerPricing.price.total' => 'required|numeric',
-            'travelerPricing.price.base' => 'required|numeric',
-            'traveller' => 'nullable|array|min:1',
-            'traveller.*.firstname' => 'nullable|string',
-            'traveller.*.surname' => 'nullable|string',
-            'traveller.*.birth_date' => 'nullable|string',
-            'traveller.*.passport_expiry_date' => 'nullable|string',
-            'traveller.*.passport_nationality' => 'nullable|string',
-            'traveller.*.phone_number' => 'nullable|string',
-            'traveller.*.passport_issuance_date' => 'nullable|string',
-            'traveller.*.emailaddress' => 'nullable|string',
-            'payload' => 'required|array',
-            'result' => 'required|string',
-            'amadeusClientRef' => 'required|string',
-        ]);
-        $booking = $bookingService->createFlightBooking(
-            $validated['bookingCode'],
-            $validated['travelerPricing'],
-            $validated['payload'],
-            $validated['result'],
-            $validated['amadeusClientRef'],
-            $validated['traveller']
+    // public function addFlight(Request $request, BookingServices $bookingService)
+    // {
+    //     $validated = $request->validate([
+    //         'bookingCode' => 'required|string',
+    //         'travelerPricing' => 'required|array',
+    //         'travelerPricing.travelerId' => 'required|integer',
+    //         'travelerPricing.travelerType' => 'required|string',
+    //         'travelerPricing.fareOption' => 'required|string',
+    //         'travelerPricing.price.total' => 'required|numeric',
+    //         'travelerPricing.price.base' => 'required|numeric',
+    //         'traveller' => 'nullable|array|min:1',
+    //         'traveller.*.firstname' => 'nullable|string',
+    //         'traveller.*.surname' => 'nullable|string',
+    //         'traveller.*.birth_date' => 'nullable|string',
+    //         'traveller.*.passport_expiry_date' => 'nullable|string',
+    //         'traveller.*.passport_nationality' => 'nullable|string',
+    //         'traveller.*.phone_number' => 'nullable|string',
+    //         'traveller.*.passport_issuance_date' => 'nullable|string',
+    //         'traveller.*.emailaddress' => 'nullable|string',
+    //         'payload' => 'required|array',
+    //         'result' => 'required|string',
+    //         'amadeusClientRef' => 'required|string',
+    //     ]);
+    //     $booking = $bookingService->createFlightBooking(
+    //         $validated['bookingCode'],
+    //         $validated['travelerPricing'],
+    //         $validated['payload'],
+    //         $validated['result'],
+    //         $validated['amadeusClientRef'],
+    //         $validated['traveller']
 
-        );
+    //     );
 
-        return response()->json(['success' => true]);
-    }
+    //     return response()->json(['success' => true]);
+    // }
 
 
 
@@ -226,4 +231,19 @@ class BookingController extends Controller
         }
         return response()->json($reponse, 200);
     }
+    public function preProcessBookingFlight($booking_code){
+        $booking = $this->bookingService->preProcessBookingFlight($booking_code);
+        if (!$booking) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Booking not found'
+            ], 404);
+        }
+        return response()->json([
+            'status' => true,
+            'message' => 'Booking created successfully',
+            'data' => $booking
+        ], 200);
+    }
+    
 }

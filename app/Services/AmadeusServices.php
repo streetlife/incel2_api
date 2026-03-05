@@ -2,11 +2,13 @@
 
 namespace App\Services;
 
+use App\Mail\FlightBookingMail;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class AmadeusServices
 {
@@ -343,25 +345,40 @@ class AmadeusServices
 
         $flightBookingId = $result['data']['id'] ?? null;
         $flightPNR = $result['data']['associatedRecords'][0]['reference'] ?? null;
+        $ticketNumber = $result['data']['travelers'][0]['documents'][0]['number'] ?? null;
 
         if (!$flightBookingId || !$flightPNR) {
             return null;
         }
 
-
+        Log::info('ticketNumber', [
+            'ticketNumber' => $ticketNumber
+        ]);
         foreach ($bookingFlights as $flight) {
-            DB::table('booking_flights')
+            DB::table('bookings_flights')
                 ->where('booking_detail_code', $flight['booking_detail_code'])
                 ->update([
                     'flight_booking_id' => $flightBookingId,
-                    'flight_pnr' => $flightPNR,
+                    'flightPNR' => $flightPNR,
                 ]);
         }
 
         DB::table('bookings')
             ->where('booking_code', $bookingCode)
-            ->update(['status' => 'BOOKED']);
+            ->update(['booking_status' => 'BOOKED']);
+        // Send email here
+        foreach ($bookingFlights as $flight) {
+            if (!empty($flight['emailaddress'])) {
+                $emailData = [
+                    'name' => $flight['firstname'] . ' ' . $flight['surname'],
+                    'pnr' => $flightPNR,
+                    'ticket_number' => $ticketNumber,
+                    'flight_number' => $flight['flight_number'] ?? 'N/A',
+                ];
 
+                Mail::to($flight['emailaddress'])->send(new FlightBookingMail($emailData));
+            }
+        }
         return $flightPNR;
     }
     public function priceOfferOWC(array $flightOffers, string $clientRef): array
