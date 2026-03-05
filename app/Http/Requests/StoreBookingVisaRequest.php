@@ -47,8 +47,8 @@ class StoreBookingVisaRequest extends FormRequest
         'language_id'              => 'nullable|integer',
         'religion_id'              => 'nullable|integer',
 
-        'passport_photo'           => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
-        'passport_data_page'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+        // 'passport_photo'           => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
+        // 'passport_data_page'       => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
     ];
     }
 
