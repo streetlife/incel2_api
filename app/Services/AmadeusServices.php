@@ -376,7 +376,7 @@ class AmadeusServices
                     'flight_number' => $flight['flight_number'] ?? 'N/A',
                 ];
 
-                Mail::to($flight['emailaddress'])->send(new FlightBookingMail($emailData));
+                // Mail::to($flight['emailaddress'])->send(new FlightBookingMail($emailData));
             }
         }
         return $flightPNR;
