@@ -375,105 +375,154 @@ class BookingServices extends FlightServices
     }
     public function preProcessBookingFlight($booking_code)
     {
-        $bookingFlights = BookingFlights::where('booking_code', $booking_code)
-            ->get()
-            ->toArray();
+        try {
 
-        if (empty($bookingFlights)) {
-            throw new \Exception('No flights found for this booking');
-        }
+            $bookingFlights = BookingFlights::where('booking_code', $booking_code)
+                ->get()
+                ->toArray();
 
-        $flightSearchResult = json_decode($bookingFlights[0]['flight_session'], true);
-        $payload = json_decode($bookingFlights[0]['payload'], true);
-
-        $flightOption = $payload['flight_option'] ?? 'FSC';
-
-        $flightBooking = [
-            'data' => [
-                'type' => 'flight-order',
-                'flightOffers' => []
-            ]
-        ];
-
-        if ($flightOption === 'FSC') {
-
-            $flightBooking['data']['flightOffers'][] = $flightSearchResult[0];
-        }
-
-        if ($flightOption === 'OWC') {
-            $flightBooking['data']['flightOffers'][] = $flightSearchResult[0];
-            $flightBooking['data']['flightOffers'][] = $flightSearchResult[1];
-        }
-
-        $travellers = [];
-        $count = 0;
-
-        foreach ($bookingFlights as $flight) {
-
-            if ($flight['status'] !== 'NEW' && !is_null($flight['status'])) {
-                continue;
+            if (empty($bookingFlights)) {
+                throw new \Exception('No flights found for this booking');
             }
 
-            $this->validateTraveller($flight);
+            $flightSearchResult = json_decode($bookingFlights[0]['flight_session'], true);
+            $payload = json_decode($bookingFlights[0]['payload'], true);
 
-            $count++;
+            $flightOption = $payload['flight_option'] ?? 'FSC';
 
-            $travellers[] = [
-                'id' => (string) $count,
-                'dateOfBirth' => $flight['birth_date'],
-                'name' => [
-                    'firstName' => $flight['firstname'],
-                    'lastName' => $flight['surname'],
-                ],
-                'gender' => $this->normalizeGender($flight['gender']),
-                'contact' => [
-                    'emailAddress' => $flight['emailaddress'],
-                    'phones' => [[
-                        'deviceType' => 'MOBILE',
-                        'countryCallingCode' => $flight['dialling_code'],
-                        'number' => $flight['phone_number'],
+            $flightBooking = [
+                'data' => [
+                    'type' => 'flight-order',
+                    'flightOffers' => []
+                ]
+            ];
+
+            if ($flightOption === 'FSC') {
+                $flightBooking['data']['flightOffers'][] = $flightSearchResult[0];
+            }
+
+            if ($flightOption === 'OWC') {
+                $flightBooking['data']['flightOffers'][] = $flightSearchResult[0];
+                $flightBooking['data']['flightOffers'][] = $flightSearchResult[1];
+            }
+
+            $travellers = [];
+            $count = 0;
+
+            foreach ($bookingFlights as $flight) {
+
+                if ($flight['status'] !== 'NEW' && !is_null($flight['status'])) {
+                    continue;
+                }
+
+                $this->validateTraveller($flight);
+
+                $count++;
+
+                $travellers[] = [
+                    'id' => (string) $count,
+                    'dateOfBirth' => $flight['birth_date'],
+                    'name' => [
+                        'firstName' => $flight['firstname'],
+                        'lastName' => $flight['surname'],
+                    ],
+                    'gender' => $this->normalizeGender($flight['gender']),
+                    'contact' => [
+                        'emailAddress' => $flight['emailaddress'],
+                        'phones' => [[
+                            'deviceType' => 'MOBILE',
+                            'countryCallingCode' => $flight['dialling_code'],
+                            'number' => $flight['phone_number'],
+                        ]]
+                    ],
+                    'documents' => [[
+                        'documentType' => 'PASSPORT',
+                        'holder' => true,
+                        'number' => $flight['passport_number'],
+                        'expiryDate' => $flight['passport_expiry_date'],
+                        'issuanceCountry' => $flight['passport_country'],
+                        'nationality' => $flight['passport_nationality'],
                     ]]
-                ],
-                'documents' => [[
-                    'documentType' => 'PASSPORT',
-                    'holder' => true,
-                    'number' => $flight['passport_number'],
-                    'expiryDate' => $flight['passport_expiry_date'],
-                    'issuanceCountry' => $flight['passport_country'],
-                    'nationality' => $flight['passport_nationality'],
-                ]]
+                ];
+            }
+
+            if (empty($travellers)) {
+                throw new \Exception('No valid travellers found');
+            }
+
+            $flightBooking['data']['travelers'] = $travellers;
+
+            $flightBooking['data']['ticketingAgreement'] = [
+                'option' => 'DELAY_TO_CANCEL',
+                'delay' => '1D'
+            ];
+
+            $flightBooking['data']['formOfPayments'][] = [
+                'other' => [
+                    'method' => 'CASH',
+                    'flightOfferIds' => [
+                        (string) $flightSearchResult[0]['id']
+                    ]
+                ]
+            ];
+
+            $clientRef = $bookingFlights[0]['amadeus_client_ref'];
+
+            Log::info('Final Amadeus Payload', [
+                'payload' => $flightBooking
+            ]);
+
+
+            $amadeusResponse = $this->amadeusService->createFlightOrder(
+                $flightBooking,
+                $clientRef,
+                $booking_code,
+                $bookingFlights
+            );
+
+
+
+            $amadeusResponse = $this->amadeusService->createFlightOrder(
+                $flightBooking,
+                $clientRef,
+                $booking_code,
+                $bookingFlights
+            );
+
+            Log::info('Amadeus Service Response', [
+                'response' => $amadeusResponse
+            ]);
+
+            if (!$amadeusResponse || !is_array($amadeusResponse)) {
+                return [
+                    'status' => false,
+                    'message' => 'Invalid response from Amadeus service'
+                ];
+            }
+
+            if (!isset($amadeusResponse['status']) || $amadeusResponse['status'] === false) {
+                return [
+                    'status' => false,
+                    'message' => $amadeusResponse['message'] ?? 'Flight booking failed',
+                    'error' => $amadeusResponse['error'] ?? null
+                ];
+            }
+
+            return $amadeusResponse;
+
+            return $amadeusResponse;
+        } catch (\Exception $e) {
+
+            Log::error('PreProcessBookingFlight Error', [
+                'booking_code' => $booking_code,
+                'error' => $e->getMessage()
+            ]);
+
+            return [
+                'status' => false,
+                'message' => $e->getMessage()
             ];
         }
-
-        if (empty($travellers)) {
-            throw new \Exception('No valid travellers found');
-        }
-
-        $flightBooking['data']['travelers'] = $travellers;
-        $flightBooking['data']['ticketingAgreement'] = [
-            'option' => 'DELAY_TO_CANCEL',
-            'delay' => '1D'
-        ];
-
-        $flightBooking['data']['formOfPayments'][] = [
-            'other' => [
-                'method' => 'CASH',
-                'flightOfferIds' => [
-                    (string) $flightSearchResult[0]['id']
-                ]
-            ]
-        ];
-
-        $clientRef = $bookingFlights[0]['amadeus_client_ref'];
-        Log::info('Final Amadeus Payload', [
-            'payload' => $flightBooking
-        ]);
-        return $this->amadeusService->createFlightOrder(
-            $flightBooking,
-            $clientRef,
-            $booking_code,
-            $bookingFlights
-        );
     }
 
     private function validateTraveller($flight)

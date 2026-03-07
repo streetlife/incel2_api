@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreBookingVisaRequest;
 use App\Services\BookingServices;
+use FFI\Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -30,9 +31,9 @@ class BookingController extends Controller
             'traveller.*.phone_number' => 'nullable|string',
             'traveller.*.passport_issuance_date' => 'nullable|string',
             'traveller.*.emailaddress' => 'nullable|string',
-            'traveller.*.gender'=>'nullable|string',
+            'traveller.*.gender' => 'nullable|string',
             'traveller.*.passport_number' => 'nullable|string',
-            'traveller.*.passport_country'=>'nullable|string',
+            'traveller.*.passport_country' => 'nullable|string',
             'traveller.*.dialling_code' => 'nullable|integer',
             'bookingCode' => "nullable|string"
         ]);
@@ -231,19 +232,44 @@ class BookingController extends Controller
         }
         return response()->json($reponse, 200);
     }
-    public function preProcessBookingFlight($booking_code){
-        $booking = $this->bookingService->preProcessBookingFlight($booking_code);
-        if (!$booking) {
+    public function preProcessBookingFlight($booking_code)
+    {
+        try {
+
+            $booking = $this->bookingService->preProcessBookingFlight($booking_code);
+              if (!$booking || !isset($booking['status'])) {
             return response()->json([
                 'status' => false,
-                'message' => 'Booking not found'
-            ], 404);
+                'message' => 'Invalid response from booking service'
+            ], 500);
         }
-        return response()->json([
-            'status' => true,
-            'message' => 'Booking created successfully',
-            'data' => $booking
-        ], 200);
+
+
+            if (!$booking['status']) {
+                return response()->json([
+                    'status' => false,
+                    'message' => $booking['message'],
+                    // 'error' => $booking['error']
+                ], 400);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Booking processed successfully',
+                'data' => $booking
+            ], 200);
+        } catch (Exception $e) {
+
+            Log::error('PreProcess Booking Flight Error', [
+                'booking_code' => $booking_code,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Something went wrong',
+                'error' => $e->getMessage()
+            ], 400);
+        }
     }
-    
 }

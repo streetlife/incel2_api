@@ -323,6 +323,64 @@ class AmadeusServices
 
         return $response->json();
     }
+    // public function createFlightOrder($payload, $clientRef, $bookingCode, $bookingFlights)
+    // {
+    //     $token = $this->getToken();
+
+    //     $response = Http::withHeaders([
+    //         'Content-Type' => 'application/json',
+    //         'ama-client-ref' => $clientRef,
+    //         'Authorization' => 'Bearer ' . $token,
+    //     ])->post($this->baseUrl . 'v1/booking/flight-orders', $payload);
+
+    //     Log::info('Amadeus Request', $payload);
+    //     Log::info('Amadeus Response', $response->json());
+
+    //     if ($response->failed()) {
+    //         Log::error('Flight booking failed', $response->json());
+    //         return null;
+    //     }
+
+    //     $result = $response->json();
+
+    //     $flightBookingId = $result['data']['id'] ?? null;
+    //     $flightPNR = $result['data']['associatedRecords'][0]['reference'] ?? null;
+    //     $ticketNumber = $result['data']['travelers'][0]['documents'][0]['number'] ?? null;
+
+    //     if (!$flightBookingId || !$flightPNR) {
+    //         return null;
+    //     }
+
+    //     Log::info('ticketNumber', [
+    //         'ticketNumber' => $ticketNumber
+    //     ]);
+    //     foreach ($bookingFlights as $flight) {
+    //         DB::table('bookings_flights')
+    //             ->where('booking_detail_code', $flight['booking_detail_code'])
+    //             ->update([
+    //                 'flight_booking_id' => $flightBookingId,
+    //                 'flightPNR' => $flightPNR,
+    //             ]);
+    //     }
+
+    //     DB::table('bookings')
+    //         ->where('booking_code', $bookingCode)
+    //         ->update(['booking_status' => 'BOOKED']);
+    //     // Send email here
+    //     foreach ($bookingFlights as $flight) {
+    //         if (!empty($flight['emailaddress'])) {
+    //             $emailData = [
+    //                 'name' => $flight['firstname'] . ' ' . $flight['surname'],
+    //                 'pnr' => $flightPNR,
+    //                 'ticket_number' => $ticketNumber,
+    //                 'flight_number' => $flight['flight_number'] ?? 'N/A',
+    //             ];
+
+    //             // Mail::to($flight['emailaddress'])->send(new FlightBookingMail($emailData));
+    //         }
+    //     }
+    //     return $flightPNR;
+    // }
     public function createFlightOrder($payload, $clientRef, $bookingCode, $bookingFlights)
     {
         $token = $this->getToken();
@@ -337,8 +395,20 @@ class AmadeusServices
         Log::info('Amadeus Response', $response->json());
 
         if ($response->failed()) {
-            Log::error('Flight booking failed', $response->json());
-            return null;
+
+            $errorResponse = $response->json();
+
+            Log::error('Flight booking failed', $errorResponse);
+
+            $errorMessage = $errorResponse['errors'][0]['detail']
+                ?? $errorResponse['errors'][0]['title']
+                ?? 'Flight booking failed';
+
+            return [
+                'status' => false,
+                'message' => $errorMessage,
+                'error' => $errorResponse
+            ];
         }
 
         $result = $response->json();
@@ -348,12 +418,18 @@ class AmadeusServices
         $ticketNumber = $result['data']['travelers'][0]['documents'][0]['number'] ?? null;
 
         if (!$flightBookingId || !$flightPNR) {
-            return null;
+
+            return [
+                'status' => false,
+                'message' => 'Invalid booking response from Amadeus',
+                'error' => $result
+            ];
         }
 
         Log::info('ticketNumber', [
             'ticketNumber' => $ticketNumber
         ]);
+
         foreach ($bookingFlights as $flight) {
             DB::table('bookings_flights')
                 ->where('booking_detail_code', $flight['booking_detail_code'])
@@ -365,10 +441,14 @@ class AmadeusServices
 
         DB::table('bookings')
             ->where('booking_code', $bookingCode)
-            ->update(['booking_status' => 'BOOKED']);
-        // Send email here
+            ->update([
+                'booking_status' => 'BOOKED'
+            ]);
+
+        // Send email
         foreach ($bookingFlights as $flight) {
             if (!empty($flight['emailaddress'])) {
+
                 $emailData = [
                     'name' => $flight['firstname'] . ' ' . $flight['surname'],
                     'pnr' => $flightPNR,
@@ -379,7 +459,15 @@ class AmadeusServices
                 // Mail::to($flight['emailaddress'])->send(new FlightBookingMail($emailData));
             }
         }
-        return $flightPNR;
+
+        return [
+            'status' => true,
+            'message' => 'Flight booked successfully',
+            'data' => [
+                'pnr' => $flightPNR,
+                'ticket_number' => $ticketNumber
+            ]
+        ];
     }
     public function priceOfferOWC(array $flightOffers, string $clientRef): array
     {
