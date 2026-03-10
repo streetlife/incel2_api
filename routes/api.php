@@ -9,6 +9,7 @@ use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\FlutterwaveController;
 use App\Http\Controllers\HotelController;
 use App\Http\Controllers\PaystackController;
+use App\Http\Controllers\ServiceRequestController;
 use App\Http\Controllers\TourController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VisaController;
@@ -39,6 +40,13 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/check-user', [AuthController::class, 'checkUser']);
+Route::prefix('services')->group(function () {
+    Route::post('/insurance', [ServiceRequestController::class, 'createInsuranceService']);
+    Route::post('/airport-transfer', [ServiceRequestController::class, 'airportTransfer']);
+    Route::get('/packages', [ServiceRequestController::class, 'getTravelPackages']);
+    Route::get('/packages/search/{country_code}', [ServiceRequestController::class, 'searchPackages']);
+    Route::post('/contact', [ServiceRequestController::class, 'store']);
+});
 
 Route::prefix('flights')->group(function () {
     Route::post('/search', [FlightController::class, 'search']);
@@ -48,7 +56,7 @@ Route::prefix('flights')->group(function () {
     Route::post('/search-result', [FlightController::class, 'searchFlights']);
     Route::post('/book-flight', [FlightController::class, 'bookFlight']);
     Route::get('/airports/search', [AirportController::class, 'search']);
-    Route::get('/preProcessBookingFlight/{booking_code}',[BookingController::class, 'preProcessBookingFlight']);
+    Route::get('/preProcessBookingFlight/{booking_code}', [BookingController::class, 'preProcessBookingFlight']);
 });
 Route::prefix('countries')->group(function () {
     Route::get('/dialing-codes', [CountryController::class, 'dialingCodes']);
@@ -105,7 +113,7 @@ Route::prefix('visas')->group(function () {
     Route::post('/search', [VisaController::class, 'search']);
     Route::get('/session/{session_code}', [VisaController::class, 'getSession']);
     Route::post('/create-visa', [BookingController::class, 'addVisa']);
-    Route::post('/payment',[VisaController::class,'payment']);
+    Route::post('/payment', [VisaController::class, 'payment']);
 
     Route::prefix('travellers')->group(function () {
         Route::get('/', [TravelController::class, 'index']);

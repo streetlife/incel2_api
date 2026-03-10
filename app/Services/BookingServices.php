@@ -509,8 +509,6 @@ class BookingServices extends FlightServices
             }
 
             return $amadeusResponse;
-
-            return $amadeusResponse;
         } catch (\Exception $e) {
 
             Log::error('PreProcessBookingFlight Error', [

@@ -254,9 +254,8 @@ class BookingController extends Controller
             }
 
             return response()->json([
-                'status' => true,
-                'message' => 'Booking processed successfully',
-                'data' => $booking
+                
+            'data' => $booking
             ], 200);
         } catch (Exception $e) {
 
