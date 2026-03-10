@@ -103,7 +103,8 @@ class ServiceRequestController extends Controller
                 'name' => ['required', 'string', 'max:100'],
                 'email' => ['required', 'email', 'max:100'],
                 'mobile_phone' => ['required', 'string', 'max:20'],
-                'message' => ['required', 'string']
+                'message' => ['required', 'string'],
+                'subject' =>['required', 'string'],
             ]);
 
             $contact = $this->service->createContact($validated);
