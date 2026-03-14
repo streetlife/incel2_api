@@ -104,7 +104,7 @@ class ServiceRequestController extends Controller
                 'email' => ['required', 'email', 'max:100'],
                 'mobile_phone' => ['required', 'string', 'max:20'],
                 'message' => ['required', 'string'],
-                'subject' =>['required', 'string'],
+                'subject' => ['required', 'string'],
             ]);
 
             $contact = $this->service->createContact($validated);
@@ -119,6 +119,69 @@ class ServiceRequestController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+    public function airportProtocol(Request $request)
+    {
+        $data = $request->all();
+        $result = $this->service->airportProtocol($data);
+        return response()->json([
+            'status' => true,
+            'message' => 'Airport protocol request created successfully',
+            'data' => $result
+        ], 201);
+        if (!$result) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Something went wrong',
+            ], 500);
+        }
+    }
+    public function tourGuide(Request $request)
+    {
+        $data = $request->all();
+        $result = $this->service->tourGuide($data);
+        return response()->json([
+            'status' => true,
+            'message' => 'Tour guide request created successfully',
+            'data' => $result
+        ], 201);
+        if (!$result) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Something went wrong',
+            ], 500);
+        }
+    }
+    public function hotDeals(Request $request)
+    {
+        $data = $request->all();
+        $result = $this->service->hotDeals($data);
+        return response()->json([
+            'status' => true,
+            'message' => 'Hot deals request created successfully',
+            'data' => $result
+        ], 201);
+        if (!$result) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Something went wrong',
+            ], 500);
+        }
+    }
+    public function getHotdeals()
+    {
+        $hotdeals = $this->service->getHotdeals();
+        return response()->json([
+            'status' => true,
+            'message' => 'Successsful',
+            'data' => $hotdeals
+        ], 200);
+        if (!$hotdeals) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Something went wrong',
             ], 500);
         }
     }

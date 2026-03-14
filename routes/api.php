@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AboutusController;
 use App\Http\Controllers\AirportController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookingController;
@@ -8,6 +9,7 @@ use App\Http\Controllers\CountryController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\FlutterwaveController;
 use App\Http\Controllers\HotelController;
+use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\PaystackController;
 use App\Http\Controllers\ServiceRequestController;
 use App\Http\Controllers\TourController;
@@ -43,9 +45,14 @@ Route::post('/check-user', [AuthController::class, 'checkUser']);
 Route::prefix('services')->group(function () {
     Route::post('/insurance', [ServiceRequestController::class, 'createInsuranceService']);
     Route::post('/airport-transfer', [ServiceRequestController::class, 'airportTransfer']);
+    Route::post('/airport-protocol', [ServiceRequestController::class, 'airportProtocol']);
+    Route::post('/hot-deal',[ServiceRequestController::class, 'hotDeals']);
+    Route::post('/tour-guide',[ServiceRequestController::class, 'tourGuide']);
     Route::get('/packages', [ServiceRequestController::class, 'getTravelPackages']);
     Route::get('/packages/search/{country_code}', [ServiceRequestController::class, 'searchPackages']);
+    Route::get('/hotdeals',[ServiceRequestController::class, 'getHotdeals']);
     Route::post('/contact', [ServiceRequestController::class, 'store']);
+    
 });
 
 Route::prefix('flights')->group(function () {
@@ -123,4 +130,10 @@ Route::prefix('visas')->group(function () {
         Route::patch('/{access_code}', [TravelController::class, 'update']);
         Route::get('/generate/booking-code', [TravelController::class, 'generateBookingCode']);
     });
+});
+
+Route::post('/subscribe', [NewsletterController::class, 'sendNewsletter']);
+Route::prefix('about-us')->group(function () {
+    Route::post('/create', [AboutusController::class, 'create']);
+    Route::get('/', [AboutusController::class, 'getAll']);
 });
