@@ -27,6 +27,7 @@ class AboutusController extends Controller
         try {
 
             $data = $this->aboutusServices->getAllAbout();
+            
             return response()->json(['stauts' => true, 'message' => 'Successfully', 'data' => $data], 200);
         } catch (\Throwable $th) {
 

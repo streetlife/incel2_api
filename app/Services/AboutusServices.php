@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Http\Resources\AboutusResource;
 use App\Models\AboutUs;
 
 class AboutusServices
@@ -33,7 +34,9 @@ class AboutusServices
         return  secured_path('uploads/about/' . $imageName);
     }
 
-    public function getAllAbout(){
-        return AboutUs::all();
+    public function getAllAbout()
+    {
+        $data = $data = AboutUs::first();
+        return new AboutusResource($data);
     }
 }

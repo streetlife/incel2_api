@@ -7,6 +7,7 @@ use App\Models\AirportProtocol;
 use App\Models\AirportTransfer;
 use App\Models\Contact;
 use App\Models\HotDeal;
+use App\Models\Hotel;
 use App\Models\InsuranceServiceRequest;
 use App\Models\Package;
 use App\Models\TourGuide;
@@ -116,5 +117,9 @@ class RequestServices
     }
     public function getHotdeals(){
         return HotDeal::all();
+    }
+    public function getHotdealslById($id){
+        return HotDeal::find($id);
+        
     }
 }

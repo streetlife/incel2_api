@@ -185,4 +185,19 @@ class ServiceRequestController extends Controller
             ], 500);
         }
     }
+    public function getHotdealsById($id){
+        $hotdeals = $this->service->getHotdealslById($id);
+        if($hotdeals){
+            return response()->json([
+                'status' => true,
+                'message' => 'Successsful',
+                'data' => $hotdeals
+            ], 200);
+        }else{
+            return response()->json([
+                'status' => false,
+                'message' => 'Something went wrong',
+            ], 500);    
+        }
+    }
 }

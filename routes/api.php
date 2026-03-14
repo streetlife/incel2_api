@@ -47,6 +47,7 @@ Route::prefix('services')->group(function () {
     Route::post('/airport-transfer', [ServiceRequestController::class, 'airportTransfer']);
     Route::post('/airport-protocol', [ServiceRequestController::class, 'airportProtocol']);
     Route::post('/hot-deal',[ServiceRequestController::class, 'hotDeals']);
+    Route::get('/hot-deal/{id}', [ServiceRequestController::class, 'getHotdeals']);
     Route::post('/tour-guide',[ServiceRequestController::class, 'tourGuide']);
     Route::get('/packages', [ServiceRequestController::class, 'getTravelPackages']);
     Route::get('/packages/search/{country_code}', [ServiceRequestController::class, 'searchPackages']);
