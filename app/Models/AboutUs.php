@@ -20,9 +20,7 @@ class AboutUs extends Model
     ];
 
     protected $casts = [
-        'story' => 'array',
         'our_promise' => 'array',
         'core_value' => 'array',
-        'our_mission' => 'array'
     ];
 }

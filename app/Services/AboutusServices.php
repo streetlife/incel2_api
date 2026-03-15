@@ -11,7 +11,11 @@ class AboutusServices
     public function createAbout($data)
     {
         $data = $this->handleImages($data);
-        return AboutUs::create($data);
+
+        return AboutUs::updateOrCreate(
+            ['id' => 1],
+            $data                        
+        );
     }
 
     protected function handleImages($data)

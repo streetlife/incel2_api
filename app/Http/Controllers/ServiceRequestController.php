@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreAirportTransferRequest;
 use App\Http\Requests\StoreServiceRequest;
+use App\Http\Resources\HotdealResource;
+use App\Http\Resources\PackageResource;
 use App\Services\RequestServices;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -176,7 +178,7 @@ class ServiceRequestController extends Controller
         return response()->json([
             'status' => true,
             'message' => 'Successsful',
-            'data' => $hotdeals
+            'data' => HotdealResource::collection($hotdeals)
         ], 200);
         if (!$hotdeals) {
             return response()->json([
@@ -185,19 +187,36 @@ class ServiceRequestController extends Controller
             ], 500);
         }
     }
-    public function getHotdealsById($id){
+    public function getHotdealsById($id)
+    {
         $hotdeals = $this->service->getHotdealslById($id);
-        if($hotdeals){
+        if ($hotdeals) {
             return response()->json([
                 'status' => true,
-                'message' => 'Successsful',
-                'data' => $hotdeals
+                'message' => 'Succesessful',
+                'data' => new HotdealResource($hotdeals)
             ], 200);
-        }else{
+        } else {
             return response()->json([
                 'status' => false,
                 'message' => 'Something went wrong',
-            ], 500);    
+            ], 500);
+        }
+    }
+    public function getTravelPackageById($id)
+    {
+        $travelPackage = $this->service->getTravelPackageById($id);
+        if ($travelPackage) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Succesessful',
+                'data' => new PackageResource($travelPackage)
+            ], 200);
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'Something went wrong',
+            ], 500);
         }
     }
 }

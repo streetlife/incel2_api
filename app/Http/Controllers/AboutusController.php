@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\AboutusResource;
 use App\Services\AboutusServices;
 use Illuminate\Http\Request;
 

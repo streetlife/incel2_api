@@ -119,7 +119,12 @@ class RequestServices
         return HotDeal::all();
     }
     public function getHotdealslById($id){
-        return HotDeal::find($id);
+        $data =HotDeal::findorFail($id);
+        return $data;
         
+    }
+    public function getTravelPackageById($id){
+        $data =Package::findorFail($id);
+        return $data;
     }
 }
