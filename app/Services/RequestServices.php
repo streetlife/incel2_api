@@ -179,23 +179,32 @@ class RequestServices
         $publicId = null;
 
         if ($videoFile) {
+
+            $existing = HeroSection::first();
+            if ($existing && $existing->public_id) {
+                $this->cloudinary->delete($existing->public_id);
+            }
+
             $upload = $this->cloudinary->uploadVideo($videoFile, 'heroSection');
 
             $videoUrl = $upload['url'];
             $publicId = $upload['public_id'];
         }
 
-        return HeroSection::create([
-            'title' => $data['title'],
-            'description' => $data['description'],
-            'video_url' => $videoUrl,
-            'public_id' => $publicId,
-        ]);
+        return HeroSection::updateOrCreate(
+            ['id' => 1],
+            [
+                'title'       => $data['title'],
+                'description' => $data['description'],
+                'video_url'   => $videoUrl ?? HeroSection::first()?->video_url,
+                'public_id'   => $publicId ?? HeroSection::first()?->public_id,
+            ]
+        );
     }
 
     public function getHeroSection()
     {
-        return HeroSection::all();
+        return HeroSection::first();
     }
     public function createVideoTestmonial(array $data, $videoFile = null)
     {

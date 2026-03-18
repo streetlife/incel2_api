@@ -37,6 +37,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('users')->group(function () {
         Route::get('/users-by-code/{userCode}', [UserController::class, 'getUserByUserCode']);
         Route::get('/auth-users-by-email', [UserController::class, 'getAuthenticatedUserByEmail']);
+        Route::get('/user-profile',[AuthController::class,'getProfile']);
     });
 });
 Route::get('/reviews', [UserController::class, 'index']);
