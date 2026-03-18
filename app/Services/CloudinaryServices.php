@@ -3,9 +3,8 @@
 namespace App\Services;
 
 use Cloudinary\Cloudinary;
-use PhpParser\Node\Scalar\String_;
 
-class CloudinaryService
+class CloudinaryServices
 {
     protected string $key;
     protected string $secret;

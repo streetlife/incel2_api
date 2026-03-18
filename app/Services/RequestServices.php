@@ -19,7 +19,7 @@ use App\Models\VideoTestimonial;
 class RequestServices
 {
 
-    public function __construct(protected CloudinaryService $cloudinary) {}
+    public function __construct(protected CloudinaryServices $cloudinary) {}
     public function createInsuranceService($data)
     {
 

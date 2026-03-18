@@ -87,7 +87,7 @@ class AuthController extends Controller
                 'message' => 'Invalid credentials'
             ], 401);
         }
-         $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken('auth_token')->plainTextToken;
         return response()->json([
             'success' => true,
             'message' => 'Login successful',
@@ -138,4 +138,36 @@ class AuthController extends Controller
             'message' => 'Logged out successfully'
         ]);
     }
+    public function getProfile(Request $request)
+    {
+        $user = Auth::user();
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile retrieved successfully',
+            'data' => $user
+        ]);
+    }
+    public function updateProfile(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            $user->full_names = $request->full_names;
+            $user->mobile_number = $request->mobile_number;
+            $user->save();
+
+            return response()->json([
+                'status'  => true,
+                'message' => 'Profile updated successfully',
+                'data'    => $user
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Failed to update profile',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
+    }
+    
 }

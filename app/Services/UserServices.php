@@ -21,4 +21,5 @@ class userServices
         $user = User::where('email_address', $auth_user->email_address)->first();
         return $user;
     }
+    public function 
 }

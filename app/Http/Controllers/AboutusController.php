@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AboutusResource;
 use App\Services\AboutusServices;
+use Exception;
 use Illuminate\Http\Request;
 
 class AboutusController extends Controller
@@ -17,7 +18,7 @@ class AboutusController extends Controller
             //code...
             $data = $this->aboutusServices->createAbout($request->all());
             return response()->json(['stauts' => true, 'message' => 'Successfully', 'data' => $data], 201);
-        } catch (\Throwable $th) {
+        } catch (Exception $th) {
             //throw $th;
             return response()->json(['stauts' => false, 'message' =>$th->getMessage() ], 500);
         }
