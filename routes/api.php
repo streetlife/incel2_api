@@ -39,6 +39,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/auth-users-by-email', [UserController::class, 'getAuthenticatedUserByEmail']);
     });
 });
+Route::get('/reviews', [UserController::class, 'index']);
+Route::post('/reviews', [UserController::class, 'store']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/check-user', [AuthController::class, 'checkUser']);
@@ -46,16 +48,21 @@ Route::prefix('services')->group(function () {
     Route::post('/insurance', [ServiceRequestController::class, 'createInsuranceService']);
     Route::post('/airport-transfer', [ServiceRequestController::class, 'airportTransfer']);
     Route::post('/airport-protocol', [ServiceRequestController::class, 'airportProtocol']);
-    Route::post('/hot-deal',[ServiceRequestController::class, 'hotDeals']);
-    Route::post('/tour-guide',[ServiceRequestController::class, 'tourGuide']);
+    Route::post('/hot-deal', [ServiceRequestController::class, 'hotDeals']);
+    Route::post('/tour-guide', [ServiceRequestController::class, 'tourGuide']);
     Route::get('/packages', [ServiceRequestController::class, 'getTravelPackages']);
     Route::get('/packages/search/{country_code}', [ServiceRequestController::class, 'searchPackages']);
-    Route::get('/hotdeals',[ServiceRequestController::class, 'getHotdeals']);
+    Route::get('/hotdeals', [ServiceRequestController::class, 'getHotdeals']);
     Route::get('/hot-deal/{id}', [ServiceRequestController::class, 'getHotdealsById']);
     Route::get('/travel-package/{id}', [ServiceRequestController::class, 'getTravelPackageById']);
-  
+    Route::post('/add-stats', [ServiceRequestController::class, 'addStats']);
+    Route::get('/stats', [ServiceRequestController::class, 'getStats']);
+    Route::get('/partner', [ServiceRequestController::class, 'getAllPartner']);
+    Route::post('/hero-section', [ServiceRequestController::class, 'createHeroSection']);
+    Route::get('/hero-section', [ServiceRequestController::class, 'getHeroSection']);
+    Route::post('/testmonial', [ServiceRequestController::class, 'createVideoTestmonial']);
+    Route::post('/package/{id}',[ServiceRequestController::class, 'update']);
     Route::post('/contact', [ServiceRequestController::class, 'store']);
-    
 });
 
 Route::prefix('flights')->group(function () {

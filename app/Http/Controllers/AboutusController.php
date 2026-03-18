@@ -19,7 +19,7 @@ class AboutusController extends Controller
             return response()->json(['stauts' => true, 'message' => 'Successfully', 'data' => $data], 201);
         } catch (\Throwable $th) {
             //throw $th;
-            return response()->json(['stauts' => false, 'message' => 'Something went wrong'], 500);
+            return response()->json(['stauts' => false, 'message' =>$th->getMessage() ], 500);
         }
     }
 

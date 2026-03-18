@@ -7,6 +7,7 @@ use App\Http\Requests\StoreAirportTransferRequest;
 use App\Http\Requests\StoreServiceRequest;
 use App\Http\Resources\HotdealResource;
 use App\Http\Resources\PackageResource;
+use App\Models\Package;
 use App\Services\RequestServices;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -78,6 +79,43 @@ class ServiceRequestController extends Controller
                 'message' => $e->getMessage()
             ], 500);
         }
+    }
+    public function update(Request $request, $id)
+    {
+        
+        $validated = $request->validate([
+            'name' => 'sometimes|string',
+            'description' => 'sometimes|string',
+            'picture1' => 'nullable|file|image',
+            'picture2' => 'nullable|file|image',
+            'picture3' => 'nullable|file|image',
+            'picture4' => 'nullable|file|image',
+            'banner'   => 'nullable|file|image',
+            'poster'   => 'nullable|file|image',
+        ]);
+
+        
+        $files = [
+            'picture1' => $request->file('picture1'),
+            'picture2' => $request->file('picture2'),
+            'picture3' => $request->file('picture3'),
+            'picture4' => $request->file('picture4'),
+            'banner'   => $request->file('banner'),
+            'poster'   => $request->file('poster'),
+        ];
+
+        
+        $package = $this->service->updateTravelPackage(
+            $validated,
+            $id,
+            $files
+        );
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Package updated successfully',
+            'data' => $package
+        ]);
     }
     public function searchPackages($country_code)
     {
@@ -218,5 +256,111 @@ class ServiceRequestController extends Controller
                 'message' => 'Something went wrong',
             ], 500);
         }
+    }
+
+    public function addStats(Request $request)
+    {
+        $data = $this->service->addStats($request->all());
+        if ($data) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Successsful',
+                'data' => $data
+            ], 200);
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'Something went wrong',
+            ], 500);
+        }
+    }
+    public function getStats()
+    {
+        $stats = $this->service->getStats();
+        return response()->json([
+            'status' => true,
+            'message' => 'Successsful',
+            'data' => $stats
+        ], 200);
+        if (!$stats) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Something went wrong',
+            ], 500);
+        }
+    }
+    public function getAllPartner()
+    {
+        $partners = $this->service->getAllPartner();
+        return response()->json([
+            'status' => true,
+            'message' => 'Successsful',
+            'data' => $partners
+        ], 200);
+        if (!$partners) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Something went wrong',
+            ], 500);
+        }
+    }
+
+    public function createHeroSection(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'video' => 'nullable|file|mimes:mp4,mov,avi|max:51200',
+        ]);
+
+        $result = $this->service->createHeroSection(
+            $validated,
+            $request->file('video')
+        );
+        if (!$result) {
+            return response()->json(['status' => false, 'message' => 'Something went wrong'], 500);
+        }
+        return response()->json([
+            'status' => true,
+            'message' => 'hero video created successfully',
+            'data' =>  $result
+        ], 201);
+    }
+    public function getHeroSection()
+    {
+        $heroSection = $this->service->getHeroSection();
+        if ($heroSection) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Successsful',
+                'data' => $heroSection
+            ], 200);
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'Something went wrong',
+            ], 500);
+        }
+    }
+    public function createVideoTestmonial(Request $request)
+    {
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name'  => 'required|string|max:255',
+            'country'    => 'required|string|max:255',
+            'rating'     => 'required|numeric|min:1|max:5',
+            'comment'    => 'required|string',
+            'video'      => 'nullable|file|mimes:mp4,mov,avi|max:51200',
+        ]);
+        $review = $this->service->createVideoTestmonial(
+            $validated,
+            $request->file('video')
+        );
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Video testmonials created successfully',
+            'data' => $review
+        ], 201);
     }
 }

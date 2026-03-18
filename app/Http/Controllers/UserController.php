@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Review;
 use App\Services\userServices;
 use Exception;
 use Illuminate\Http\Request;
@@ -37,5 +38,33 @@ class UserController extends Controller
             Log::error($e->getMessage());
             return response()->json(['message' => 'Something went wrong'], 500);
         }
+    }
+    public function index()
+    {
+        $reviews = Review::latest()->get();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Reviews fetched successfully',
+            'data' => $reviews
+        ], 200);
+    }
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name'  => 'required|string|max:255',
+            'rating'     => 'required|numeric|min:1|max:5',
+            'review'     => 'required|string',
+            'country'    => 'required|string|max:255',
+        ]);
+
+        $review = Review::create($validated);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Review created successfully',
+            'data' => $review
+        ], 201);
     }
 }

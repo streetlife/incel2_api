@@ -6,15 +6,20 @@ use App\Http\Resources\PackageResource;
 use App\Models\AirportProtocol;
 use App\Models\AirportTransfer;
 use App\Models\Contact;
+use App\Models\HeroSection;
 use App\Models\HotDeal;
 use App\Models\Hotel;
 use App\Models\InsuranceServiceRequest;
 use App\Models\Package;
+use App\Models\Partners;
+use App\Models\Stats;
 use App\Models\TourGuide;
+use App\Models\VideoTestimonial;
 
 class RequestServices
 {
 
+    public function __construct(protected CloudinaryService $cloudinary) {}
     public function createInsuranceService($data)
     {
 
@@ -101,30 +106,117 @@ class RequestServices
         }
         return $result;
     }
-    public  function tourGuide($data){
+    public  function tourGuide($data)
+    {
         if (empty($data['terms_and_conditions']) || $data['terms_and_conditions'] == false) {
             throw new \Exception('Please accept the terms and conditions');
         }
-           $result = TourGuide::create($data);
-           if (!$result) {
+        $result = TourGuide::create($data);
+        if (!$result) {
             throw new \Exception('Error creating tour guide request');
         }
         return $result;
- 
     }
-    public function hotDeals($data){
+    public function hotDeals($data)
+    {
         return HotDeal::create($data);
     }
-    public function getHotdeals(){
+    public function getHotdeals()
+    {
         return HotDeal::all();
     }
-    public function getHotdealslById($id){
-        $data =HotDeal::findorFail($id);
+    public function getHotdealslById($id)
+    {
+        $data = HotDeal::findorFail($id);
         return $data;
-        
     }
-    public function getTravelPackageById($id){
-        $data =Package::findorFail($id);
+    public function getTravelPackageById($id)
+    {
+        $data = Package::findorFail($id);
         return $data;
+    }
+    public function updateTravelPackage($data, $id, $files = [])
+    {
+        $package = Package::findOrFail($id);
+
+
+        $fields = ['picture1', 'picture2', 'picture3', 'picture4', 'banner', 'poster'];
+
+        foreach ($fields as $field) {
+            if (isset($files[$field])) {
+                $upload = $this->cloudinary->upload($files[$field], 'package');
+                $package->$field = $upload['url'];
+            }
+        }
+
+
+        foreach ($data as $key => $value) {
+            $package->$key = $value;
+        }
+
+
+        $package->save();
+
+        return $package;
+    }
+    public function addStats($data)
+    {
+        $data = new Stats($data);
+        $data->save();
+        return $data;
+    }
+    public function getStats()
+    {
+        return Stats::all();
+    }
+    public function getAllPartner()
+    {
+        return Partners::all();
+    }
+    public function createHeroSection(array $data, $videoFile = null)
+    {
+        $videoUrl = null;
+        $publicId = null;
+
+        if ($videoFile) {
+            $upload = $this->cloudinary->uploadVideo($videoFile, 'heroSection');
+
+            $videoUrl = $upload['url'];
+            $publicId = $upload['public_id'];
+        }
+
+        return HeroSection::create([
+            'title' => $data['title'],
+            'description' => $data['description'],
+            'video_url' => $videoUrl,
+            'public_id' => $publicId,
+        ]);
+    }
+
+    public function getHeroSection()
+    {
+        return HeroSection::all();
+    }
+    public function createVideoTestmonial(array $data, $videoFile = null)
+    {
+        $videoUrl = null;
+        $publicId = null;
+
+        if ($videoFile) {
+            $upload = $this->cloudinary->uploadVideo($videoFile, 'VideoTestimonial');
+
+            $videoUrl = $upload['url'];
+            $publicId = $upload['public_id'];
+        }
+
+        return VideoTestimonial::create([
+            'first_name' => $data['first_name'],
+            'last_name'  => $data['last_name'],
+            'country'    => $data['country'],
+            'rating'     => $data['rating'],
+            'comment'    => $data['comment'],
+            'video_url'  => $videoUrl,
+            'public_id'  => $publicId,
+        ]);
     }
 }
