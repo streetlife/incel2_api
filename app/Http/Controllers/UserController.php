@@ -7,6 +7,7 @@ use App\Models\Review;
 use App\Services\userServices;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
@@ -67,4 +68,9 @@ class UserController extends Controller
             'data' => $review
         ], 201);
     }
+
+    // public function  dashbaord(){
+    //     $auth = Auth()->user();
+    //     $totalBooking = 
+    // }
 }

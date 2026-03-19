@@ -9,14 +9,14 @@ class RezliveServices {
     protected $url;
     protected $agent;
     protected $username;
-    protected $password;
+    protected $key;
     protected $content_url;
 
     public function __construct() {
         $this->url = config("rezlive.rezlive_url");
         $this->agent = config("rezlive.rezlive_agent_code");
         $this->username = config("rezlive.rezlive_username");
-        $this->password = config("rezlive.relive_password");
+        $this->key = config("rezlive.relive_api_key");
         $this->content_url = config("rezlive.content_url");
          
     }
@@ -62,7 +62,7 @@ class RezliveServices {
         <Authentication>
             <AgentCode>{$this->agent}</AgentCode>
             <UserName>{$this->username}</UserName>
-            <Password>{$this->password}</Password>
+            <Password>{$this->key}</Password>
         </Authentication>
         <Booking>
             <ArrivalDate>{$arrivalDate}</ArrivalDate>

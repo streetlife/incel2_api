@@ -15,12 +15,24 @@ class PartnersSeeder extends Seeder
     {
         $partners = [
             [
-                'name' => 'Partner 1',
+                'name' => 'Amadeous',
                 'logo' => 'partner1_logo.png',
+                "type" => "Airline",
             ],
             [
-                'name' => 'Partner 2',
+                'name' => 'Rezlive',
                 'logo' => 'partner2_logo.png',
+                "type" => "Hotel",
+            ],
+             [
+                'name' => 'RAYNA_KEY',
+                'logo' => 'partner1_logo.png',
+                "type" => "Tour",
+            ],
+            [
+                'name' => 'Rezlive',
+                'logo' => 'partner2_logo.png',
+                "type" => "Hotel",
             ],
         ];
         collect($partners)->each(function ($partner) {

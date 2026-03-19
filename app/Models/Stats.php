@@ -10,6 +10,8 @@ class Stats extends Model
     use HasFactory;
     protected $fillable = [
         'destinations',
-        'years_of_experience'
+        'years_of_experience',
+        'happy_travellers',
+        'statisfaction_rate'
     ];
 }
