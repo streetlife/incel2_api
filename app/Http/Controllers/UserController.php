@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Review;
 use App\Services\userServices;
+use App\Services\UserServices as ServicesUserServices;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
-    public function __construct(public userServices $userServices) {}
+    public function __construct(protected ServicesUserServices $userServices) {}
 
     public function getUserByUserCode($userCode)
     {
