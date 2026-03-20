@@ -74,4 +74,8 @@ class UserController extends Controller
     //     $auth = Auth()->user();
     //     $totalBooking = 
     // }
+
+    public function getBooking(Request $request){
+        
+    }
 }
