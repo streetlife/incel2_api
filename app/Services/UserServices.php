@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
-class userServices
+class UserServices
 {
 
     public function getUserByUserCode($userCode)
@@ -22,4 +22,5 @@ class userServices
         return $user;
     }
     
+
 }

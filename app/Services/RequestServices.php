@@ -167,7 +167,7 @@ class RequestServices
     }
     public function getStats()
     {
-        return Stats::all();
+        return Stats::first();
     }
     public function getAllPartner()
     {
