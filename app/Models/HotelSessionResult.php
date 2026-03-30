@@ -9,6 +9,7 @@ class HotelSessionResult extends Model
 {
     use HasFactory;
     protected $table = 'sessions_hotels_results';
+    public $timestamps = false;
     protected $guarded = [];
     
     protected $fillable = [

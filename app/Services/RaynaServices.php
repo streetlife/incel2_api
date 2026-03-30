@@ -26,7 +26,7 @@ class RaynaServices
     {
         try {
 
-            $response = Http::withHeaders([
+            $response =Http::withHeaders([
                 'Authorization' => 'Bearer' . $this->key,
                 'Content-Type'  => 'application/json',
             ])

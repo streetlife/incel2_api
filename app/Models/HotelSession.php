@@ -10,6 +10,7 @@ class HotelSession extends Model
     use HasFactory;
     protected $table = 'sessions_hotels';
     protected $guarded = [];
+    public $timestamps = false;
     protected $fillable = [
         'session_code',
         'country_code',

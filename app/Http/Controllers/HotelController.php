@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Services\HotelServices;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class HotelController extends Controller
 {
@@ -15,7 +16,7 @@ class HotelController extends Controller
         $this->hotelService = $hotelService;
     }
 
-    
+
     public function countries()
     {
         return response()->json(
@@ -44,24 +45,20 @@ class HotelController extends Controller
         return response()->json($hotel);
     }
 
-   
+
     public function search(Request $request)
     {
-        $validated = $request->validate([
-            'search_hotel_nationality' => 'required|string',
-            'search_hotel_country' => 'required|string',
-            'search_hotel_city' => 'required|string',
-            'daterange' => 'required|string',
-            'room_number' => 'required|integer|min:1',
-            'adult_number' => 'required|integer|min:1',
-        ]);
-
+        Log::info('Search request payload', $request->all());
         return response()->json(
-            $this->hotelService->search($request->all())
+            $this->hotelService->search(
+                $request->all(),
+                $request->input('arrival_date'),
+                $request->input('departure_date')
+            )
         );
     }
 
-   
+
     public function amenities(string $hotelCode)
     {
         return response()->json(
