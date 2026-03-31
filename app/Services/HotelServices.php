@@ -25,14 +25,14 @@ class HotelServices
     public function getCountries()
     {
         return HotelCountry::orderBy('country_name')
-            ->pluck('country_name', 'country_code');
+            ->get(['country_name as name', 'country_code as code']);
     }
 
     public function getCities(string $countryCode)
     {
         return HotelCities::where('country_code', $countryCode)
             ->orderBy('city_name')
-            ->pluck('city_name', 'city_code');
+            ->get(['city_name as name', 'city_code as code']);
     }
 
     public function getHotel(string $hotelCode)
