@@ -48,14 +48,13 @@ class HotelController extends Controller
 
     public function search(Request $request)
     {
-        Log::info('Search request payload', $request->all());
-        return response()->json(
-            $this->hotelService->search(
-                $request->all(),
-                $request->input('arrival_date'),
-                $request->input('departure_date')
-            )
+        // Log::info('Search request payload', $request->all());
+        $data = $this->hotelService->search(
+            $request->all(),
+            $request->input('arrival_date'),
+            $request->input('departure_date')
         );
+        return $data;
     }
 
 
