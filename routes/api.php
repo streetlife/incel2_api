@@ -97,6 +97,8 @@ Route::prefix('hotels')->group(function () {
     Route::get('/{hotelCode}', [HotelController::class, 'show']);
     Route::get('/{hotelCode}/amenities', [HotelController::class, 'amenities']);
     Route::post('/search', [HotelController::class, 'search']);
+    Route::get('/{sessionCode}/{hotelId}', [HotelController::class, 'hotelDetail']);
+    Route::post('/create-booking', [HotelController::class, 'createBooking']);
 });
 Route::prefix('tours')->group(function () {
     Route::post('/search', [TourController::class, 'search']);
