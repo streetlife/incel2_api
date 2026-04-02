@@ -329,6 +329,92 @@ class HotelServices
 
         return $hotel;
     }
+    // public function createHotelsBooking($data)
+    // {
+    //     $userCode = auth()->user()->usercode ?? "temp" . now()->format('ymdHis');
+
+    //     $sessionCode   = $data['session_code'] ?? null;
+    //     $hotelId       = $data['hotel_id'] ?? null;
+    //     $countryCode   = $data['country_code'] ?? null;
+    //     $cityCode      = $data['city_code'] ?? null;
+    //     $arrivalDate   = $data['arrival_date'] ?? null;
+    //     $departureDate = $data['departure_date'] ?? null;
+    //     $traveller_title = $data['traveller_title'] ?? [];
+    //     $first_name = $data['first_name'] ?? [];
+    //     $last_name = $data['last_name'] ?? [];
+
+    //     if (!$sessionCode) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'Session code is required'
+    //         ], 400);
+    //     }
+
+    //     $hotelSession = $this->getHotelBySessioncode($sessionCode);
+
+    //     if (!$hotelSession) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => 'Hotel session not found'
+    //         ], 404);
+    //     }
+
+    //     $nationality = $hotelSession['nationality'] ?? null;
+    //     $roomCount   = $hotelSession['rooms'] ?? 1;
+
+    //     $arrivalDate   = $this->changeDateFormatHotel($arrivalDate);
+    //     $departureDate = $this->changeDateFormatHotel($departureDate);
+
+    //     $bookingCode = $this->createBooking($userCode, 'HOTEL');
+
+    //     $markup = $this->getMarkup('HOTEL');
+
+    //     $roomType      = $data['rooms_type'] ?? null;
+    //     $bookingKey    = $data['rooms_key'] ?? null;
+    //     $roomsAdults   = $data['rooms_adults'] ?? 1;
+    //     $roomsChildren = $data['rooms_children'] ?? 0;
+    //     $totalRate     = $data['room_rates'] ?? 0;
+
+    //     // split rates
+    //     $totalRates = explode('|', $totalRate);
+    //     $totalRoomCount = count($totalRates);
+
+    //     for ($i = 0; $i < $totalRoomCount; $i++) {
+
+    //         $roomRate = $totalRates[$i] ?? 0;
+
+    //         $roomRateMarkup = $this->priceMarkup($roomRate, $markup);
+
+    //         $this->createHotelBooking([
+    //             'booking_code'       => $bookingCode,
+    //             'booking_detail_code' => 'BH' . now()->format('ymdHis') . rand(10, 99),
+    //             'session_id'       => $sessionCode,
+    //             'first_name'        => $first_name,
+    //             'last_name'         => $last_name,
+    //             'hotel_id'           => $hotelId,
+    //             'country_code'       => $countryCode,
+    //             'city_code'          => $cityCode,
+    //             'arrival_date'       => $arrivalDate,
+    //             'departure_date'     => $departureDate,
+    //             'room_type'          => $roomType,
+    //             'nationality'        => $nationality,
+    //             'traveller_title'    => $traveller_title,
+    //             'booking_key'        => $bookingKey,
+    //             'room_rate'          => $roomRate,
+    //             'room_rate_markup'   => $roomRateMarkup,
+    //             'rooms_adults'       => $roomsAdults,
+    //             'rooms_children'     => $roomsChildren,
+    //             'total_rate'         => $totalRate,
+    //             'total_room_count'   => $totalRoomCount,
+    //         ]);
+    //     }
+
+    //     return [
+    //         'status' => true,
+    //         'booking_code' => $bookingCode,
+    //         'message' => 'Booking created successfully'
+    //     ];
+    // }
     public function createHotelsBooking($data)
     {
         $userCode = auth()->user()->usercode ?? "temp" . now()->format('ymdHis');
@@ -339,9 +425,11 @@ class HotelServices
         $cityCode      = $data['city_code'] ?? null;
         $arrivalDate   = $data['arrival_date'] ?? null;
         $departureDate = $data['departure_date'] ?? null;
-        $traveller_title = $data['traveller_title'] ?? null;
-        $first_name = $data['first_name'] ?? null;
-        $last_name = $data['last_name'] ?? null;
+
+        // guests as arrays
+        $travellerTitles = $data['traveller_title'] ?? [];
+        $firstNames      = $data['first_name'] ?? [];
+        $lastNames       = $data['last_name'] ?? [];
 
         if (!$sessionCode) {
             return response()->json([
@@ -375,38 +463,40 @@ class HotelServices
         $roomsChildren = $data['rooms_children'] ?? 0;
         $totalRate     = $data['room_rates'] ?? 0;
 
-        // split rates
         $totalRates = explode('|', $totalRate);
         $totalRoomCount = count($totalRates);
 
         for ($i = 0; $i < $totalRoomCount; $i++) {
 
             $roomRate = $totalRates[$i] ?? 0;
-
             $roomRateMarkup = $this->priceMarkup($roomRate, $markup);
 
-            $this->createHotelBooking([
-                'booking_code'       => $bookingCode,
-                'booking_detail_code' => 'BH' . now()->format('ymdHis') . rand(10, 99),
-                'session_id'       => $sessionCode,
-                'first_name'        => $first_name,
-                'last_name'         => $last_name,
-                'hotel_id'           => $hotelId,
-                'country_code'       => $countryCode,
-                'city_code'          => $cityCode,
-                'arrival_date'       => $arrivalDate,
-                'departure_date'     => $departureDate,
-                'room_type'          => $roomType,
-                'nationality'        => $nationality,
-                'traveller_title'    => $traveller_title,
-                'booking_key'        => $bookingKey,
-                'room_rate'          => $roomRate,
-                'room_rate_markup'   => $roomRateMarkup,
-                'rooms_adults'       => $roomsAdults,
-                'rooms_children'     => $roomsChildren,
-                'total_rate'         => $totalRate,
-                'total_room_count'   => $totalRoomCount,
-            ]);
+            // loop through guests
+            foreach ($firstNames as $index => $firstName) {
+
+                $this->createHotelBooking([
+                    'booking_code'         => $bookingCode,
+                    'booking_detail_code'  => 'BH' . now()->format('ymdHis') . rand(10, 99),
+                    'session_id'           => $sessionCode,
+                    'first_name'           => $firstName,
+                    'last_name'            => $lastNames[$index] ?? null,
+                    'traveller_title'      => $travellerTitles[$index] ?? null,
+                    'hotel_id'             => $hotelId,
+                    'country_code'         => $countryCode,
+                    'city_code'            => $cityCode,
+                    'arrival_date'         => $arrivalDate,
+                    'departure_date'       => $departureDate,
+                    'room_type'            => $roomType,
+                    'nationality'          => $nationality,
+                    'booking_key'          => $bookingKey,
+                    'room_rate'            => $roomRate,
+                    'room_rate_markup'     => $roomRateMarkup,
+                    'rooms_adults'         => $roomsAdults,
+                    'rooms_children'       => $roomsChildren,
+                    'total_rate'           => $totalRate,
+                    'total_room_count'     => $totalRoomCount,
+                ]);
+            }
         }
 
         return [
