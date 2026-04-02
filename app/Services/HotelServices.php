@@ -426,15 +426,19 @@ class HotelServices
         $arrivalDate   = $data['arrival_date'] ?? null;
         $departureDate = $data['departure_date'] ?? null;
 
-        // guests as arrays
-        $travellerTitles = $data['traveller_title'] ?? [];
-        $firstNames      = $data['first_name'] ?? [];
-        $lastNames       = $data['last_name'] ?? [];
+        $travellers = $data['travellers'] ?? [];
 
         if (!$sessionCode) {
             return response()->json([
                 'status' => false,
                 'message' => 'Session code is required'
+            ], 400);
+        }
+
+        if (!is_array($travellers) || count($travellers) === 0) {
+            return response()->json([
+                'status' => false,
+                'message' => 'At least one traveller is required'
             ], 400);
         }
 
@@ -463,6 +467,7 @@ class HotelServices
         $roomsChildren = $data['rooms_children'] ?? 0;
         $totalRate     = $data['room_rates'] ?? 0;
 
+        // split room rates
         $totalRates = explode('|', $totalRate);
         $totalRoomCount = count($totalRates);
 
@@ -471,30 +476,33 @@ class HotelServices
             $roomRate = $totalRates[$i] ?? 0;
             $roomRateMarkup = $this->priceMarkup($roomRate, $markup);
 
-            // loop through guests
-            foreach ($firstNames as $index => $firstName) {
+            foreach ($travellers as $traveller) {
+
+                $title     = $traveller['title'] ?? null;
+                $firstName = $traveller['first_name'] ?? null;
+                $lastName  = $traveller['last_name'] ?? null;
 
                 $this->createHotelBooking([
-                    'booking_code'         => $bookingCode,
-                    'booking_detail_code'  => 'BH' . now()->format('ymdHis') . rand(10, 99),
-                    'session_id'           => $sessionCode,
-                    'first_name'           => $firstName,
-                    'last_name'            => $lastNames[$index] ?? null,
-                    'traveller_title'      => $travellerTitles[$index] ?? null,
-                    'hotel_id'             => $hotelId,
-                    'country_code'         => $countryCode,
-                    'city_code'            => $cityCode,
-                    'arrival_date'         => $arrivalDate,
-                    'departure_date'       => $departureDate,
-                    'room_type'            => $roomType,
-                    'nationality'          => $nationality,
-                    'booking_key'          => $bookingKey,
-                    'room_rate'            => $roomRate,
-                    'room_rate_markup'     => $roomRateMarkup,
-                    'rooms_adults'         => $roomsAdults,
-                    'rooms_children'       => $roomsChildren,
-                    'total_rate'           => $totalRate,
-                    'total_room_count'     => $totalRoomCount,
+                    'booking_code'        => $bookingCode,
+                    'booking_detail_code' => 'BH' . now()->format('ymdHis') . rand(10, 99),
+                    'session_id'          => $sessionCode,
+                    'first_name'          => $firstName,
+                    'last_name'           => $lastName,
+                    'traveller_title'     => $title,
+                    'hotel_id'            => $hotelId,
+                    'country_code'        => $countryCode,
+                    'city_code'           => $cityCode,
+                    'arrival_date'        => $arrivalDate,
+                    'departure_date'      => $departureDate,
+                    'room_type'           => $roomType,
+                    'nationality'         => $nationality,
+                    'booking_key'         => $bookingKey,
+                    'room_rate'           => $roomRate,
+                    'room_rate_markup'    => $roomRateMarkup,
+                    'rooms_adults'        => $roomsAdults,
+                    'rooms_children'      => $roomsChildren,
+                    'total_rate'          => $totalRate,
+                    'total_room_count'    => $totalRoomCount,
                 ]);
             }
         }
