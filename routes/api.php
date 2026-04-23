@@ -151,3 +151,6 @@ Route::prefix('about-us')->group(function () {
     Route::post('/create', [AboutusController::class, 'create']);
     Route::get('/', [AboutusController::class, 'getAll']);
 });
+Route::prefix('invoice')->group(function () {
+      Route::post('/generate', [FlutterwaveController::class, 'invoice']);
+});

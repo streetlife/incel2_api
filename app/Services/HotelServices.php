@@ -86,7 +86,7 @@ class HotelServices
 
             $result = $this->rezlive->searchHotels($params, $arrivalDateFormatted, $departureDateFormatted);
 
-            Log::info('Rezlive hotel search response', $result);
+            // Log::info('Rezlive hotel search response', $result);
 
             if (isset($result['error'])) {
                 throw new \Exception($result['error']);

@@ -514,13 +514,13 @@ class FlightServices
     public function getMarkup(string $module)
     {
         $customerMode = 'B2C';
-        // if (Auth::check()) {
-        //     $accessLevel = Auth::user()->access_level;
+        if (Auth::check()) {
+            $accessLevel = Auth::user()->access_level;
 
-        //     if (in_array($accessLevel, ['AGENT', 'ADMIN'])) {
-        //         $customerMode = 'B2B';
-        //     }
-        // }
+            if (in_array($accessLevel, ['AGENT', 'ADMIN'])) {
+                $customerMode = 'B2B';
+            }
+        }
 
         return Markup::where('module', $module)
             ->where('customer_type', $customerMode)

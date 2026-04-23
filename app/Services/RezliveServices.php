@@ -194,9 +194,11 @@ class RezliveServices
             'XML' => $xml
         ]);
 
-        Log::info('Rezlive Response', ['response' => $response->body()]);
+        // Log::info('Rezlive Response', ['response' => $response->body()]);
 
         $data = simplexml_load_string($response->body(), 'SimpleXMLElement', LIBXML_NOCDATA);
+        
+        Log::info("Rezlive Response", ['data' => $data]);
 
         return json_decode(json_encode($data), true);
     }

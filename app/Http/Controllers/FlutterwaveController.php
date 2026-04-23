@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class FlutterwaveController extends Controller
 {
-     protected $flutterwaveService;
+    protected $flutterwaveService;
     protected $invoiceService;
 
     public function __construct(
@@ -27,16 +27,16 @@ class FlutterwaveController extends Controller
             'invoice_code' => 'required|string',
             'customer_name' => 'required|string',
             'customer_email' => 'required|email',
-            'callback_url'=> 'required|string'
+            'callback_url' => 'required|string'
         ]);
 
-        $payment = $this->flutterwaveService->initializePayment($request->all(),$request->callback_url);
+        $payment = $this->flutterwaveService->initializePayment($request->all(), $request->callback_url);
 
         if (!$payment['status']) {
             return response()->json($payment, 400);
         }
 
-        
+
         $this->invoiceService->updateTransactionReference(
             $request->invoice_code,
             $payment['transaction_reference']
@@ -46,5 +46,20 @@ class FlutterwaveController extends Controller
             'status' => true,
             'payment_link' => $payment['payment_link']
         ]);
+    }
+
+    public function invoice(Request $request)
+    {
+        $data = $this->invoiceService->createInvoice($request->all());
+        if (!$data) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to create invoice'
+            ], 400);
+        }
+        return response()->json([
+            'status' => true,
+            'invoice' => $data
+        ], 200);
     }
 }
