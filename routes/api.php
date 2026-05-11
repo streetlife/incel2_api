@@ -37,7 +37,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('users')->group(function () {
         Route::get('/users-by-code/{userCode}', [UserController::class, 'getUserByUserCode']);
         Route::get('/auth-users-by-email', [UserController::class, 'getAuthenticatedUserByEmail']);
-        Route::get('/user-profile',[AuthController::class,'getProfile']);
+        Route::get('/user-profile', [AuthController::class, 'getProfile']);
         Route::patch('/user-profile', [AuthController::class, 'updateProfile']);
     });
 });
@@ -63,7 +63,7 @@ Route::prefix('services')->group(function () {
     Route::post('/hero-section', [ServiceRequestController::class, 'createHeroSection']);
     Route::get('/hero-section', [ServiceRequestController::class, 'getHeroSection']);
     Route::post('/testmonial', [ServiceRequestController::class, 'createVideoTestmonial']);
-    Route::post('/package/{id}',[ServiceRequestController::class, 'update']);
+    Route::post('/package/{id}', [ServiceRequestController::class, 'update']);
     Route::post('/contact', [ServiceRequestController::class, 'store']);
 });
 
@@ -102,6 +102,8 @@ Route::prefix('hotels')->group(function () {
 });
 Route::prefix('tours')->group(function () {
     Route::post('/search', [TourController::class, 'search']);
+    Route::get('/countries', [TourController::class, 'getTourCountries']);
+    Route::get('/cities-by-country/{countryId}', [TourController::class, 'getTourCities']);
 });
 Route::prefix('bookings')->group(function () {
     Route::post('/', [BookingController::class, 'create']);
@@ -152,5 +154,5 @@ Route::prefix('about-us')->group(function () {
     Route::get('/', [AboutusController::class, 'getAll']);
 });
 Route::prefix('invoice')->group(function () {
-      Route::post('/generate', [FlutterwaveController::class, 'invoice']);
+    Route::post('/generate', [FlutterwaveController::class, 'invoice']);
 });
