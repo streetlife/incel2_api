@@ -11,7 +11,7 @@ class BookingTour extends Model
     protected $table = 'bookings_tours';
 
     public $timestamps = false;
-    
+
     protected $fillable = [
         'booking_code',
         'booking_detail_code',
@@ -29,6 +29,13 @@ class BookingTour extends Model
         'tour_option_id',
         'traveller_type',
         'time_slot_id',
-        'time_slot_name'
+        'time_slot_name',
+        'surname',
+        'firstname',
+        'othernames',
+        'gender',
+        'phone_number',
+        'emailaddress',
+        'passport_nationality'
     ];
 }

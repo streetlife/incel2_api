@@ -161,4 +161,30 @@ class RaynaServices
             'data'    => $response['data'],
         ];
     }
+    public function getTourPricing(int $tourId, int $contractId, string $travelDate)
+    {
+        $payload = [
+            "tourId"     => $tourId,
+            "contractId" => $contractId,
+            "travelDate" => $travelDate,
+            "noOfAdult"  => 1,
+            "noOfChild"  => 1,
+            "noOfInfant" => 1
+        ];
+        $response = $this->post("touroption", $payload);
+        Log::info("response tour pricing ", [$response]);
+        if (empty($response)) {
+            return [
+                'status'  => false,
+                'message' => $response['message'] ?? 'Unable to fetch tour static data',
+                'data'    => null,
+            ];
+        }
+
+        return [
+            'status'  => true,
+            'message' => 'Tour static data fetched successfully',
+            'data'    => $response['data'],
+        ];
+    }
 }

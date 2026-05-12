@@ -34,7 +34,7 @@ class BookingServices extends FlightServices
             'date_expiry'    => Carbon::now()->addMinutes(config('booking.expiry', 60))
         ]);
 
-        return $booking;
+        return $booking['booking_code'];
     }
 
     public function getBooking($bookingCode)
@@ -48,10 +48,11 @@ class BookingServices extends FlightServices
     }
     public function createTourBooking(array $data)
     {
+        $userCode = auth()->user()->usercode ?? "temp" . now()->format('ymdHis');
+        $genrateBookingCode = $this->createBooking($userCode, 'TOUR');
         $bookingDetailCode = 'BT' . now()->format('ymdHis') . rand(10, 99);
-
         $tour = BookingTour::create([
-            'booking_code'       => $data['booking_code'],
+            'booking_code'       =>  $genrateBookingCode,
             'booking_detail_code' => $bookingDetailCode,
             'traveller_code'     => '',
             'tour_id'            => $data['tour_id'],
@@ -67,7 +68,14 @@ class BookingServices extends FlightServices
             'tour_option_id'     => $data['tour_option_id'] ?? null,
             'traveller_type'     => $data['traveller_type'] ?? null,
             'time_slot_id'       => $data['time_slot_id'] ?? 0,
-            'time_slot_name'     => $data['time_slot_name'] ?? ''
+            'time_slot_name'     => $data['time_slot_name'] ?? '',
+            'surname'            => $data['surname'] ?? null,
+            'firstname'          =>  $data['firstname'] ?? null,
+            'othernames'         => $data['othernames'] ?? null,
+            'gender'             => $data['gender'] ?? null,
+            'phone_number'        =>  $data['phone_number'] ?? null,
+            'emailaddress'       =>  $data['emailaddress'] ?? null,
+            'passport_nationality' =>  $data['passport_nationality'] ?? null,
         ]);
 
         return $tour;

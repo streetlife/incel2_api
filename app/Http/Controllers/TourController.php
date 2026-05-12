@@ -88,4 +88,67 @@ class TourController extends Controller
             ]);
         }
     }
+    public function getTourPricing(Request $request)
+    {
+        $data = $request->validate([
+            'tour_id'     => 'required|integer',
+            'contract_id' => 'required|integer',
+            'travel_date' => 'required|date',
+        ]);
+
+        $result = $this->tourService->getTourPricing($data);
+
+        if (!$result['status']) {
+            return response()->json([
+                'status'  => false,
+                'message' => $result['message'],
+                'data'    => null,
+            ], 400);
+        }
+
+        return response()->json([
+            'status'  => true,
+            'message' => $result['message'],
+            'data'    => $result['data'],
+        ], 200);
+    }
+    public function processBooking(Request $request)
+    {
+        $request->validate([
+            'booking_code'              => 'required|string|',
+            'booking_tours'             => 'required|array|min:1',
+            'booking_tours.*.tour_id'           => 'required|integer',
+            'booking_tours.*.tour_option_id'    => 'required|integer',
+            'booking_tours.*.travel_date'       => 'required|date',
+            'booking_tours.*.time_slot_id'      => 'nullable|integer',
+            'booking_tours.*.transfer_id'       => 'required|integer',
+            'booking_tours.*.traveller_type'    => 'required|in:ADULT,CHILD,INFANT',
+            'booking_tours.*.amount'            => 'required|numeric',
+            'booking_tours.*.firstname'         => 'required|string',
+            'booking_tours.*.surname'           => 'required|string',
+            'booking_tours.*.emailaddress'      => 'required|email',
+            'booking_tours.*.phone_number'      => 'required|string',
+            'booking_tours.*.passport_nationality' => 'required|string',
+            'booking_tours.*.booking_detail_code'  => 'required|string',
+        ]);
+
+        $result = $this->tourService->processBooking(
+            bookingCode:  $request->booking_code,
+            bookingTours: $request->booking_tours,
+        );
+
+        if (!$result['status']) {
+            return response()->json([
+                'status'  => false,
+                'message' => $result['message'],
+                'data'    => null,
+            ], 400);
+        }
+
+        return response()->json([
+            'status'  => true,
+            'message' => $result['message'],
+            'data'    => $result['data'],
+        ], 200);
+    }
 }

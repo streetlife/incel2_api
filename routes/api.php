@@ -104,6 +104,8 @@ Route::prefix('tours')->group(function () {
     Route::post('/search', [TourController::class, 'search']);
     Route::get('/countries', [TourController::class, 'getTourCountries']);
     Route::get('/cities-by-country/{countryId}', [TourController::class, 'getTourCities']);
+    Route::post('/pricing', [TourController::class, 'getTourPricing']);
+    Route::post('/process', [TourController::class, 'processBooking']);
 });
 Route::prefix('bookings')->group(function () {
     Route::post('/', [BookingController::class, 'create']);

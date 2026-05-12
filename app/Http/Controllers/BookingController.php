@@ -83,9 +83,8 @@ class BookingController extends Controller
 
     public function addTour(Request $request)
     {
+        Log::info($request);
         $request->validate([
-            'booking_code'        => 'required|string',
-            'booking_detail_code' => 'required|string',
             'traveller_code'      => 'required|string',
             'tour_id'             => 'required|integer',
             'travel_date'         => 'required|date',
@@ -101,6 +100,14 @@ class BookingController extends Controller
             'traveller_type'      => 'required|string',
             'time_slot_id'        => 'nullable|integer',
             'time_slot_name'      => 'nullable|string',
+            'surname'             => 'nullable|string',
+            'firstname'           => 'nullable|string',
+            'othernames'          => 'nullable|string',
+            'gender'              => 'nullable|string',
+            'phone_number'         => 'nullable|string',
+            'emailaddress'        => 'nullable|string',
+            'passport_nationality' => 'nullable|string'
+
         ]);
 
         $tour = $this->bookingService->createTourBooking($request->all());
@@ -237,12 +244,12 @@ class BookingController extends Controller
         try {
 
             $booking = $this->bookingService->preProcessBookingFlight($booking_code);
-              if (!$booking || !isset($booking['status'])) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Invalid response from booking service'
-            ], 500);
-        }
+            if (!$booking || !isset($booking['status'])) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid response from booking service'
+                ], 500);
+            }
 
 
             if (!$booking['status']) {
@@ -254,8 +261,8 @@ class BookingController extends Controller
             }
 
             return response()->json([
-                
-            'data' => $booking
+
+                'data' => $booking
             ], 200);
         } catch (Exception $e) {
 
@@ -271,6 +278,4 @@ class BookingController extends Controller
             ], 400);
         }
     }
-
-    
 }

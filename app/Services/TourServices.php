@@ -155,30 +155,49 @@ class TourServices
             $payload  = $this->buildPayload($bookingTours);
             $response = $this->raynaService->booking('Bookings', $payload);
 
-            if (!$response['success']) {
+            if (empty($response)) {
                 return [
                     'status'  => false,
-                    'message' => $response['message'] ?? 'Booking failed',
+                    'message' => 'Booking failed, no response from API',
                 ];
             }
 
             $result = $response['data'];
 
             if (($result['statuscode'] ?? null) === 200) {
+
+                if (empty($result['result'])) {
+                    return [
+                        'status'  => false,
+                        'message' => $result['error']['description'] ?? 'Booking failed',
+                    ];
+                }
+
+                $details = $result['result']['details'][0] ?? null; // ✅ first item in array
+
+                if (empty($details) || $details['status'] !== 'Success') {
+                    return [
+                        'status'  => false,
+                        'message' => 'Booking was not successful',
+                    ];
+                }
+
                 $this->handleSuccess($bookingCode, $result, json_encode($response));
 
                 return [
                     'status'  => true,
                     'message' => 'Booking processed successfully',
                     'data'    => [
-                        'booking_id'      => $result['result']['details']['bookingId'],
-                        'confirmation_no' => $result['result']['details']['confirmationNo'],
+                        'booking_id'      => $details['bookingId'],
+                        // 'confirmation_no' => $details['confirmationNo'],
                         'reference_no'    => $result['result']['referenceNo'],
                     ],
                 ];
             }
-
-            return ['status' => false, 'message' => 'Booking failed'];
+            return [
+                'status'  => false,
+                'message' => $result['error']['description'] ?? 'Booking failed',
+            ];
         } catch (\Throwable $th) {
             Log::error('TourBookingService Exception', ['error' => $th->getMessage()]);
 
@@ -189,6 +208,12 @@ class TourServices
     {
         $uniqueId = date('ym') . random_int(10, 99);
         $first    = $bookingTours[0];
+        // Log::info('Building Payload - Traveller Types', [
+        //     'travellers' => array_map(fn($t) => [
+        //         'type'   => $t['traveller_type'],
+        //         'amount' => $t['amount'],
+        //     ], $bookingTours)
+        // ]);
 
         $tourDetails = [
             'serviceUniqueId' => $uniqueId,
@@ -252,15 +277,17 @@ class TourServices
     }
     private function handleSuccess(string $bookingCode, array $result, string $rawResponse): void
     {
+        $details = $result['result']['details'][0];
+
         DB::table('bookings')
             ->where('booking_code', $bookingCode)
             ->update([
-                'api_response'    => $rawResponse,
-                'booking_id'      => $result['result']['details']['bookingId'],
-                'confirmation_no' => $result['result']['details']['confirmationNo'],
-                'reference_no'    => $result['result']['referenceNo'],
-                'status'          => 'PROCESSED',
-                'updated_at'      => now(),
+                'response'    => $rawResponse,
+                // 'booking_id'      => $details['bookingId'],
+                // 'confirmation_no' => $details['confirmationNo'],
+                // 'reference_no'    => $result['result']['referenceNo'],
+                'booking_status'    => 'PROCESSED',
+                'date_created'      => now(),
             ]);
     }
     public function getTourStaticData(array $data): array
@@ -289,6 +316,38 @@ class TourServices
             ];
         } catch (\Throwable $th) {
             Log::error('getTourStaticData Error', ['message' => $th->getMessage()]);
+
+            return [
+                'status'  => false,
+                'message' => 'Something went wrong.',
+                'data'    => null,
+            ];
+        }
+    }
+    public function getTourPricing(array $data)
+    {
+        try {
+            $result = $this->raynaService->getTourPricing(
+                tourId: $data['tour_id'],
+                contractId: $data['contract_id'],
+                travelDate: $data['travel_date'],
+            );
+
+            if (empty($result) || !$result['status']) {
+                return [
+                    'status'  => false,
+                    'message' => $result['message'] ?? 'Failed to fetch tour pricing data',
+                    'data'    => null,
+                ];
+            }
+
+            return [
+                'status'  => true,
+                'message' => 'Tour pricing fetched successfully',
+                'data'    => $result['data'],
+            ];
+        } catch (\Throwable $th) {
+            Log::error('getTourPricing Error', ['message' => $th->getMessage()]);
 
             return [
                 'status'  => false,
