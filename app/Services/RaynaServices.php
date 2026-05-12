@@ -129,4 +129,36 @@ class RaynaServices
             ];
         }
     }
+
+    public function getTourStaticData(
+        int    $tourCountryId,
+        int    $tourCityId,
+        int    $tourId,
+        int    $tourContractId,
+        string $travelDate
+    ): array {
+        $payload = [
+            'countryId'  => $tourCountryId,
+            'cityId'     => $tourCityId,
+            'tourId'     => $tourId,
+            'contractId' => $tourContractId,
+            'travelDate' => $travelDate,
+        ];
+
+        $response = $this->post('tourStaticDataById', $payload);
+
+        if (empty($response)) {
+            return [
+                'status'  => false,
+                'message' => $response['message'] ?? 'Unable to fetch tour static data',
+                'data'    => null,
+            ];
+        }
+
+        return [
+            'status'  => true,
+            'message' => 'Tour static data fetched successfully',
+            'data'    => $response['data'],
+        ];
+    }
 }

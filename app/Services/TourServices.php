@@ -20,55 +20,55 @@ class TourServices
             'travelDate' => $date,
         ];
 
-        
         $search_session_code = uniqid('tour');
 
-        
         $response = $this->raynaService->post('tourlist/', $payload);
-      
-        log::info("respon ryna",[$response['data']]);
-        
+
+        Log::info("Rayna raw response", [$response]);
+
         if (
             empty($response) ||
-            !isset($response['response']) ||
-            !is_array($response['response'])
+            ($response['data']['statuscode'] ?? null) !== 200 ||
+            !isset($response['data']['result']) ||
+            !is_array($response['data']['result'])
         ) {
             return [
-                'status' => false,
-                'message' => 'Invalid response from Rayna API',
-                'data' => $response
+                'status'  => false,
+                'message' => $response['data']['errormessage'] ?? 'Invalid response from Rayna API',
+                'data'    => null,
             ];
         }
+
+        $responseData = $response['data'];
 
         DB::beginTransaction();
 
         try {
-
             DB::table('sessions_tours')->insert([
                 'session_code'    => $search_session_code,
                 'country_id'      => $countryId,
                 'city_id'         => $cityId,
                 'travel_date'     => $date,
-                'currency'        => $response['currency'] ?? null,
-                'currency_symbol' => $response['currencysymbol'] ?? null,
-                'result_count'    => $response['count'] ?? count($response['response']),
-                'created_at'      => now(),
-                'updated_at'      => now(),
+                'currency'        => $responseData['currency']       ?? null,
+                'currency_symbol' => $responseData['currencysymbol'] ?? null,
+                'result_count'    => $responseData['count']          ?? count($responseData['result']),
+                // 'created_at'      => now(),
+                // 'updated_at'      => now(),
             ]);
+
             $tourResults = [];
 
-            foreach ($response['response'] as $tour) {
-
+            foreach ($responseData['result'] as $tour) {
                 $tourResults[] = [
-                    'session_code' => $search_session_code,
-                    'tour_id' => $tour['tourId'] ?? null,
-                    'contract_id' => $tour['contractId'] ?? null,
-                    'amount' => $tour['amount'] ?? 0,
-                    'discount' => $tour['discount'] ?? 0,
+                    'session_code'  => $search_session_code,
+                    'tour_id'       => $tour['tourId']      ?? null,
+                    'contract_id'   => $tour['contractId']  ?? null,
+                    'amount'        => $tour['amount']       ?? 0,
+                    'discount'      => $tour['discount']     ?? 0,
                     'reward_points' => $tour['rewardPoints'] ?? 0,
-                    'sort_order' => $tour['sortOrder'] ?? 0,
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                    'sort_order'    => $tour['sortOrder']    ?? 0,
+                    // 'created_at'    => now(),
+                    // 'updated_at'    => now(),
                 ];
             }
 
@@ -78,21 +78,35 @@ class TourServices
 
             DB::commit();
 
-            $response['session_code'] = $search_session_code;
+            $data = [
+                'country_id'  => $countryId,
+                'city_id'     => $cityId,
+                'tour_id'     => $responseData['result'][0]['tourId']     ?? null,
+                'contract_id' => $responseData['result'][0]['contractId'] ?? null,
+                'travel_date' => $date,
+            ];
 
-            return ['status'=>true,'data'=>$response['data'],'message'=>'Successful'];
+
+
+            $result = $this->getTourStaticData($data);
+
+            return [
+                'status'       => true,
+                'message'      => 'Tours fetched successfully',
+                'session_code' => $search_session_code,
+                'data'         => $result,
+            ];
         } catch (\Throwable $e) {
-
             DB::rollBack();
 
             Log::error('Tour Search Error', [
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace'   => $e->getTraceAsString(),
             ]);
 
             return [
-                'status' => false,
-                'message' => $e->getMessage()
+                'status'  => false,
+                'message' => $e->getMessage(),
             ];
         }
     }
@@ -248,5 +262,39 @@ class TourServices
                 'status'          => 'PROCESSED',
                 'updated_at'      => now(),
             ]);
+    }
+    public function getTourStaticData(array $data): array
+    {
+        try {
+            $result = $this->raynaService->getTourStaticData(
+                tourCountryId: $data['country_id'],
+                tourCityId: $data['city_id'],
+                tourId: $data['tour_id'],
+                tourContractId: $data['contract_id'],
+                travelDate: $data['travel_date'],
+            );
+
+            if (empty($result)) {
+                return [
+                    'status'  => false,
+                    'message' => $result['message'] ?? 'Failed to fetch tour static data',
+                    'data'    => null,
+                ];
+            }
+
+            return [
+                'status'  => true,
+                'message' => 'Tour static data fetched successfully',
+                'data'    => $result['data'],
+            ];
+        } catch (\Throwable $th) {
+            Log::error('getTourStaticData Error', ['message' => $th->getMessage()]);
+
+            return [
+                'status'  => false,
+                'message' => 'Something went wrong.',
+                'data'    => null,
+            ];
+        }
     }
 }

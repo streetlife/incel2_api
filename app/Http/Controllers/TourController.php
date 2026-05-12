@@ -12,6 +12,27 @@ class TourController extends Controller
 
     public function __construct(public TourServices $tourService) {}
 
+    // public function search(Request $request)
+    // {
+    //     $request->validate([
+    //         'country_id' => 'required|integer',
+    //         'city_id'    => 'required|integer',
+    //         'date'       => 'required|date',
+    //     ]);
+
+    //     $result = $this->tourService->search(
+    //         $request->country_id,
+    //         $request->city_id,
+    //         $request->date
+    //     );
+    //     if (!$result) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => "Something went wrong"
+    //         ]);
+    //     }
+    //     return response()->json($result['data']);
+    // }
     public function search(Request $request)
     {
         $request->validate([
@@ -21,17 +42,25 @@ class TourController extends Controller
         ]);
 
         $result = $this->tourService->search(
-            $request->country_id,
-            $request->city_id,
-            $request->date
+            $request->integer('country_id'),
+            $request->integer('city_id'),
+            $request->input('date'),
         );
-        if (!$result) {
+
+        if (!$result['status']) {
             return response()->json([
-                'status' => false,
-                'message' => "Something went wrong"
-            ]);
+                'status'  => false,
+                'message' => $result['message'] ?? 'Search failed',
+                'data'    => null,
+            ], 400);
         }
-        return response()->json($result['data']);
+
+        return response()->json([
+            'status'       => true,
+            'message'      => $result['message']      ?? 'Tours fetched successfully',
+            'session_code' => $result['session_code'] ?? null,
+            'data'         => $result['data']         ?? null,
+        ], 200);
     }
     public function getTourCountries()
     {
