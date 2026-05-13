@@ -329,7 +329,7 @@ class TourServices
                 travelDate: $data['travel_date'],
             );
             Log::info("resu ryna", $result);
-            if (empty($result) || !$result['status']) {
+            if (empty($result)) {
                 return [
                     'status'  => false,
                     'message' => $result['message'] ?? 'Failed to fetch tour pricing data',
@@ -340,7 +340,7 @@ class TourServices
             return [
                 'status'  => true,
                 'message' => 'Tour pricing fetched successfully',
-                'data'    => $result['data'],
+                'data'    => $result['result'],
             ];
         } catch (\Throwable $th) {
             Log::error('getTourPricing Error', ['message' => $th->getMessage()]);
