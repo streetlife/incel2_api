@@ -89,7 +89,7 @@ class TourServices
 
 
             $result = $this->getTourStaticData($data);
-
+            Log::info("totured", [$result]);
             return [
                 'status'       => true,
                 'message'      => 'Tours fetched successfully',
@@ -309,11 +309,7 @@ class TourServices
                 ];
             }
 
-            return [
-                'status'  => true,
-                'message' => 'Tour static data fetched successfully',
-                'data'    => $result['data'],
-            ];
+            return $result['data'];
         } catch (\Throwable $th) {
             Log::error('getTourStaticData Error', ['message' => $th->getMessage()]);
 
@@ -332,7 +328,7 @@ class TourServices
                 contractId: $data['contract_id'],
                 travelDate: $data['travel_date'],
             );
-
+            Log::info("resu ryna", $result);
             if (empty($result) || !$result['status']) {
                 return [
                     'status'  => false,

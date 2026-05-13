@@ -118,10 +118,10 @@ class RaynaServices
                 'data'    => $response->json(),
             ];
         } catch (\Exception $e) {
-            Log::error('Rayna Booking Exception', [
-                'endpoint' => $endpoint,
-                'message'  => $e->getMessage(),
-            ]);
+            // Log::error('Rayna Booking Exception', [
+            //     'endpoint' => $endpoint,
+            //     'message'  => $e->getMessage(),
+            // ]);
 
             return [
                 'success' => false,
@@ -172,7 +172,7 @@ class RaynaServices
             "noOfInfant" => 1
         ];
         $response = $this->post("touroption", $payload);
-        Log::info("response tour pricing ", [$response]);
+        // Log::info("response tour pricing ", [$response]);
         if (empty($response)) {
             return [
                 'status'  => false,
@@ -181,10 +181,7 @@ class RaynaServices
             ];
         }
 
-        return [
-            'status'  => true,
-            'message' => 'Tour static data fetched successfully',
-            'data'    => $response['data'],
-        ];
+        return  $response['data'];
+
     }
 }
