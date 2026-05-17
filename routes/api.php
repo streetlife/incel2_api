@@ -99,7 +99,10 @@ Route::prefix('hotels')->group(function () {
     Route::post('/search', [HotelController::class, 'search']);
     Route::get('/{sessionCode}/{hotelId}', [HotelController::class, 'hotelDetail']);
     Route::post('/create-booking', [HotelController::class, 'createBooking']);
+    Route::post('/book-hotel', [HotelController::class, 'bookHotel']);
+    
 });
+Route::get('/rezlive/logs', [HotelController::class, 'fetchLog']);
 Route::prefix('tours')->group(function () {
     Route::post('/search', [TourController::class, 'search']);
     Route::get('/countries', [TourController::class, 'getTourCountries']);

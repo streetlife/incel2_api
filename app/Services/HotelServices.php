@@ -191,7 +191,8 @@ class HotelServices
                 ],
 
                 'filters' => $results['filters'],
-                'hotels' => $results['hotels']
+                'hotels' => $results['hotels'],
+                'bookingKey'=> $result['booking_keys']
             ];
         } catch (\Exception $e) {
 
@@ -281,6 +282,7 @@ class HotelServices
                 'boardbasis' => array_values($filterBoardBasis)
             ],
             'hotels' => $results
+         
         ];
     }
     public function getHotelDetail($sessionCode, $hotelId)

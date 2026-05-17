@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\RezliveLog;
 use App\Services\HotelServices;
 use App\Services\RezliveServices;
 use Illuminate\Http\Request;
@@ -110,4 +111,15 @@ class HotelController extends Controller
 
         return response()->json($result);
     }
+
+  public function fetchLog()
+{
+    $logs = RezliveLog::latest()->get();
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Logs fetched successfully',
+        'data' => $logs
+    ]);
+}
 }

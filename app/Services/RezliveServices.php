@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\RezliveLog;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -45,6 +46,21 @@ class RezliveServices
 
             $body = $response->body();
 
+            RezliveLog::create([
+                'type' => 'hotel',
+
+                'request_xml' => $xml,
+
+                'response_xml' => $body,
+
+                'request_payload' => [
+                    'params' => $params,
+                    'arrivalDate' => $arrivalDate,
+                    'departureDate' => $departureDate
+                ],
+
+                'status_code' => $response->status(),
+            ]);
             Log::info("Rezlive Raw Response", [
                 'status' => $response->status(),
                 'body' => $body
@@ -75,11 +91,32 @@ class RezliveServices
             }
 
             $result = json_decode(json_encode($xmlResponse), true);
+            $bookingKeys = [];
 
+            foreach ($result['Hotels']['Hotel'] as $hotel) {
+
+                $rooms = $hotel['RoomDetails']['RoomDetail'] ?? [];
+
+                // Handle single room (associative array) vs multiple rooms (indexed array)
+                if (isset($rooms['BookingKey'])) {
+                    $rooms = [$rooms];
+                }
+
+                foreach ($rooms as $room) {
+                    $bookingKeys[] = [
+                        'hotel_id'    => $hotel['Id'],
+                        'hotel_name'  => $hotel['Name'],
+                        'booking_key' => $room['BookingKey'],
+
+                    ];
+                }
+            }
+            log::info("result-k", $result);
             return [
                 'status' => true,
                 'message' => 'Success',
-                'data' => $result
+                'data' => $result,
+                'booking_keys' => $bookingKeys,
             ];
         } catch (\Exception $e) {
 
@@ -93,6 +130,7 @@ class RezliveServices
             ];
         }
     }
+
 
     /**
      * Build XML Request
@@ -197,7 +235,7 @@ class RezliveServices
         // Log::info('Rezlive Response', ['response' => $response->body()]);
 
         $data = simplexml_load_string($response->body(), 'SimpleXMLElement', LIBXML_NOCDATA);
-        
+
         Log::info("Rezlive Response", ['data' => $data]);
 
         return json_decode(json_encode($data), true);
@@ -258,13 +296,26 @@ class RezliveServices
     }
     public function processBooking($bookingCode, $bookingHotels)
     {
-        Log::info('Processing Hotel Booking', ['booking_code' => $bookingCode]);
+        Log::info('Processing Hotel Booking', [
+            'booking_code' => $bookingCode
+        ]);
 
         $hotelData = $bookingHotels[0];
 
-        $xml = $this->buildBookingXml($hotelData, $bookingHotels);
+        $xml = $this->buildBookingXml(
+            $hotelData,
+            $bookingHotels
+        );
 
-        Log::info('Rezlive Booking Request', ['xml' => $xml]);
+        // dd([
+        //     'session_id' => $hotelData['search_session_id'],
+        //     'booking_key' => $hotelData['booking_key'],
+        //     'xml' => $xml
+        // ]);
+
+        Log::info('Rezlive Booking Request', [
+            'xml' => $xml
+        ]);
 
         $endpoint = $this->url . "/bookhotel";
 
@@ -279,17 +330,44 @@ class RezliveServices
             'response' => $response->body()
         ]);
 
-        $xmlResponse = simplexml_load_string($response->body(), 'SimpleXMLElement', LIBXML_NOCDATA);
+        $xmlResponse = simplexml_load_string(
+            $response->body(),
+            'SimpleXMLElement',
+            LIBXML_NOCDATA
+        );
 
-        $responseJson = json_decode(json_encode($xmlResponse), true);
+        $responseJson = json_decode(
+            json_encode($xmlResponse),
+            true
+        );
 
-        return $this->handleBookingResponse($bookingCode, $responseJson, $response->body());
+        return $this->handleBookingResponse(
+            $bookingCode,
+            $responseJson,
+            $response->body()
+        );
     }
 
     private function buildBookingXml($hotelData, $bookingHotels)
     {
         $childrenAges = '';
         $guestsXml = '';
+
+        // Validate and parse dates upfront
+        $arrivalDate = strtotime($hotelData['arrival_date']);
+        $departureDate = strtotime($hotelData['departure_date']);
+
+        if (!$arrivalDate || !$departureDate) {
+            throw new \InvalidArgumentException("Invalid arrival or departure date provided.");
+        }
+
+        if ($arrivalDate <= time()) {
+            throw new \InvalidArgumentException("Arrival date must be greater than the current date.");
+        }
+
+        if ($departureDate <= $arrivalDate) {
+            throw new \InvalidArgumentException("Departure date must be greater than the arrival date.");
+        }
 
         foreach ($bookingHotels as $hotel) {
 
@@ -328,12 +406,11 @@ class RezliveServices
         $childrenAges = rtrim($childrenAges, '*');
 
         return "
-
         <BookingRequest>
 
             <Authentication>
-              <AgentCode>{$this->agent}</AgentCode>
-              <UserName>{$this->username}</UserName>
+                <AgentCode>{$this->agent}</AgentCode>
+                <UserName>{$this->username}</UserName>
             </Authentication>
 
             <Booking>
@@ -342,8 +419,8 @@ class RezliveServices
 
                 <AgentRefNo>{$this->agent}</AgentRefNo>
 
-                <ArrivalDate>{$hotelData['arrival_date']}</ArrivalDate>
-                <DepartureDate>{$hotelData['departure_date']}</DepartureDate>
+                <ArrivalDate>" . date('d/m/Y', $arrivalDate) . "</ArrivalDate>
+                <DepartureDate>" . date('d/m/Y', $departureDate) . "</DepartureDate>
 
                 <GuestNationality>{$hotelData['nationality']}</GuestNationality>
 
@@ -383,7 +460,7 @@ class RezliveServices
             </Booking>
 
         </BookingRequest>
-        ";
+    ";
     }
 
     private function handleBookingResponse($bookingCode, $responseJson, $rawResponse)
