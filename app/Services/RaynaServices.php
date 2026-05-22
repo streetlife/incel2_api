@@ -130,6 +130,31 @@ class RaynaServices
         }
     }
 
+    public function getToursStatic(int $country_id, int $city_id)
+    {
+        $payload = [
+            'countryId' => $country_id,
+            'cityId'    => $city_id,
+        ];
+
+        $response = $this->post('tourstaticdata', $payload);
+        Log::info('response', is_array($response) ? $response : ['raw' => $response]);
+
+        if (empty($response) || !is_array($response)) {
+            return [
+                'status'  => false,
+                'message' => 'Unable to fetch tour static data',
+                'data'    => null,
+            ];
+        }
+
+
+        return [
+            'status'  => true,
+            'message' => 'Tour static data fetched successfully',
+            'data'    => $response['data'] ?? null,
+        ];
+    }
     public function getTourStaticData(
         int    $tourCountryId,
         int    $tourCityId,
@@ -182,6 +207,5 @@ class RaynaServices
         }
 
         return  $response['data'];
-
     }
 }

@@ -293,12 +293,9 @@ class TourServices
     public function getTourStaticData(array $data): array
     {
         try {
-            $result = $this->raynaService->getTourStaticData(
-                tourCountryId: $data['country_id'],
-                tourCityId: $data['city_id'],
-                tourId: $data['tour_id'],
-                tourContractId: $data['contract_id'],
-                travelDate: $data['travel_date'],
+            $result = $this->raynaService->getToursStatic(
+                country_id: $data['country_id'],
+                city_id: $data['city_id'],
             );
 
             if (empty($result)) {
