@@ -111,7 +111,7 @@ class HotelServices
             }
 
             HotelSession::create([
-                'session_code' => $result['data']['SearchSessionId'] ?? null,
+                'session_code' =>  $sessionCode ,
                 'country_code' => $params['search_hotel_country'] ?? null,
                 'city_code' => $params['search_hotel_city'] ?? null,
                 'arrival_date' => $arrivalDate,
@@ -161,7 +161,7 @@ class HotelServices
                 ];
 
                 HotelSessionResult::create([
-                    'session_code' => $result['data']['SearchSessionId'] ?? null,
+                    'session_code' =>  $sessionCode ,
                     'hotel_id' => $hotel['Id'],
                     'hotel_rating' => $hotel['Rating'] ?? 0,
                     'hotel_thumbs' => '-',
@@ -178,7 +178,8 @@ class HotelServices
             return [
                 'status' => true,
                 'message' => 'Hotels fetched successfully',
-                'session_code' => $result['data']['SearchSessionId'] ?? null,
+                'session_code' =>  $sessionCode ,
+                'search_session_id' => $result['data']['SearchSessionId'] ?? null,
 
                 'search_meta' => [
                     'arrival_date' => $arrivalDate,
