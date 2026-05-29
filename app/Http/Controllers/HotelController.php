@@ -13,7 +13,7 @@ class HotelController extends Controller
 {
     protected HotelServices $hotelService;
 
-    public function __construct(HotelServices $hotelService,protected RezliveServices $rezliveBooking)
+    public function __construct(HotelServices $hotelService, protected RezliveServices $rezliveBooking)
     {
         $this->hotelService = $hotelService;
     }
@@ -81,7 +81,7 @@ class HotelController extends Controller
             ], 400);
         }
     }
-     public function bookHotel(Request $request)
+    public function bookHotel(Request $request)
     {
         $request->validate([
             'booking_code' => 'required',
@@ -95,31 +95,63 @@ class HotelController extends Controller
 
         return response()->json($result);
     }
-      public function createBooking(Request $request)
+    //   public function createBooking(Request $request)
+    // {
+    //     $request->validate([
+    //         'session_code' => 'required|string',
+    //         'hotel_id' => 'required',
+    //         'country_code' => 'required|string',
+    //         'city_code' => 'required|string',
+    //         'arrival_date' => 'required|date',
+    //         'departure_date' => 'required|date',
+    //         // 'prebooking_file' => 'required|string'
+    //     ]);
+
+    //     $result = $this->hotelService->createHotelsBooking($request->all());
+
+    //     return response()->json($result);
+    // }
+    public function createBooking(Request $request)
     {
         $request->validate([
-            'session_code' => 'required|string',
-            'hotel_id' => 'required',
-            'country_code' => 'required|string',
-            'city_code' => 'required|string',
-            'arrival_date' => 'required|date',
-            'departure_date' => 'required|date',
-            // 'prebooking_file' => 'required|string'
+            'session_code'   => 'required|string',
+            'hotel_id'       => 'required',
+            'hotel_name'     => 'required|string',
+            'country_code'   => 'required|string',
+            'city_code'      => 'required|string',
+            'arrival_date'   => 'required|date',
+            'departure_date' => 'required|date|after:arrival_date',
+            'rooms_type'     => 'required|string',
+            'rooms_key'      => 'required|string',
+            'rooms_adults'   => 'required|integer|min:1',
+            'rooms_children' => 'nullable|integer|min:0',
+            'room_rates'     => 'required',
+
+            // travellers array
+            'travellers'              => 'required|array|min:1',
+            'travellers.*.first_name' => 'required|string',
+            'travellers.*.last_name'  => 'required|string',
+            'travellers.*.title'      => 'required|string',
+            'travellers.*.type'       => 'required|in:ADULT,CHILD',
+            'travellers.*.age'        => 'nullable|integer',  // required if CHILD
         ]);
 
         $result = $this->hotelService->createHotelsBooking($request->all());
 
-        return response()->json($result);
+        $statusCode = $result['status'] ? 200 : 422;
+
+        return response()->json($result, $statusCode);
     }
 
-  public function fetchLog()
-{
-    $logs = RezliveLog::latest()->get();
 
-    return response()->json([
-        'status' => true,
-        'message' => 'Logs fetched successfully',
-        'data' => $logs
-    ]);
-}
+    public function fetchLog()
+    {
+        $logs = RezliveLog::latest()->get();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Logs fetched successfully',
+            'data' => $logs
+        ]);
+    }
 }
