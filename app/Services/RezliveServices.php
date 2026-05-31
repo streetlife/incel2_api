@@ -626,27 +626,137 @@ class RezliveServices
         return json_decode(json_encode($xmlResponse), true);
     }
 
+    // private function buildBookingXml($hotelData, $bookingHotels)
+    // {
+    //     $childrenAges = '';
+    //     $guestsXml = '';
+    //     $totalRates = [];
+
+    //     // Validate and parse dates
+    //     $arrivalDate   = strtotime($hotelData['arrival_date']);
+    //     $departureDate = strtotime($hotelData['departure_date']);
+
+    //     // if (!$arrivalDate || !$departureDate) {
+    //     //     throw new \InvalidArgumentException("Invalid arrival or departure date provided.");
+    //     // }
+
+    //     // if ($arrivalDate <= time()) {
+    //     //     throw new \InvalidArgumentException("Arrival date must be greater than the current date.");
+    //     // }
+
+    //     // if ($departureDate <= $arrivalDate) {
+    //     //     throw new \InvalidArgumentException("Departure date must be greater than the arrival date.");
+    //     // }
+
+    //     $adultsCount   = 0;
+    //     $childrenCount = 0;
+
+    //     foreach ($bookingHotels as $index => $hotel) {
+
+    //         $guestsXml .= "<Guests>";
+
+    //         foreach ($hotel['guests'] as $guest) {
+
+    //             if ($guest['type'] === 'ADULT') {
+    //                 $adultsCount++;
+    //                 $guestsXml .= "
+    //                 <Guest>
+    //                     <Salutation>MR</Salutation>
+    //                     <FirstName>" . htmlspecialchars($guest['first_name']) . "</FirstName>
+    //                     <LastName>" . htmlspecialchars($guest['last_name']) . "</LastName>
+    //                 </Guest>";
+    //             }
+
+    //             if ($guest['type'] === 'CHILD') {
+    //                 $childrenCount++;
+    //                 $guestsXml .= "
+    //                 <Guest>
+    //                     <Salutation>Child</Salutation>
+    //                     <FirstName>" . htmlspecialchars($guest['first_name']) . "</FirstName>
+    //                     <LastName>" . htmlspecialchars($guest['last_name']) . "</LastName>
+    //                     <IsChild>1</IsChild>
+    //                     <Age>{$guest['age']}</Age>
+    //                 </Guest>";
+
+    //                 $childrenAges .= $guest['age'] . '*';
+    //             }
+    //         }
+
+    //         $guestsXml .= "</Guests>";
+
+    //         // Collect per-room rate (pipe-separated for multiple rooms)
+    //         $totalRates[] = $hotel['total_rate'] ?? $hotel['totalRates'] ?? 0;
+    //     }
+
+    //     // Trim trailing separator
+    //     $childrenAges = rtrim($childrenAges, '*');
+
+    //     // Multiple room rates separated by "|"
+    //     $totalRateStr = implode('|', $totalRates);
+
+    //     // Total number of rooms
+    //     $totalRooms = count($bookingHotels);
+
+    //     return "
+    //     <BookingRequest>
+
+    //         <Authentication>
+    //             <AgentCode>{$this->agent}</AgentCode>
+    //             <UserName>{$this->username}</UserName>
+    //         </Authentication>
+
+    //         <Booking>
+
+    //             <SearchSessionId>{$hotelData['search_session_id']}</SearchSessionId>
+
+    //             <AgentRefNo>{$this->agent}</AgentRefNo>
+
+    //             <ArrivalDate>" . date('d/m/Y', $arrivalDate) . "</ArrivalDate>
+    //             <DepartureDate>" . date('d/m/Y', $departureDate) . "</DepartureDate>
+
+    //             <GuestNationality>{$hotelData['nationality']}</GuestNationality>
+
+    //             <CountryCode>{$hotelData['country_code']}</CountryCode>
+    //             <City>{$hotelData['city_code']}</City>
+
+    //             <HotelId>{$hotelData['hotel_id']}</HotelId>
+
+    //             <Name>" . htmlspecialchars($hotelData['hotel_name']) . "</Name>
+
+    //             <Currency>USD</Currency>
+
+    //             <RoomDetails>
+    //                 <RoomDetail>
+
+    //                     <Type>" . htmlspecialchars($hotelData['room_type']) . "</Type>
+
+    //                     <BookingKey>{$hotelData['booking_key']}</BookingKey>
+
+    //                     <Adults>{$adultsCount}</Adults>
+
+    //                     <Children>{$childrenCount}</Children>
+
+    //                     <ChildrenAges>{$childrenAges}</ChildrenAges>
+
+    //                     <TotalRooms>{$totalRooms}</TotalRooms>
+
+    //                     <TotalRate>{$totalRateStr}</TotalRate>
+
+    //                     {$guestsXml}
+
+    //                 </RoomDetail>
+    //             </RoomDetails>
+
+    //         </Booking>
+
+    //     </BookingRequest>
+    // ";
+    // }
     private function buildBookingXml($hotelData, $bookingHotels)
     {
         $childrenAges = '';
         $guestsXml = '';
         $totalRates = [];
-
-        // Validate and parse dates
-        $arrivalDate   = strtotime($hotelData['arrival_date']);
-        $departureDate = strtotime($hotelData['departure_date']);
-
-        // if (!$arrivalDate || !$departureDate) {
-        //     throw new \InvalidArgumentException("Invalid arrival or departure date provided.");
-        // }
-
-        // if ($arrivalDate <= time()) {
-        //     throw new \InvalidArgumentException("Arrival date must be greater than the current date.");
-        // }
-
-        // if ($departureDate <= $arrivalDate) {
-        //     throw new \InvalidArgumentException("Departure date must be greater than the arrival date.");
-        // }
 
         $adultsCount   = 0;
         $childrenCount = 0;
@@ -660,23 +770,23 @@ class RezliveServices
                 if ($guest['type'] === 'ADULT') {
                     $adultsCount++;
                     $guestsXml .= "
-                    <Guest>
-                        <Salutation>MR</Salutation>
-                        <FirstName>" . htmlspecialchars($guest['first_name']) . "</FirstName>
-                        <LastName>" . htmlspecialchars($guest['last_name']) . "</LastName>
-                    </Guest>";
+                <Guest>
+                    <Salutation>MR</Salutation>
+                    <FirstName>" . htmlspecialchars($guest['first_name']) . "</FirstName>
+                    <LastName>" . htmlspecialchars($guest['last_name']) . "</LastName>
+                </Guest>";
                 }
 
                 if ($guest['type'] === 'CHILD') {
                     $childrenCount++;
                     $guestsXml .= "
-                    <Guest>
-                        <Salutation>Child</Salutation>
-                        <FirstName>" . htmlspecialchars($guest['first_name']) . "</FirstName>
-                        <LastName>" . htmlspecialchars($guest['last_name']) . "</LastName>
-                        <IsChild>1</IsChild>
-                        <Age>{$guest['age']}</Age>
-                    </Guest>";
+                <Guest>
+                    <Salutation>Child</Salutation>
+                    <FirstName>" . htmlspecialchars($guest['first_name']) . "</FirstName>
+                    <LastName>" . htmlspecialchars($guest['last_name']) . "</LastName>
+                    <IsChild>1</IsChild>
+                    <Age>{$guest['age']}</Age>
+                </Guest>";
 
                     $childrenAges .= $guest['age'] . '*';
                 }
@@ -684,7 +794,6 @@ class RezliveServices
 
             $guestsXml .= "</Guests>";
 
-            // Collect per-room rate (pipe-separated for multiple rooms)
             $totalRates[] = $hotel['total_rate'] ?? $hotel['totalRates'] ?? 0;
         }
 
@@ -698,59 +807,59 @@ class RezliveServices
         $totalRooms = count($bookingHotels);
 
         return "
-        <BookingRequest>
+    <BookingRequest>
 
-            <Authentication>
-                <AgentCode>{$this->agent}</AgentCode>
-                <UserName>{$this->username}</UserName>
-            </Authentication>
+        <Authentication>
+            <AgentCode>{$this->agent}</AgentCode>
+            <UserName>{$this->username}</UserName>
+        </Authentication>
 
-            <Booking>
+        <Booking>
 
-                <SearchSessionId>{$hotelData['search_session_id']}</SearchSessionId>
+            <SearchSessionId>{$hotelData['search_session_id']}</SearchSessionId>
 
-                <AgentRefNo>{$this->agent}</AgentRefNo>
+            <AgentRefNo>{$this->agent}</AgentRefNo>
 
-                <ArrivalDate>" . date('d/m/Y', $arrivalDate) . "</ArrivalDate>
-                <DepartureDate>" . date('d/m/Y', $departureDate) . "</DepartureDate>
+            <ArrivalDate>{$hotelData['arrival_date']}</ArrivalDate>
+            <DepartureDate>{$hotelData['departure_date']}</DepartureDate>
 
-                <GuestNationality>{$hotelData['nationality']}</GuestNationality>
+            <GuestNationality>{$hotelData['nationality']}</GuestNationality>
 
-                <CountryCode>{$hotelData['country_code']}</CountryCode>
-                <City>{$hotelData['city_code']}</City>
+            <CountryCode>{$hotelData['country_code']}</CountryCode>
+            <City>{$hotelData['city_code']}</City>
 
-                <HotelId>{$hotelData['hotel_id']}</HotelId>
+            <HotelId>{$hotelData['hotel_id']}</HotelId>
 
-                <Name>" . htmlspecialchars($hotelData['hotel_name']) . "</Name>
+            <Name>" . htmlspecialchars($hotelData['hotel_name']) . "</Name>
 
-                <Currency>USD</Currency>
+            <Currency>USD</Currency>
 
-                <RoomDetails>
-                    <RoomDetail>
+            <RoomDetails>
+                <RoomDetail>
 
-                        <Type>" . htmlspecialchars($hotelData['room_type']) . "</Type>
+                    <Type>" . htmlspecialchars($hotelData['room_type']) . "</Type>
 
-                        <BookingKey>{$hotelData['booking_key']}</BookingKey>
+                    <BookingKey>{$hotelData['booking_key']}</BookingKey>
 
-                        <Adults>{$adultsCount}</Adults>
+                    <Adults>{$adultsCount}</Adults>
 
-                        <Children>{$childrenCount}</Children>
+                    <Children>{$childrenCount}</Children>
 
-                        <ChildrenAges>{$childrenAges}</ChildrenAges>
+                    <ChildrenAges>{$childrenAges}</ChildrenAges>
 
-                        <TotalRooms>{$totalRooms}</TotalRooms>
+                    <TotalRooms>{$totalRooms}</TotalRooms>
 
-                        <TotalRate>{$totalRateStr}</TotalRate>
+                    <TotalRate>{$totalRateStr}</TotalRate>
 
-                        {$guestsXml}
+                    {$guestsXml}
 
-                    </RoomDetail>
-                </RoomDetails>
+                </RoomDetail>
+            </RoomDetails>
 
-            </Booking>
+        </Booking>
 
-        </BookingRequest>
-    ";
+    </BookingRequest>
+";
     }
 
     private function handleBookingResponse($bookingCode, $responseJson, $rawResponse)
