@@ -636,17 +636,17 @@ class RezliveServices
         $arrivalDate   = strtotime($hotelData['arrival_date']);
         $departureDate = strtotime($hotelData['departure_date']);
 
-        if (!$arrivalDate || !$departureDate) {
-            throw new \InvalidArgumentException("Invalid arrival or departure date provided.");
-        }
+        // if (!$arrivalDate || !$departureDate) {
+        //     throw new \InvalidArgumentException("Invalid arrival or departure date provided.");
+        // }
 
-        if ($arrivalDate <= time()) {
-            throw new \InvalidArgumentException("Arrival date must be greater than the current date.");
-        }
+        // if ($arrivalDate <= time()) {
+        //     throw new \InvalidArgumentException("Arrival date must be greater than the current date.");
+        // }
 
-        if ($departureDate <= $arrivalDate) {
-            throw new \InvalidArgumentException("Departure date must be greater than the arrival date.");
-        }
+        // if ($departureDate <= $arrivalDate) {
+        //     throw new \InvalidArgumentException("Departure date must be greater than the arrival date.");
+        // }
 
         $adultsCount   = 0;
         $childrenCount = 0;
