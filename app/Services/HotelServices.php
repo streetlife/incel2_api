@@ -554,8 +554,8 @@ class HotelServices
         $hotelId       = $data['hotel_id'] ?? null;
         $countryCode   = $data['country_code'] ?? null;
         $cityCode      = $data['city_code'] ?? null;
-        $arrivalDate   = $data['arrival_date'] ?? null;   // ✅ keep as Y-m-d
-        $departureDate = $data['departure_date'] ?? null; // ✅ keep as Y-m-d
+        $arrivalDate   = $data['arrival_date'] ?? null; 
+        $departureDate = $data['departure_date'] ?? null; 
         $travellers    = $data['travellers'] ?? [];
         $roomType      = $data['rooms_type'] ?? null;
         $bookingKey    = $data['rooms_key'] ?? null;

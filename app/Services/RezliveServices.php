@@ -507,20 +507,12 @@ class RezliveServices
 
         $hotelData = $bookingHotels[0];
 
-        // Step 1: Pre-book
         $preBookResponse = $this->preBook($hotelData, $bookingHotels);
 
-        if (!$preBookResponse || isset($preBookResponse['error'])) {
+        if (!$preBookResponse || !empty($preBookResponse['error'])) {
             return [
                 'status'  => false,
                 'message' => $preBookResponse['error'] ?? 'Pre-booking failed'
-            ];
-        }
-
-        if (!empty($preBookResponse['error'])) {
-            return [
-                'status'  => false,
-                'message' => $preBookResponse['error']
             ];
         }
 
@@ -529,7 +521,7 @@ class RezliveServices
 
         $xml = $this->buildBookingXml($hotelData, $bookingHotels);
 
-        Log::info('Rezlive Booking Request', ['xml' => $xml]);
+        Log::info('Rezlive Booking XML', ['xml' => $xml]);
 
         $endpoint = $this->url . "/bookhotel";
 
@@ -866,12 +858,10 @@ class RezliveServices
         $childrenAges = '';
         $guestsXml    = '';
         $totalRates   = [];
-
-     
         $adultsCount   = $hotelData['rooms_adults'];
         $childrenCount = $hotelData['rooms_children'];
 
-        foreach ($bookingHotels as $index => $hotel) {
+        foreach ($bookingHotels as $hotel) {
 
             $guestsXml .= "<Guests>";
 
@@ -902,17 +892,12 @@ class RezliveServices
 
             $guestsXml .= "</Guests>";
 
-            $totalRates[] = $hotel['total_rate'] ?? $hotel['totalRates'] ?? 0;
+            $totalRates[] = $hotel['total_rate'] ?? 0;
         }
 
-        // Trim trailing separator
         $childrenAges = rtrim($childrenAges, '*');
-
-        // Multiple room rates separated by "|"
         $totalRateStr = implode('|', $totalRates);
-
-        // Total number of rooms
-        $totalRooms = count($bookingHotels);
+        $totalRooms   = count($bookingHotels);
 
         return "
     <BookingRequest>
@@ -967,7 +952,7 @@ class RezliveServices
         </Booking>
 
     </BookingRequest>
-";
+    ";
     }
 
     private function handleBookingResponse($bookingCode, $responseJson, $rawResponse)
