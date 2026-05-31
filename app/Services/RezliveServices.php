@@ -867,7 +867,7 @@ class RezliveServices
         $guestsXml    = '';
         $totalRates   = [];
 
-        // ✅ Use original search values
+     
         $adultsCount   = $hotelData['rooms_adults'];
         $childrenCount = $hotelData['rooms_children'];
 
