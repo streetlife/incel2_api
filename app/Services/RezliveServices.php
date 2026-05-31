@@ -752,14 +752,124 @@ class RezliveServices
     //     </BookingRequest>
     // ";
     // }
+    //     private function buildBookingXml($hotelData, $bookingHotels)
+    //     {
+    //         $childrenAges = '';
+    //         $guestsXml = '';
+    //         $totalRates = [];
+
+    //         $adultsCount   = 0;
+    //         $childrenCount = 0;
+
+    //         foreach ($bookingHotels as $index => $hotel) {
+
+    //             $guestsXml .= "<Guests>";
+
+    //             foreach ($hotel['guests'] as $guest) {
+
+    //                 if ($guest['type'] === 'ADULT') {
+    //                     $adultsCount++;
+    //                     $guestsXml .= "
+    //                 <Guest>
+    //                     <Salutation>MR</Salutation>
+    //                     <FirstName>" . htmlspecialchars($guest['first_name']) . "</FirstName>
+    //                     <LastName>" . htmlspecialchars($guest['last_name']) . "</LastName>
+    //                 </Guest>";
+    //                 }
+
+    //                 if ($guest['type'] === 'CHILD') {
+    //                     $childrenCount++;
+    //                     $guestsXml .= "
+    //                 <Guest>
+    //                     <Salutation>Child</Salutation>
+    //                     <FirstName>" . htmlspecialchars($guest['first_name']) . "</FirstName>
+    //                     <LastName>" . htmlspecialchars($guest['last_name']) . "</LastName>
+    //                     <IsChild>1</IsChild>
+    //                     <Age>{$guest['age']}</Age>
+    //                 </Guest>";
+
+    //                     $childrenAges .= $guest['age'] . '*';
+    //                 }
+    //             }
+
+    //             $guestsXml .= "</Guests>";
+
+    //             $totalRates[] = $hotel['total_rate'] ?? $hotel['totalRates'] ?? 0;
+    //         }
+
+    //         // Trim trailing separator
+    //         $childrenAges = rtrim($childrenAges, '*');
+
+    //         // Multiple room rates separated by "|"
+    //         $totalRateStr = implode('|', $totalRates);
+
+    //         // Total number of rooms
+    //         $totalRooms = count($bookingHotels);
+
+    //         return "
+    //     <BookingRequest>
+
+    //         <Authentication>
+    //             <AgentCode>{$this->agent}</AgentCode>
+    //             <UserName>{$this->username}</UserName>
+    //         </Authentication>
+
+    //         <Booking>
+
+    //             <SearchSessionId>{$hotelData['search_session_id']}</SearchSessionId>
+
+    //             <AgentRefNo>{$this->agent}</AgentRefNo>
+
+    //             <ArrivalDate>{$hotelData['arrival_date']}</ArrivalDate>
+    //             <DepartureDate>{$hotelData['departure_date']}</DepartureDate>
+
+    //             <GuestNationality>{$hotelData['nationality']}</GuestNationality>
+
+    //             <CountryCode>{$hotelData['country_code']}</CountryCode>
+    //             <City>{$hotelData['city_code']}</City>
+
+    //             <HotelId>{$hotelData['hotel_id']}</HotelId>
+
+    //             <Name>" . htmlspecialchars($hotelData['hotel_name']) . "</Name>
+
+    //             <Currency>USD</Currency>
+
+    //             <RoomDetails>
+    //                 <RoomDetail>
+
+    //                     <Type>" . htmlspecialchars($hotelData['room_type']) . "</Type>
+
+    //                     <BookingKey>{$hotelData['booking_key']}</BookingKey>
+
+    //                     <Adults>{$adultsCount}</Adults>
+
+    //                     <Children>{$childrenCount}</Children>
+
+    //                     <ChildrenAges>{$childrenAges}</ChildrenAges>
+
+    //                     <TotalRooms>{$totalRooms}</TotalRooms>
+
+    //                     <TotalRate>{$totalRateStr}</TotalRate>
+
+    //                     {$guestsXml}
+
+    //                 </RoomDetail>
+    //             </RoomDetails>
+
+    //         </Booking>
+
+    //     </BookingRequest>
+    // ";
+    //     }
     private function buildBookingXml($hotelData, $bookingHotels)
     {
         $childrenAges = '';
-        $guestsXml = '';
-        $totalRates = [];
+        $guestsXml    = '';
+        $totalRates   = [];
 
-        $adultsCount   = 0;
-        $childrenCount = 0;
+        // ✅ Use original search values
+        $adultsCount   = $hotelData['rooms_adults'];
+        $childrenCount = $hotelData['rooms_children'];
 
         foreach ($bookingHotels as $index => $hotel) {
 
@@ -768,7 +878,6 @@ class RezliveServices
             foreach ($hotel['guests'] as $guest) {
 
                 if ($guest['type'] === 'ADULT') {
-                    $adultsCount++;
                     $guestsXml .= "
                 <Guest>
                     <Salutation>MR</Salutation>
@@ -778,7 +887,6 @@ class RezliveServices
                 }
 
                 if ($guest['type'] === 'CHILD') {
-                    $childrenCount++;
                     $guestsXml .= "
                 <Guest>
                     <Salutation>Child</Salutation>
