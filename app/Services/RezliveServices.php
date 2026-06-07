@@ -16,7 +16,7 @@ class RezliveServices
     protected $apiKey;
 
     private const LOG_DISK = 'local';
-
+  
     public function __construct()
     {
         $this->url      = rtrim(config("rezlive.rezlive_url"), '/');
@@ -37,25 +37,24 @@ class RezliveServices
      * @param string $label   e.g. 'request', 'response'
      * @param string $content XML string to save
      */
+
     private function saveXmlLog(string $type, string $label, string $content): void
     {
         try {
             $timestamp = now()->format('Ymd_His');
-            $folder    = "xml_logs/{$type}";
-            $filename  = "{$folder}/{$timestamp}_{$label}.xml";
+            $filename  = "xml_logs/{$timestamp}_{$label}_{$type}.xml";
 
             Storage::disk(self::LOG_DISK)->put($filename, $content);
 
             Log::debug("XML log saved", ['file' => $filename]);
         } catch (\Throwable $e) {
             Log::warning("Failed to save XML log", [
-                'type'    => $type,
-                'label'   => $label,
-                'error'   => $e->getMessage(),
+                'type'  => $type,
+                'label' => $label,
+                'error' => $e->getMessage(),
             ]);
         }
     }
-
     // -------------------------------------------------------------------------
     // SEARCH HOTELS
     // -------------------------------------------------------------------------
@@ -203,7 +202,7 @@ class RezliveServices
         $xml      = $this->buildBookingXml($hotelData, $bookingHotels);
         $endpoint = $this->url . "/bookhotel";
 
-        
+
         $this->saveXmlLog('booking', 'request', $xml);
 
         Log::info('Rezlive Booking XML', ['xml' => $xml]);
@@ -215,7 +214,7 @@ class RezliveServices
 
         $body = trim($response->body());
 
-        
+
         $this->saveXmlLog('booking', 'response', $body);
 
         Log::info('Rezlive Booking Response', ['response' => $body]);
