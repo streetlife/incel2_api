@@ -15,8 +15,8 @@ class RezliveServices
     protected $password;
     protected $apiKey;
 
-    private const LOG_DISK = 'local';
-  
+    private const LOG_DISK = 'xml_logs';
+
     public function __construct()
     {
         $this->url      = rtrim(config("rezlive.rezlive_url"), '/');
@@ -43,10 +43,12 @@ class RezliveServices
         try {
             $timestamp = now()->format('Ymd_His');
             $filename  = "xml_logs/{$timestamp}_{$label}_{$type}.xml";
-
-            Storage::disk(self::LOG_DISK)->put($filename, $content);
-
-            Log::debug("XML log saved", ['file' => $filename]);
+            $path = public_path($filename);
+            if (!file_exists(public_path('xml_logs'))) {
+                mkdir(public_path('xml_logs'), 0755, true);
+            }
+            file_put_contents($path, $content);
+            Log::Info("XML log saved", ['file' => $filename]);
         } catch (\Throwable $e) {
             Log::warning("Failed to save XML log", [
                 'type'  => $type,
