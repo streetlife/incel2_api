@@ -302,10 +302,78 @@ class RezliveServices
     }
 
 
+    //     private function buildSearchXml(array $params, string $arrivalDate, string $departureDate): string
+    //     {
+    //         $arrivalDate   = Carbon::parse($arrivalDate)->format('Y-m-d');
+    //         $departureDate = Carbon::parse($departureDate)->format('Y-m-d');
+    //         Log::info("Rezlive Search Params", [
+    //             'params'        => $params,
+    //             'arrivalDate'   => $arrivalDate,
+    //             'departureDate' => $departureDate,
+    //         ]);
+
+    //         $country     = $params['search_hotel_country'];
+    //         $city        = $params['search_hotel_city'];
+    //         $nationality = $params['search_hotel_nationality'];
+    //         $roomNumber  = $params['room_number'] ?? 1;
+    //         $childAges   = $params['child'] ?? [];
+    //         $arrivalDate =  $arrivalDate;
+    //         $departureDate =  $departureDate;
+    //         $childIndex  = 0;
+
+    //         $xml = "<HotelFindRequest>
+    // <Authentication>
+    // <AgentCode>{$this->agent}</AgentCode>
+    // <UserName>{$this->username}</UserName>
+    // </Authentication>
+    // <Booking>
+    // <ArrivalDate>{$arrivalDate}</ArrivalDate>
+    // <DepartureDate>{$departureDate}</DepartureDate>
+    // <CountryCode>{$country}</CountryCode>
+    // <City>{$city}</City>
+    // <GuestNationality>{$nationality}</GuestNationality>
+    // <HotelRatings>
+    // <HotelRating>1</HotelRating>
+    // <HotelRating>2</HotelRating>
+    // <HotelRating>3</HotelRating>
+    // <HotelRating>4</HotelRating>
+    // <HotelRating>5</HotelRating>
+    // </HotelRatings>
+    // <Rooms>";
+
+    //         for ($room = 1; $room <= $roomNumber; $room++) {
+    //             $adults   = $params["room{$room}_adults"] ?? 2;
+    //             $children = $params["room{$room}_children"] ?? 0;
+
+    //             $xml .= "<Room>
+    // <Type>Room-{$room}</Type>
+    // <NoOfAdults>{$adults}</NoOfAdults>
+    // <NoOfChilds>{$children}</NoOfChilds>";
+
+    //             if ($children > 0) {
+    //                 $xml .= "<ChildrenAges>";
+    //                 for ($i = 0; $i < $children; $i++) {
+    //                     if (isset($childAges[$childIndex])) {
+    //                         $xml .= "<ChildAge>{$childAges[$childIndex]}</ChildAge>";
+    //                     }
+    //                     $childIndex++;
+    //                 }
+    //                 $xml .= "</ChildrenAges>";
+    //             }
+
+    //             $xml .= "</Room>";
+    //         }
+
+    //         $xml .= "</Rooms></Booking></HotelFindRequest>";
+
+    //         return $xml;
+    //     }
+
     private function buildSearchXml(array $params, string $arrivalDate, string $departureDate): string
     {
-        $arrivalDate   = Carbon::parse($arrivalDate)->format('d/m/Y');
-        $departureDate = Carbon::parse($departureDate)->format('d/m/Y');
+        // $arrivalDate   = Carbon::parse($arrivalDate)->format('Y-m-d');
+        // $departureDate = Carbon::parse($departureDate)->format('Y-m-d');
+
         Log::info("Rezlive Search Params", [
             'params'        => $params,
             'arrivalDate'   => $arrivalDate,
@@ -317,8 +385,6 @@ class RezliveServices
         $nationality = $params['search_hotel_nationality'];
         $roomNumber  = $params['room_number'] ?? 1;
         $childAges   = $params['child'] ?? [];
-        $arrivalDate =  $arrivalDate;
-        $departureDate =  $departureDate;
         $childIndex  = 0;
 
         $xml = "<HotelFindRequest>
@@ -368,12 +434,10 @@ class RezliveServices
 
         return $xml;
     }
-
-
     protected function buildXml($payload): string
     {
-        $arrivalDate   = Carbon::parse($payload['arrival_date'])->format('d/m/Y');
-        $departureDate = Carbon::parse($payload['departure_date'])->format('d/m/Y');
+        $arrivalDate   = $payload['arrival_date'];
+        $departureDate = $payload['departure_date'];
         $roomsXml = '';
 
         foreach ($payload['rooms'] as $index => $room) {
@@ -415,8 +479,8 @@ class RezliveServices
 
     private function buildBookingXml($hotelData, $bookingHotels): string
     {
-        $arrivalDate   = Carbon::parse($hotelData['arrival_date'])->format('d/m/Y');
-        $departureDate = Carbon::parse($$hotelData['departure_date'])->format('d/m/Y');
+        $arrivalDate   = $hotelData['arrival_date'];
+        $departureDate = $hotelData['departure_date'];
         $childrenAges    = '';
         $guestsXml       = '';
         $totalRates      = [];
