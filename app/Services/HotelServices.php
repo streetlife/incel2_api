@@ -614,7 +614,7 @@ class HotelServices
             'guests'            => $guests,
         ];
 
-        $rezliveResult = $this->rezlive->processBooking($bookingCode, [$rezliveHotelData]);
+         $rezliveResult = $this->rezlive->processBooking($bookingCode, [$rezliveHotelData]);
 
         if (!($rezliveResult['status'] ?? false)) {
             Log::error('Rezlive booking failed', [

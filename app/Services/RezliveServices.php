@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\RezliveLog;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -303,6 +304,8 @@ class RezliveServices
 
     private function buildSearchXml(array $params, string $arrivalDate, string $departureDate): string
     {
+        $arrivalDate   = Carbon::parse($arrivalDate)->format('d/m/Y');
+        $departureDate = Carbon::parse($departureDate)->format('d/m/Y');
         Log::info("Rezlive Search Params", [
             'params'        => $params,
             'arrivalDate'   => $arrivalDate,
@@ -314,6 +317,8 @@ class RezliveServices
         $nationality = $params['search_hotel_nationality'];
         $roomNumber  = $params['room_number'] ?? 1;
         $childAges   = $params['child'] ?? [];
+        $arrivalDate =  $arrivalDate;
+        $departureDate =  $departureDate;
         $childIndex  = 0;
 
         $xml = "<HotelFindRequest>
@@ -364,8 +369,11 @@ class RezliveServices
         return $xml;
     }
 
+
     protected function buildXml($payload): string
     {
+        $arrivalDate   = Carbon::parse($payload['arrival_date'])->format('d/m/Y');
+        $departureDate = Carbon::parse($payload['departure_date'])->format('d/m/Y');
         $roomsXml = '';
 
         foreach ($payload['rooms'] as $index => $room) {
@@ -392,8 +400,8 @@ class RezliveServices
               <UserName>{$this->username}</UserName>
             </Authentication>
             <Booking>
-                <ArrivalDate>{$payload['arrival_date']}</ArrivalDate>
-                <DepartureDate>{$payload['departure_date']}</DepartureDate>
+                <ArrivalDate>{$arrivalDate}</ArrivalDate>
+                <DepartureDate>{$departureDate}</DepartureDate>
                 <CountryCode>{$payload['country_code']}</CountryCode>
                 <City>{$payload['city_code']}</City>
                 <HotelIDs>
@@ -407,6 +415,8 @@ class RezliveServices
 
     private function buildBookingXml($hotelData, $bookingHotels): string
     {
+        $arrivalDate   = Carbon::parse($hotelData['arrival_date'])->format('d/m/Y');
+        $departureDate = Carbon::parse($$hotelData['departure_date'])->format('d/m/Y');
         $childrenAges    = '';
         $guestsXml       = '';
         $totalRates      = [];
@@ -457,8 +467,8 @@ class RezliveServices
         <Booking>
             <SearchSessionId>{$searchSessionId}</SearchSessionId>
             <AgentRefNo>{$this->agent}</AgentRefNo>
-            <ArrivalDate>{$hotelData['arrival_date']}</ArrivalDate>
-            <DepartureDate>{$hotelData['departure_date']}</DepartureDate>
+            <ArrivalDate>{$arrivalDate}</ArrivalDate>
+            <DepartureDate>{$departureDate}</DepartureDate>
             <GuestNationality>{$hotelData['nationality']}</GuestNationality>
             <CountryCode>{$hotelData['country_code']}</CountryCode>
             <City>{$hotelData['city_code']}</City>
