@@ -142,7 +142,7 @@ class RezliveServices
                 'status'       => true,
                 'message'      => 'Success',
                 'data'         => $result,
-                'booking_keys' => $bookingKeys,
+                'booking_keys' => $bookingKeys ?? null,
             ];
         } catch (\Exception $e) {
             Log::error('Rezlive Error', ['message' => $e->getMessage()]);
