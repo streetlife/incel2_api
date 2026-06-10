@@ -479,48 +479,66 @@ class RezliveServices
 
     private function buildBookingXml($hotelData, $bookingHotels): string
     {
-        $arrivalDate   = $hotelData['arrival_date'];
-        $departureDate = $hotelData['departure_date'];
-        $childrenAges    = '';
-        $guestsXml       = '';
-        $totalRates      = [];
-        $adultsCount     = $hotelData['rooms_adults'];
-        $childrenCount   = $hotelData['rooms_children'];
+        $arrivalDate     = $hotelData['arrival_date'];
+        $departureDate   = $hotelData['departure_date'];
         $searchSessionId = (string) $hotelData['search_session_id'];
+        $adultsPerRoom   = $hotelData['rooms_adults'];    // array e.g. [2, 1]
+        $childrenPerRoom = $hotelData['rooms_children'];  // array e.g. [0, 1]
 
-        foreach ($bookingHotels as $hotel) {
-            $guestsXml .= "<Guests>";
+        if (!is_array($adultsPerRoom))   $adultsPerRoom   = [$adultsPerRoom];
+        if (!is_array($childrenPerRoom)) $childrenPerRoom = [$childrenPerRoom];
+
+        $roomDetailsXml = '';
+        $totalRates     = [];
+
+        foreach ($bookingHotels as $i => $hotel) {
+            $adults   = $adultsPerRoom[$i]   ?? 1;
+            $children = $childrenPerRoom[$i] ?? 0;
+
+            $guestsXml    = '<Guests>';
+            $childrenAges = '';
 
             foreach ($hotel['guests'] as $guest) {
                 if ($guest['type'] === 'ADULT') {
-                    $guestsXml .= "
+                    $guestsXml .= '
                 <Guest>
                     <Salutation>MR</Salutation>
-                    <FirstName>" . htmlspecialchars($guest['first_name']) . "</FirstName>
-                    <LastName>" . htmlspecialchars($guest['last_name']) . "</LastName>
-                </Guest>";
+                    <FirstName>' . htmlspecialchars($guest['first_name']) . '</FirstName>
+                    <LastName>'  . htmlspecialchars($guest['last_name'])  . '</LastName>
+                </Guest>';
                 }
 
                 if ($guest['type'] === 'CHILD') {
-                    $guestsXml .= "
+                    $guestsXml .= '
                 <Guest>
                     <Salutation>Child</Salutation>
-                    <FirstName>" . htmlspecialchars($guest['first_name']) . "</FirstName>
-                    <LastName>" . htmlspecialchars($guest['last_name']) . "</LastName>
+                    <FirstName>' . htmlspecialchars($guest['first_name']) . '</FirstName>
+                    <LastName>'  . htmlspecialchars($guest['last_name'])  . '</LastName>
                     <IsChild>1</IsChild>
-                    <Age>{$guest['age']}</Age>
-                </Guest>";
+                    <Age>' . $guest['age'] . '</Age>
+                </Guest>';
                     $childrenAges .= $guest['age'] . '*';
                 }
             }
 
-            $guestsXml   .= "</Guests>";
+            $guestsXml   .= '</Guests>';
+            $childrenAges = rtrim($childrenAges, '*');
             $totalRates[] = $hotel['total_rate'] ?? 0;
+
+            $roomDetailsXml .= '
+            <RoomDetail>
+                <Type>'        . htmlspecialchars($hotel['room_type'] ?? $hotelData['room_type']) . '</Type>
+                <BookingKey>'  . ($hotel['booking_key'] ?? $hotelData['booking_key']) . '</BookingKey>
+                <Adults>'      . $adults   . '</Adults>
+                <Children>'    . $children . '</Children>
+                <ChildrenAges>' . $childrenAges . '</ChildrenAges>
+                <TotalRooms>1</TotalRooms>
+                <TotalRate>'   . ($hotel['total_rate'] ?? 0) . '</TotalRate>
+                ' . $guestsXml . '
+            </RoomDetail>';
         }
 
-        $childrenAges = rtrim($childrenAges, '*');
         $totalRateStr = implode('|', $totalRates);
-        $totalRooms   = count($bookingHotels);
 
         return "
     <BookingRequest>
@@ -540,16 +558,7 @@ class RezliveServices
             <Name>" . htmlspecialchars($hotelData['hotel_name']) . "</Name>
             <Currency>USD</Currency>
             <RoomDetails>
-                <RoomDetail>
-                    <Type>" . htmlspecialchars($hotelData['room_type']) . "</Type>
-                    <BookingKey>{$hotelData['booking_key']}</BookingKey>
-                    <Adults>{$adultsCount}</Adults>
-                    <Children>{$childrenCount}</Children>
-                    <ChildrenAges>{$childrenAges}</ChildrenAges>
-                    <TotalRooms>{$totalRooms}</TotalRooms>
-                    <TotalRate>{$totalRateStr}</TotalRate>
-                    {$guestsXml}
-                </RoomDetail>
+                {$roomDetailsXml}
             </RoomDetails>
         </Booking>
     </BookingRequest>";

@@ -546,23 +546,149 @@ class HotelServices
     //         'message'      => 'Booking created successfully',
     //     ];
     // } 
+    // public function createHotelsBooking($data)
+    // {
+    //     $userCode = auth()->user()->usercode ?? "temp" . now()->format('ymdHis');
+
+    //     $sessionCode   = $data['session_code'] ?? null;
+    //     $hotelId       = $data['hotel_id'] ?? null;
+    //     $countryCode   = $data['country_code'] ?? null;
+    //     $cityCode      = $data['city_code'] ?? null;
+    //     $arrivalDate   = $data['arrival_date'] ?? null; 
+    //     $departureDate = $data['departure_date'] ?? null; 
+    //     $travellers    = $data['travellers'] ?? [];
+    //     $roomType      = $data['rooms_type'] ?? null;
+    //     $bookingKey    = $data['rooms_key'] ?? null;
+    //     $roomsAdults   = (int)($data['rooms_adults'] ?? 1);
+    //     $roomsChildren = (int)($data['rooms_children'] ?? 0);
+    //     $totalRate     = $data['room_rates'] ?? 0;
+    //     $hotelName     = $data['hotel_name'] ?? null;
+
+    //     if (!$sessionCode) {
+    //         return ['status' => false, 'message' => 'Session code is required'];
+    //     }
+
+    //     if (!is_array($travellers) || count($travellers) === 0) {
+    //         return ['status' => false, 'message' => 'At least one traveller is required'];
+    //     }
+
+    //     $hotelSession = $this->getHotelBySessioncode($sessionCode);
+
+    //     if (!$hotelSession) {
+    //         return ['status' => false, 'message' => 'Hotel session not found'];
+    //     }
+
+    //     $nationality     = $hotelSession->nationality ?? null;
+    //     $searchSessionId = $hotelSession->search_session_id ?? null;
+
+    //     $bookingCode = $this->createBooking($userCode, 'HOTEL');
+    //     $markup      = $this->getMarkup('HOTEL');
+
+    //     $totalRates     = explode('|', $totalRate);
+    //     $totalRoomCount = count($totalRates);
+
+    //     $guests = [];
+    //     foreach ($travellers as $traveller) {
+    //         $guests[] = [
+    //             'type'       => strtoupper($traveller['type'] ?? 'ADULT'),
+    //             'first_name' => $traveller['first_name'] ?? '',
+    //             'last_name'  => $traveller['last_name'] ?? '',
+    //             'age'        => $traveller['age'] ?? null,
+    //         ];
+    //     }
+
+    //     $rezliveHotelData = [
+    //         'search_session_id' => $searchSessionId,
+    //         'hotel_id'          => $hotelId,
+    //         'hotel_name'        => $hotelName,
+    //         'country_code'      => $countryCode,
+    //         'city_code'         => $cityCode,
+    //         'arrival_date'      => $arrivalDate,  
+    //         'departure_date'    => $departureDate,
+    //         'nationality'       => $nationality,
+    //         'room_type'         => $roomType,
+    //         'booking_key'       => $bookingKey,
+    //         'rooms_adults'      => $roomsAdults,   
+    //         'rooms_children'    => $roomsChildren,
+    //         'total_rate'        => $totalRates[0] ?? 0,
+    //         'guests'            => $guests,
+    //     ];
+
+    //      $rezliveResult = $this->rezlive->processBooking($bookingCode, [$rezliveHotelData]);
+
+    //     if (!($rezliveResult['status'] ?? false)) {
+    //         Log::error('Rezlive booking failed', [
+    //             'booking_code' => $bookingCode,
+    //             'error'        => $rezliveResult['message'] ?? 'Unknown error'
+    //         ]);
+
+    //         return [
+    //             'status'  => false,
+    //             'message' => $rezliveResult['message'] ?? 'Booking failed at provider',
+    //         ];
+    //     }
+
+    //     for ($i = 0; $i < $totalRoomCount; $i++) {
+
+    //         $roomRate       = $totalRates[$i] ?? 0;
+    //         $roomRateMarkup = $this->priceMarkup($roomRate, $markup);
+
+    //         foreach ($travellers as $traveller) {
+    //             $this->createHotelBooking([
+    //                 'booking_code'         => $bookingCode,
+    //                 'booking_detail_code'  => 'BH' . now()->format('ymdHis') . rand(10, 99),
+    //                 'session_id'           => $sessionCode,
+    //                 'first_name'           => $traveller['first_name'] ?? null,
+    //                 'last_name'            => $traveller['last_name'] ?? null,
+    //                 'traveller_title'      => $traveller['title'] ?? null,
+    //                 'hotel_id'             => $hotelId,
+    //                 'country_code'         => $countryCode,
+    //                 'city_code'            => $cityCode,
+    //                 'arrival_date'         => $arrivalDate,
+    //                 'departure_date'       => $departureDate,
+    //                 'room_type'            => $roomType,
+    //                 'nationality'          => $nationality,
+    //                 'booking_key'          => $bookingKey,
+    //                 'room_rate'            => $roomRate,
+    //                 'room_rate_markup'     => $roomRateMarkup,
+    //                 'rooms_adults'         => $roomsAdults,
+    //                 'rooms_children'       => $roomsChildren,
+    //                 'total_rate'           => $totalRate,
+    //                 'total_room_count'     => $totalRoomCount,
+    //                 'provider_booking_ref' => $rezliveResult['provider_ref'] ?? null,
+    //             ]);
+    //         }
+    //     }
+
+    //     return [
+    //         'status'       => true,
+    //         'booking_code' => $bookingCode,
+    //         'provider_ref' => $rezliveResult['provider_ref'] ?? null,
+    //         'message'      => 'Booking created successfully',
+    //     ];
+    // }
     public function createHotelsBooking($data)
     {
         $userCode = auth()->user()->usercode ?? "temp" . now()->format('ymdHis');
 
-        $sessionCode   = $data['session_code'] ?? null;
-        $hotelId       = $data['hotel_id'] ?? null;
-        $countryCode   = $data['country_code'] ?? null;
-        $cityCode      = $data['city_code'] ?? null;
-        $arrivalDate   = $data['arrival_date'] ?? null; 
-        $departureDate = $data['departure_date'] ?? null; 
-        $travellers    = $data['travellers'] ?? [];
-        $roomType      = $data['rooms_type'] ?? null;
-        $bookingKey    = $data['rooms_key'] ?? null;
-        $roomsAdults   = (int)($data['rooms_adults'] ?? 1);
-        $roomsChildren = (int)($data['rooms_children'] ?? 0);
-        $totalRate     = $data['room_rates'] ?? 0;
-        $hotelName     = $data['hotel_name'] ?? null;
+        $sessionCode   = $data['session_code']    ?? null;
+        $hotelId       = $data['hotel_id']        ?? null;
+        $countryCode   = $data['country_code']    ?? null;
+        $cityCode      = $data['city_code']       ?? null;
+        $arrivalDate   = $data['arrival_date']    ?? null;
+        $departureDate = $data['departure_date']  ?? null;
+        $travellers    = $data['travellers']      ?? [];
+        $roomType      = $data['rooms_type']      ?? null;
+        $bookingKey    = $data['rooms_key']        ?? null;
+        $totalRate     = $data['room_rates']       ?? 0;
+        $hotelName     = $data['hotel_name']       ?? null;
+
+        // Accept per-room arrays matching what was sent in search
+        $roomsAdults   = $data['rooms_adults']   ?? [1];
+        $roomsChildren = $data['rooms_children'] ?? [0];
+
+        if (!is_array($roomsAdults))   $roomsAdults   = [$roomsAdults];
+        if (!is_array($roomsChildren)) $roomsChildren = [$roomsChildren];
 
         if (!$sessionCode) {
             return ['status' => false, 'message' => 'Session code is required'];
@@ -578,7 +704,7 @@ class HotelServices
             return ['status' => false, 'message' => 'Hotel session not found'];
         }
 
-        $nationality     = $hotelSession->nationality ?? null;
+        $nationality     = $hotelSession->nationality      ?? null;
         $searchSessionId = $hotelSession->search_session_id ?? null;
 
         $bookingCode = $this->createBooking($userCode, 'HOTEL');
@@ -592,8 +718,8 @@ class HotelServices
             $guests[] = [
                 'type'       => strtoupper($traveller['type'] ?? 'ADULT'),
                 'first_name' => $traveller['first_name'] ?? '',
-                'last_name'  => $traveller['last_name'] ?? '',
-                'age'        => $traveller['age'] ?? null,
+                'last_name'  => $traveller['last_name']  ?? '',
+                'age'        => $traveller['age']         ?? null,
             ];
         }
 
@@ -603,23 +729,23 @@ class HotelServices
             'hotel_name'        => $hotelName,
             'country_code'      => $countryCode,
             'city_code'         => $cityCode,
-            'arrival_date'      => $arrivalDate,  
+            'arrival_date'      => $arrivalDate,
             'departure_date'    => $departureDate,
             'nationality'       => $nationality,
             'room_type'         => $roomType,
             'booking_key'       => $bookingKey,
-            'rooms_adults'      => $roomsAdults,   
-            'rooms_children'    => $roomsChildren,
+            'rooms_adults'      => $roomsAdults,    // array
+            'rooms_children'    => $roomsChildren,  // array
             'total_rate'        => $totalRates[0] ?? 0,
             'guests'            => $guests,
         ];
 
-         $rezliveResult = $this->rezlive->processBooking($bookingCode, [$rezliveHotelData]);
+        $rezliveResult = $this->rezlive->processBooking($bookingCode, [$rezliveHotelData]);
 
         if (!($rezliveResult['status'] ?? false)) {
             Log::error('Rezlive booking failed', [
                 'booking_code' => $bookingCode,
-                'error'        => $rezliveResult['message'] ?? 'Unknown error'
+                'error'        => $rezliveResult['message'] ?? 'Unknown error',
             ]);
 
             return [
@@ -629,7 +755,6 @@ class HotelServices
         }
 
         for ($i = 0; $i < $totalRoomCount; $i++) {
-
             $roomRate       = $totalRates[$i] ?? 0;
             $roomRateMarkup = $this->priceMarkup($roomRate, $markup);
 
@@ -638,9 +763,9 @@ class HotelServices
                     'booking_code'         => $bookingCode,
                     'booking_detail_code'  => 'BH' . now()->format('ymdHis') . rand(10, 99),
                     'session_id'           => $sessionCode,
-                    'first_name'           => $traveller['first_name'] ?? null,
-                    'last_name'            => $traveller['last_name'] ?? null,
-                    'traveller_title'      => $traveller['title'] ?? null,
+                    'first_name'           => $traveller['first_name']  ?? null,
+                    'last_name'            => $traveller['last_name']   ?? null,
+                    'traveller_title'      => $traveller['title']       ?? null,
                     'hotel_id'             => $hotelId,
                     'country_code'         => $countryCode,
                     'city_code'            => $cityCode,
@@ -651,8 +776,8 @@ class HotelServices
                     'booking_key'          => $bookingKey,
                     'room_rate'            => $roomRate,
                     'room_rate_markup'     => $roomRateMarkup,
-                    'rooms_adults'         => $roomsAdults,
-                    'rooms_children'       => $roomsChildren,
+                    'rooms_adults'         => $roomsAdults[$i]   ?? 1,  // per-room
+                    'rooms_children'       => $roomsChildren[$i] ?? 0,  // per-room
                     'total_rate'           => $totalRate,
                     'total_room_count'     => $totalRoomCount,
                     'provider_booking_ref' => $rezliveResult['provider_ref'] ?? null,
