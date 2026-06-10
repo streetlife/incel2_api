@@ -111,6 +111,37 @@ class HotelController extends Controller
 
     //     return response()->json($result);
     // }
+    // public function createBooking(Request $request)
+    // {
+    //     $request->validate([
+    //         'session_code'   => 'required|string',
+    //         'hotel_id'       => 'required',
+    //         'hotel_name'     => 'required|string',
+    //         'country_code'   => 'required|string',
+    //         'city_code'      => 'required|string',
+    //         'arrival_date'   => 'required|string',
+    //         'departure_date' => 'required|string',
+    //         'rooms_type'     => 'required|string',
+    //         'rooms_key'      => 'required|string',
+    //         'rooms_adults'   => 'required|integer|min:1',
+    //         'rooms_children' => 'nullable|integer|min:0',
+    //         'room_rates'     => 'required',
+
+    //         // travellers array
+    //         'travellers'              => 'required|array|min:1',
+    //         'travellers.*.first_name' => 'required|string',
+    //         'travellers.*.last_name'  => 'required|string',
+    //         'travellers.*.title'      => 'required|string',
+    //         'travellers.*.type'       => 'required|in:ADULT,CHILD',
+    //         'travellers.*.age'        => 'nullable|integer',  // required if CHILD
+    //     ]);
+
+    //     $result = $this->hotelService->createHotelsBooking($request->all());
+
+    //     $statusCode = $result['status'] ? 200 : 422;
+
+    //     return response()->json($result, $statusCode);
+    // }
     public function createBooking(Request $request)
     {
         $request->validate([
@@ -123,17 +154,21 @@ class HotelController extends Controller
             'departure_date' => 'required|string',
             'rooms_type'     => 'required|string',
             'rooms_key'      => 'required|string',
-            'rooms_adults'   => 'required|integer|min:1',
-            'rooms_children' => 'nullable|integer|min:0',
+
+            // per-room arrays
+            'rooms_adults'            => 'required|array|min:1',
+            'rooms_adults.*'          => 'required|integer|min:1',
+            'rooms_children'          => 'nullable|array',
+            'rooms_children.*'        => 'nullable|integer|min:0',
+
             'room_rates'     => 'required',
 
-            // travellers array
             'travellers'              => 'required|array|min:1',
             'travellers.*.first_name' => 'required|string',
             'travellers.*.last_name'  => 'required|string',
             'travellers.*.title'      => 'required|string',
             'travellers.*.type'       => 'required|in:ADULT,CHILD',
-            'travellers.*.age'        => 'nullable|integer',  // required if CHILD
+            'travellers.*.age'        => 'nullable|integer',
         ]);
 
         $result = $this->hotelService->createHotelsBooking($request->all());
@@ -142,7 +177,6 @@ class HotelController extends Controller
 
         return response()->json($result, $statusCode);
     }
-
 
     public function fetchLog()
     {
