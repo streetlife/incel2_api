@@ -16,7 +16,6 @@ class RezliveServices
     protected $password;
     protected $apiKey;
 
-    private const LOG_DISK = 'xml_logs';
 
     public function __construct()
     {
@@ -28,8 +27,6 @@ class RezliveServices
     }
 
 
-    // XML FILE LOGGER
-    // -------------------------------------------------------------------------
 
     /**
      * Save XML request/response to storage/app/xml_logs/{type}/{timestamp}-{label}.xml
@@ -58,9 +55,6 @@ class RezliveServices
             ]);
         }
     }
-    // -------------------------------------------------------------------------
-    // SEARCH HOTELS
-    // -------------------------------------------------------------------------
 
     public function searchHotels(array $params, string $arrivalDate, string $departureDate): array
     {
@@ -69,9 +63,17 @@ class RezliveServices
             'arrivalDate'   => $arrivalDate,
             'departureDate' => $departureDate,
         ]);
+        $convertedArrivalDate = \Carbon\Carbon::createFromFormat(
+            'd/m/Y',
+            $arrivalDate
+        )->format('d/m/Y');
 
+        $convertedDepartureDate = \Carbon\Carbon::createFromFormat(
+            'd/m/Y',
+            $departureDate
+        )->format('d/m/Y');
         try {
-            $xml      = $this->buildSearchXml($params, $arrivalDate, $departureDate);
+            $xml      = $this->buildSearchXml($params, $convertedArrivalDate, $convertedDepartureDate);
             $endpoint = $this->url . "/findhotel";
 
             $this->saveXmlLog('search', 'request', $xml);
@@ -150,13 +152,11 @@ class RezliveServices
         }
     }
 
-    // -------------------------------------------------------------------------
-    // FIND HOTEL BY ID
-    // -------------------------------------------------------------------------
+
 
     public function findHotelById($payload): array
     {
-        $xml      = $this->buildXml($payload);
+        $xml      = $this->FindHotleXml($payload);
         $endpoint = $this->url . "/findhotelbyid";
 
         $this->saveXmlLog('find_by_id', 'request', $xml);
@@ -179,35 +179,16 @@ class RezliveServices
         return json_decode(json_encode($data), true);
     }
 
-    // -------------------------------------------------------------------------
-    // PROCESS BOOKING
-    // -------------------------------------------------------------------------
 
     public function processBooking($bookingCode, $bookingHotels): array
     {
         Log::info('Processing Hotel Booking', ['booking_code' => $bookingCode]);
 
         $hotelData = $bookingHotels[0];
-
-        // Pre-book
-        $preBookResponse = $this->preBook($hotelData, $bookingHotels);
-
-        if (!$preBookResponse || !empty($preBookResponse['error'])) {
-            return [
-                'status'  => false,
-                'message' => $preBookResponse['error'] ?? 'Pre-booking failed',
-            ];
-        }
-
-        Log::info('Rezlive Pre-Booking Success', $preBookResponse);
-
-        // Actual booking
-        $xml      = $this->buildBookingXml($hotelData, $bookingHotels);
-        $endpoint = $this->url . "/bookhotel";
-
+        $xml       = $this->buildBookingXml($hotelData, $bookingHotels);
+        $endpoint  = $this->url . "/bookhotel";
 
         $this->saveXmlLog('booking', 'request', $xml);
-
         Log::info('Rezlive Booking XML', ['xml' => $xml]);
 
         $response = Http::withHeaders([
@@ -216,10 +197,7 @@ class RezliveServices
         ])->asForm()->post($endpoint, ['XML' => $xml]);
 
         $body = trim($response->body());
-
-
         $this->saveXmlLog('booking', 'response', $body);
-
         Log::info('Rezlive Booking Response', ['response' => $body]);
 
         if (empty($body) || stripos($body, '<html') !== false) {
@@ -235,139 +213,10 @@ class RezliveServices
         }
 
         libxml_clear_errors();
-
         $responseJson = json_decode(json_encode($xmlResponse), true);
 
         return $this->handleBookingResponse($bookingCode, $responseJson, $body);
     }
-
-
-
-    private function preBook($hotelData, $bookingHotels): array
-    {
-        $xml      = $this->buildBookingXml($hotelData, $bookingHotels);
-        $endpoint = $this->url . "/bookhotel";
-
-
-        $this->saveXmlLog('prebook', 'request', $xml);
-
-        Log::info('Rezlive Pre-Booking Request', ['endpoint' => $endpoint, 'xml' => $xml]);
-
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/x-www-form-urlencoded',
-            'x-api-key'    => $this->apiKey,
-        ])->asForm()->post($endpoint, ['XML' => $xml]);
-
-        $body = trim($response->body());
-
-
-        $this->saveXmlLog('prebook', 'response', $body);
-
-        Log::info('Rezlive Pre-Booking Response', ['response' => $body]);
-
-        if (empty($body)) {
-            Log::error('Rezlive Pre-Booking: Empty response', ['endpoint' => $endpoint]);
-            return ['error' => 'Pre-booking returned an empty response from provider'];
-        }
-
-        if (stripos($body, '<!DOCTYPE') !== false || stripos($body, '<html') !== false) {
-            Log::error('Rezlive Pre-Booking: HTML error page returned', ['body' => $body]);
-            return ['error' => 'Pre-booking endpoint returned an HTML page — check the API URL'];
-        }
-
-        if (strpos($body, '<?xml') === false && strpos($body, '<') !== 0) {
-            Log::error('Rezlive Pre-Booking: Non-XML response', ['body' => $body]);
-            return ['error' => 'Pre-booking returned an unexpected response format'];
-        }
-
-        libxml_use_internal_errors(true);
-        $xmlResponse = simplexml_load_string($body, 'SimpleXMLElement', LIBXML_NOCDATA);
-
-        if ($xmlResponse === false) {
-            $errors        = libxml_get_errors();
-            libxml_clear_errors();
-            $errorMessages = array_map(fn($e) => trim($e->message), $errors);
-
-            Log::error('Rezlive Pre-Booking: XML parse failed', [
-                'errors' => $errorMessages,
-                'body'   => $body,
-            ]);
-
-            return ['error' => 'Failed to parse pre-booking response: ' . implode(', ', $errorMessages)];
-        }
-
-        libxml_clear_errors();
-
-        return json_decode(json_encode($xmlResponse), true);
-    }
-
-
-    //     private function buildSearchXml(array $params, string $arrivalDate, string $departureDate): string
-    //     {
-    //         $arrivalDate   = Carbon::parse($arrivalDate)->format('Y-m-d');
-    //         $departureDate = Carbon::parse($departureDate)->format('Y-m-d');
-    //         Log::info("Rezlive Search Params", [
-    //             'params'        => $params,
-    //             'arrivalDate'   => $arrivalDate,
-    //             'departureDate' => $departureDate,
-    //         ]);
-
-    //         $country     = $params['search_hotel_country'];
-    //         $city        = $params['search_hotel_city'];
-    //         $nationality = $params['search_hotel_nationality'];
-    //         $roomNumber  = $params['room_number'] ?? 1;
-    //         $childAges   = $params['child'] ?? [];
-    //         $arrivalDate =  $arrivalDate;
-    //         $departureDate =  $departureDate;
-    //         $childIndex  = 0;
-
-    //         $xml = "<HotelFindRequest>
-    // <Authentication>
-    // <AgentCode>{$this->agent}</AgentCode>
-    // <UserName>{$this->username}</UserName>
-    // </Authentication>
-    // <Booking>
-    // <ArrivalDate>{$arrivalDate}</ArrivalDate>
-    // <DepartureDate>{$departureDate}</DepartureDate>
-    // <CountryCode>{$country}</CountryCode>
-    // <City>{$city}</City>
-    // <GuestNationality>{$nationality}</GuestNationality>
-    // <HotelRatings>
-    // <HotelRating>1</HotelRating>
-    // <HotelRating>2</HotelRating>
-    // <HotelRating>3</HotelRating>
-    // <HotelRating>4</HotelRating>
-    // <HotelRating>5</HotelRating>
-    // </HotelRatings>
-    // <Rooms>";
-
-    //         for ($room = 1; $room <= $roomNumber; $room++) {
-    //             $adults   = $params["room{$room}_adults"] ?? 2;
-    //             $children = $params["room{$room}_children"] ?? 0;
-
-    //             $xml .= "<Room>
-    // <Type>Room-{$room}</Type>
-    // <NoOfAdults>{$adults}</NoOfAdults>
-    // <NoOfChilds>{$children}</NoOfChilds>";
-
-    //             if ($children > 0) {
-    //                 $xml .= "<ChildrenAges>";
-    //                 for ($i = 0; $i < $children; $i++) {
-    //                     if (isset($childAges[$childIndex])) {
-    //                         $xml .= "<ChildAge>{$childAges[$childIndex]}</ChildAge>";
-    //                     }
-    //                     $childIndex++;
-    //                 }
-    //                 $xml .= "</ChildrenAges>";
-    //             }
-
-    //             $xml .= "</Room>";
-    //         }
-
-    //         $xml .= "</Rooms></Booking></HotelFindRequest>";
-
-    //         return $xml;
-    //     }
 
     private function buildSearchXml(array $params, string $arrivalDate, string $departureDate): string
     {
@@ -388,8 +237,8 @@ class RezliveServices
         $childIndex  = 0;
 
         $xml = "<HotelFindRequest>
-<Authentication>
-<AgentCode>{$this->agent}</AgentCode>
+ <Authentication>
+        <AgentCode>{$this->agent}</AgentCode>
 <UserName>{$this->username}</UserName>
 </Authentication>
 <Booking>
@@ -434,7 +283,7 @@ class RezliveServices
 
         return $xml;
     }
-    protected function buildXml($payload): string
+    protected function FindHotleXml($payload): string
     {
         $arrivalDate   = $payload['arrival_date'];
         $departureDate = $payload['departure_date'];
@@ -482,86 +331,103 @@ class RezliveServices
         $arrivalDate     = $hotelData['arrival_date'];
         $departureDate   = $hotelData['departure_date'];
         $searchSessionId = (string) $hotelData['search_session_id'];
-        $adultsPerRoom   = $hotelData['rooms_adults'];    // array e.g. [2, 1]
-        $childrenPerRoom = $hotelData['rooms_children'];  // array e.g. [0, 1]
+        $adultsPerRoom   = $hotelData['rooms_adults'];
+        $childrenPerRoom = $hotelData['rooms_children'];
 
         if (!is_array($adultsPerRoom))   $adultsPerRoom   = [$adultsPerRoom];
         if (!is_array($childrenPerRoom)) $childrenPerRoom = [$childrenPerRoom];
 
-        $roomDetailsXml = '';
-        $totalRates     = [];
+        $types        = [];
+        $adultsList   = [];
+        $childrenList = [];
+        $agesList     = [];
+        $ratesList    = [];
+        $guestsXmlAll = '';
+        $bookingKey   = $bookingHotels[0]['booking_key'] ?? $hotelData['booking_key'];
 
         foreach ($bookingHotels as $i => $hotel) {
             $adults   = $adultsPerRoom[$i]   ?? 1;
             $children = $childrenPerRoom[$i] ?? 0;
 
-            $guestsXml    = '<Guests>';
-            $childrenAges = '';
+            $types[]        = $hotel['room_type'] ?? $hotelData['room_type'];
+            $adultsList[]   = $adults;
+            $childrenList[] = $children;
+            $ratesList[]    = $hotel['total_rate'] ?? 0;
+
+            $roomAges  = [];
+            $guestsXml = '<Guests>';
 
             foreach ($hotel['guests'] as $guest) {
                 if ($guest['type'] === 'ADULT') {
                     $guestsXml .= '
-                <Guest>
-                    <Salutation>MR</Salutation>
-                    <FirstName>' . htmlspecialchars($guest['first_name']) . '</FirstName>
-                    <LastName>'  . htmlspecialchars($guest['last_name'])  . '</LastName>
-                </Guest>';
+            <Guest>
+                <Salutation>Mr</Salutation>
+                <FirstName>' . htmlspecialchars($guest['first_name']) . '</FirstName>
+                <LastName>'  . htmlspecialchars($guest['last_name'])  . '</LastName>
+                <IsChild>0</IsChild>
+            </Guest>';
                 }
 
                 if ($guest['type'] === 'CHILD') {
                     $guestsXml .= '
-                <Guest>
-                    <Salutation>Child</Salutation>
-                    <FirstName>' . htmlspecialchars($guest['first_name']) . '</FirstName>
-                    <LastName>'  . htmlspecialchars($guest['last_name'])  . '</LastName>
-                    <IsChild>1</IsChild>
-                    <Age>' . $guest['age'] . '</Age>
-                </Guest>';
-                    $childrenAges .= $guest['age'] . '*';
+            <Guest>
+                <Salutation>Child</Salutation>
+                <FirstName>' . htmlspecialchars($guest['first_name']) . '</FirstName>
+                <LastName>'  . htmlspecialchars($guest['last_name'])  . '</LastName>
+                <IsChild>1</IsChild>
+                <Age>' . $guest['age'] . '</Age>
+            </Guest>';
+                    $roomAges[] = $guest['age'];
                 }
             }
 
-            $guestsXml   .= '</Guests>';
-            $childrenAges = rtrim($childrenAges, '*');
-            $totalRates[] = $hotel['total_rate'] ?? 0;
+            $guestsXml .= '</Guests>';
+            $guestsXmlAll .= $guestsXml;
 
-            $roomDetailsXml .= '
-            <RoomDetail>
-                <Type>'        . htmlspecialchars($hotel['room_type'] ?? $hotelData['room_type']) . '</Type>
-                <BookingKey>'  . ($hotel['booking_key'] ?? $hotelData['booking_key']) . '</BookingKey>
-                <Adults>'      . $adults   . '</Adults>
-                <Children>'    . $children . '</Children>
-                <ChildrenAges>' . $childrenAges . '</ChildrenAges>
-                <TotalRooms>1</TotalRooms>
-                <TotalRate>'   . ($hotel['total_rate'] ?? 0) . '</TotalRate>
-                ' . $guestsXml . '
-            </RoomDetail>';
+            $agesList[] = $roomAges ? implode(',', $roomAges) : '0';
         }
 
-        $totalRateStr = implode('|', $totalRates);
+        $typeStr     = htmlspecialchars(implode('|', $types));
+        $adultsStr   = implode('|', $adultsList);
+        $childrenStr = implode('|', $childrenList);
+        $agesStr     = implode('|', $agesList);
+        $rateStr     = implode('|', $ratesList);
+        $totalRooms  = count($bookingHotels);
+
+        $roomDetailsXml = "
+        <RoomDetail>
+            <Type>{$typeStr}</Type>
+            <BookingKey>{$bookingKey}</BookingKey>
+            <Adults>{$adultsStr}</Adults>
+            <Children>{$childrenStr}</Children>
+            <ChildrenAges>{$agesStr}</ChildrenAges>
+            <TotalRooms>{$totalRooms}</TotalRooms>
+            <TotalRate>{$rateStr}</TotalRate>
+            {$guestsXmlAll}
+        </RoomDetail>";
 
         return "
-    <BookingRequest>
-        <Authentication>
-            <AgentCode>{$this->agent}</AgentCode>
-            <UserName>{$this->username}</UserName>
-        </Authentication>
-        <Booking>
-            <SearchSessionId>{$searchSessionId}</SearchSessionId>
-            <AgentRefNo>{$this->agent}</AgentRefNo>
-            <ArrivalDate>{$arrivalDate}</ArrivalDate>
-            <DepartureDate>{$departureDate}</DepartureDate>
-            <GuestNationality>{$hotelData['nationality']}</GuestNationality>
-            <CountryCode>{$hotelData['country_code']}</CountryCode>
-            <City>{$hotelData['city_code']}</City>
-            <HotelId>{$hotelData['hotel_id']}</HotelId>
-            <Name>" . htmlspecialchars($hotelData['hotel_name']) . "</Name>
-            <Currency>USD</Currency>
-            <RoomDetails>
-                {$roomDetailsXml}
-            </RoomDetails>
-        </Booking>
-    </BookingRequest>";
+<BookingRequest>
+    <Authentication>
+        <AgentCode>{$this->agent}</AgentCode>
+        <UserName>{$this->username}</UserName>
+    </Authentication>
+    <Booking>
+        <SearchSessionId>{$searchSessionId}</SearchSessionId>
+        <AgentRefNo>{$this->agent}</AgentRefNo>
+        <ArrivalDate>{$arrivalDate}</ArrivalDate>
+        <DepartureDate>{$departureDate}</DepartureDate>
+        <GuestNationality>{$hotelData['nationality']}</GuestNationality>
+        <CountryCode>{$hotelData['country_code']}</CountryCode>
+        <City>{$hotelData['city_code']}</City>
+        <HotelId>{$hotelData['hotel_id']}</HotelId>
+        <Name>" . htmlspecialchars($hotelData['hotel_name']) . "</Name>
+        <Currency>USD</Currency>
+        <RoomDetails>
+            {$roomDetailsXml}
+        </RoomDetails>
+    </Booking>
+</BookingRequest>";
     }
 
 
