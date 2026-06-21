@@ -56,24 +56,24 @@ class RezliveServices
         }
     }
 
-    public function searchHotels(array $params, string $arrivalDate, string $departureDate): array
+    public function searchHotels(array $params,$arrivalDate,$departureDate): array
     {
         Log::info("Rezlive Search Request", [
             'params'        => $params,
             'arrivalDate'   => $arrivalDate,
             'departureDate' => $departureDate,
         ]);
-        $convertedArrivalDate = \Carbon\Carbon::createFromFormat(
-            'd/m/Y',
-            $arrivalDate
-        )->format('d/m/Y');
+        // $convertedArrivalDate = \Carbon\Carbon::createFromFormat(
+        //     'd/m/Y',
+        //     $arrivalDate
+        // )->format('d/m/Y');
 
-        $convertedDepartureDate = \Carbon\Carbon::createFromFormat(
-            'd/m/Y',
-            $departureDate
-        )->format('d/m/Y');
+        // $convertedDepartureDate = \Carbon\Carbon::createFromFormat(
+        //     'd/m/Y',
+        //     $departureDate
+        // )->format('d/m/Y');
         try {
-            $xml      = $this->buildSearchXml($params, $convertedArrivalDate, $convertedDepartureDate);
+            $xml      = $this->buildSearchXml($params, $arrivalDate, $departureDate);
             $endpoint = $this->url . "/findhotel";
 
             $this->saveXmlLog('search', 'request', $xml);
