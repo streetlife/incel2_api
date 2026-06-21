@@ -146,12 +146,25 @@ class HotelServices
                         continue;
                     }
 
-                    $parts = explode('|', $room['RoomDescription']);
+                    $roomDescription = $room['RoomDescription'];
 
-                    foreach ($parts as $part) {
-                        $boards[] = trim($part);
+                    if (is_string($roomDescription)) {
+
+                        $boards = array_merge(
+                            $boards,
+                            array_map('trim', explode('|', $roomDescription))
+                        );
+                    } elseif (is_array($roomDescription)) {
+
+                        array_walk_recursive($roomDescription, function ($value) use (&$boards) {
+                            if (is_string($value) && !empty(trim($value))) {
+                                $boards[] = trim($value);
+                            }
+                        });
                     }
                 }
+
+                $boards = array_values(array_unique($boards));
 
                 $boards = array_values(array_unique($boards));
 

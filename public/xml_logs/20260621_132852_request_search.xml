@@ -1,0 +1,28 @@
+<HotelFindRequest>
+ <Authentication>
+        <AgentCode>CD32280</AgentCode>
+<UserName>Inceltourism</UserName>
+</Authentication>
+<Booking>
+<ArrivalDate>24/06/2026</ArrivalDate>
+<DepartureDate>25/06/2026</DepartureDate>
+<CountryCode>GE</CountryCode>
+<City>17122</City>
+<GuestNationality>AE</GuestNationality>
+<HotelRatings>
+<HotelRating>1</HotelRating>
+<HotelRating>2</HotelRating>
+<HotelRating>3</HotelRating>
+<HotelRating>4</HotelRating>
+<HotelRating>5</HotelRating>
+</HotelRatings>
+<Rooms><Room>
+<Type>Room-1</Type>
+<NoOfAdults>1</NoOfAdults>
+<NoOfChilds>0</NoOfChilds></Room><Room>
+<Type>Room-2</Type>
+<NoOfAdults>2</NoOfAdults>
+<NoOfChilds>2</NoOfChilds><ChildrenAges><ChildAge>3</ChildAge><ChildAge>5</ChildAge></ChildrenAges></Room><Room>
+<Type>Room-3</Type>
+<NoOfAdults>2</NoOfAdults>
+<NoOfChilds>2</NoOfChilds><ChildrenAges><ChildAge>6</ChildAge><ChildAge>12</ChildAge></ChildrenAges></Room></Rooms></Booking></HotelFindRequest>

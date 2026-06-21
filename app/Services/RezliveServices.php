@@ -133,7 +133,7 @@ class RezliveServices
                     $bookingKeys[] = [
                         'hotel_id'    => $hotel['Id'],
                         'hotel_name'  => $hotel['Name'],
-                        'booking_key' => $room['BookingKey'],
+                        'booking_key' => $room['BookingKey'] ?? null,
                     ];
                 }
             }
