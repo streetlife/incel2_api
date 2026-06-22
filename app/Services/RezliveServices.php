@@ -56,7 +56,7 @@ class RezliveServices
         }
     }
 
-    public function searchHotels(array $params,$arrivalDate,$departureDate): array
+    public function searchHotels(array $params, $arrivalDate, $departureDate): array
     {
         Log::info("Rezlive Search Request", [
             'params'        => $params,
@@ -83,7 +83,7 @@ class RezliveServices
             $response = Http::withHeaders([
                 'Content-Type' => 'application/x-www-form-urlencoded',
                 'x-api-key'    => $this->apiKey,
-            ])->asForm()->post($endpoint, ['XML' => $xml]);
+            ])->timeout(120)->asForm()->post($endpoint, ['XML' => $xml]);
 
             $body = $response->body();
 
@@ -160,7 +160,6 @@ class RezliveServices
         $endpoint = $this->url . "/findhotelbyid";
 
         $this->saveXmlLog('find_by_id', 'request', $xml);
-
         Log::info('Rezlive Request', ['xml' => $xml]);
 
         $response = Http::withHeaders([
@@ -168,17 +167,33 @@ class RezliveServices
             'x-api-key'    => $this->apiKey,
         ])->asForm()->post($endpoint, ['XML' => $xml]);
 
-        $body = $response->body();
+        $body = trim($response->body());
 
         $this->saveXmlLog('find_by_id', 'response', $body);
+        Log::info('Rezlive Response', ['body' => $body]);
 
-        Log::info("Rezlive Response", ['body' => $body]);
+        if (empty($body) || stripos($body, '<html') !== false) {
+            return ['status' => false, 'message' => 'Find hotel returned invalid response from provider'];
+        }
 
+        libxml_use_internal_errors(true);
         $data = simplexml_load_string($body, 'SimpleXMLElement', LIBXML_NOCDATA);
 
-        return json_decode(json_encode($data), true);
-    }
+        if ($data === false) {
+            libxml_clear_errors();
+            return ['status' => false, 'message' => 'Failed to parse find-hotel response'];
+        }
 
+        libxml_clear_errors();
+
+        $result = json_decode(json_encode($data), true);
+
+        if (isset($result['error'])) {
+            return ['status' => false, 'message' => $result['error']];
+        }
+
+        return ['status' => true, 'data' => $result];
+    }
 
     public function processBooking($bookingCode, $bookingHotels): array
     {
@@ -283,48 +298,150 @@ class RezliveServices
 
         return $xml;
     }
+    //     protected function FindHotleXml($payload): string
+    //     {
+    //         $arrivalDate   = $payload['arrival_date'];
+    //         $departureDate = $payload['departure_date'];
+
+    //         $hotelIds = $payload['hotel_id'];
+    //         if (!is_array($hotelIds)) {
+    //             $hotelIds = explode('|', (string) $hotelIds);
+    //         }
+
+    //         $hotelIdsXml = '';
+    //         foreach ($hotelIds as $id) {
+    //             $hotelIdsXml .= "<Int>{$id}</Int>";
+    //         }
+
+    //         $roomTypes     = $payload['rooms_type']     ?? [];
+    //         $roomsAdults   = $payload['rooms_adults']   ?? [1];
+    //         $roomsChildren = $payload['rooms_children'] ?? [0];
+    //         $childrenAges  = $payload['rooms_children_ages'] ?? [];
+
+    //         if (!is_array($roomTypes))     $roomTypes     = explode('|', (string) $roomTypes);
+    //         if (!is_array($roomsAdults))   $roomsAdults   = [$roomsAdults];
+    //         if (!is_array($roomsChildren)) $roomsChildren = [$roomsChildren];
+
+    //         $roomsXml = '';
+    //         foreach ($roomsAdults as $i => $adults) {
+    //             $children = $roomsChildren[$i] ?? 0;
+    //             $type     = $roomTypes[$i] ?? ($roomTypes[0] ?? '');
+
+    //             $childrenAgesXml = '';
+    //             if ($children > 0) {
+    //                 $ages = $childrenAges[$i] ?? [];
+    //                 foreach ($ages as $age) {
+    //                     $childrenAgesXml .= "<Int>{$age}</Int>";
+    //                 }
+    //             }
+
+    //             $roomsXml .= "
+    //             <Room>
+    //                 <Type>{$type}</Type>
+    //                 <NoOfAdults>{$adults}</NoOfAdults>
+    //                 <NoOfChildren>{$children}</NoOfChildren>" .
+    //                 ($children > 0 ? "<ChildrenAges>{$childrenAgesXml}</ChildrenAges>" : '') . "
+    //             </Room>";
+    //         }
+
+    //         return "
+    // <HotelFindRequest>
+    //     <Authentication>
+    //         <AgentCode>{$this->agent}</AgentCode>
+    //         <UserName>{$this->username}</UserName>
+    //     </Authentication>
+    //     <Booking>
+    //         <ArrivalDate>{$arrivalDate}</ArrivalDate>
+    //         <DepartureDate>{$departureDate}</DepartureDate>
+    //         <HotelIDs>
+    //             {$hotelIdsXml}
+    //         </HotelIDs>
+    //         <CountryCode>{$payload['country_code']}</CountryCode>
+    //         <City>{$payload['city_code']}</City>
+    //         <GuestNationality>{$payload['nationality']}</GuestNationality>
+    //         <Rooms>
+    //             {$roomsXml}
+    //         </Rooms>
+    //     </Booking>
+    // </HotelFindRequest>";
+    //     }
+
     protected function FindHotleXml($payload): string
     {
         $arrivalDate   = $payload['arrival_date'];
         $departureDate = $payload['departure_date'];
+
+        $hotelIds = $payload['hotel_id'];
+        if (!is_array($hotelIds)) {
+            $hotelIds = explode('|', (string) $hotelIds);
+        }
+
+        $hotelIdsXml = '';
+        foreach ($hotelIds as $id) {
+            $hotelIdsXml .= "<Int>{$id}</Int>";
+        }
+
+        $roomTypes     = $payload['rooms_type']          ?? [];
+        $roomsAdults   = $payload['rooms_adults']         ?? [1];
+        $roomsChildren = $payload['rooms_children']       ?? [0];
+        $childrenAges  = $payload['rooms_children_ages']  ?? [];
+
+        if (!is_array($roomTypes))     $roomTypes     = explode('|', (string) $roomTypes);
+        if (!is_array($roomsAdults))   $roomsAdults   = [$roomsAdults];
+        if (!is_array($roomsChildren)) $roomsChildren = [$roomsChildren];
+
         $roomsXml = '';
+        foreach ($roomsAdults as $i => $adults) {
+            $children = (int) ($roomsChildren[$i] ?? 0);
+            $type     = $roomTypes[$i] ?? ($roomTypes[0] ?? '');
 
-        foreach ($payload['rooms'] as $index => $room) {
-            $roomsXml .= "<Room>
-                <Type>Room-" . ($index + 1) . "</Type>
-                <NoOfAdults>{$room['adults']}</NoOfAdults>
-                <NoOfChilds>{$room['children']}</NoOfChilds>";
+            $childrenAgesTag = '';
+            if ($children > 0) {
+                $ages = $childrenAges[$i] ?? [];
 
-            if ($room['children'] > 0) {
-                $roomsXml .= "<ChildrenAges>";
-                foreach ($room['child_ages'] ?? [] as $age) {
-                    $roomsXml .= "<ChildAge>{$age}</ChildAge>";
+                while (count($ages) < $children) {
+                    $ages[] = 5;
                 }
-                $roomsXml .= "</ChildrenAges>";
+
+                $agesXml = '';
+                foreach ($ages as $age) {
+                    $agesXml .= "<ChildAge>{$age}</ChildAge>";
+                }
+
+                $childrenAgesTag = "<ChildrenAges>{$agesXml}</ChildrenAges>";
             }
 
-            $roomsXml .= "</Room>";
+            $roomsXml .= "
+        <Room>
+            <Type>{$type}</Type>
+            <NoOfAdults>{$adults}</NoOfAdults>
+            <NoOfChilds>{$children}</NoOfChilds>
+            {$childrenAgesTag}
+        </Room>";
         }
 
         return "
-        <HotelFindRequest>
-            <Authentication>
-              <AgentCode>{$this->agent}</AgentCode>
-              <UserName>{$this->username}</UserName>
-            </Authentication>
-            <Booking>
-                <ArrivalDate>{$arrivalDate}</ArrivalDate>
-                <DepartureDate>{$departureDate}</DepartureDate>
-                <CountryCode>{$payload['country_code']}</CountryCode>
-                <City>{$payload['city_code']}</City>
-                <HotelIDs>
-                    <Int>{$payload['hotel_id']}</Int>
-                </HotelIDs>
-                <GuestNationality>{$payload['nationality']}</GuestNationality>
-                <Rooms>{$roomsXml}</Rooms>
-            </Booking>
-        </HotelFindRequest>";
+<HotelFindRequest>
+    <Authentication>
+        <AgentCode>{$this->agent}</AgentCode>
+        <UserName>{$this->username}</UserName>
+    </Authentication>
+    <Booking>
+        <ArrivalDate>{$arrivalDate}</ArrivalDate>
+        <DepartureDate>{$departureDate}</DepartureDate>
+        <HotelIDs>
+            {$hotelIdsXml}
+        </HotelIDs>
+        <CountryCode>{$payload['country_code']}</CountryCode>
+        <City>{$payload['city_code']}</City>
+        <GuestNationality>{$payload['nationality']}</GuestNationality>
+        <Rooms>
+            {$roomsXml}
+        </Rooms>
+    </Booking>
+</HotelFindRequest>";
     }
+
 
     private function buildBookingXml($hotelData, $bookingHotels): string
     {
@@ -333,68 +450,88 @@ class RezliveServices
         $searchSessionId = (string) $hotelData['search_session_id'];
         $adultsPerRoom   = $hotelData['rooms_adults'];
         $childrenPerRoom = $hotelData['rooms_children'];
+        $childrenAgesAll = $hotelData['rooms_children_ages'] ?? [];
 
         if (!is_array($adultsPerRoom))   $adultsPerRoom   = [$adultsPerRoom];
         if (!is_array($childrenPerRoom)) $childrenPerRoom = [$childrenPerRoom];
 
-        $types        = [];
-        $adultsList   = [];
-        $childrenList = [];
-        $agesList     = [];
-        $ratesList    = [];
-        $guestsXmlAll = '';
-        $bookingKey   = $bookingHotels[0]['booking_key'] ?? $hotelData['booking_key'];
-
+        $groups = [];
         foreach ($bookingHotels as $i => $hotel) {
-            $adults   = $adultsPerRoom[$i]   ?? 1;
-            $children = $childrenPerRoom[$i] ?? 0;
-
-            $types[]        = $hotel['room_type'] ?? $hotelData['room_type'];
-            $adultsList[]   = $adults;
-            $childrenList[] = $children;
-            $ratesList[]    = $hotel['total_rate'] ?? 0;
-
-            $roomAges  = [];
-            $guestsXml = '<Guests>';
-
-            foreach ($hotel['guests'] as $guest) {
-                if ($guest['type'] === 'ADULT') {
-                    $guestsXml .= '
-            <Guest>
-                <Salutation>Mr</Salutation>
-                <FirstName>' . htmlspecialchars($guest['first_name']) . '</FirstName>
-                <LastName>'  . htmlspecialchars($guest['last_name'])  . '</LastName>
-                <IsChild>0</IsChild>
-            </Guest>';
-                }
-
-                if ($guest['type'] === 'CHILD') {
-                    $guestsXml .= '
-            <Guest>
-                <Salutation>Child</Salutation>
-                <FirstName>' . htmlspecialchars($guest['first_name']) . '</FirstName>
-                <LastName>'  . htmlspecialchars($guest['last_name'])  . '</LastName>
-                <IsChild>1</IsChild>
-                <Age>' . $guest['age'] . '</Age>
-            </Guest>';
-                    $roomAges[] = $guest['age'];
-                }
-            }
-
-            $guestsXml .= '</Guests>';
-            $guestsXmlAll .= $guestsXml;
-
-            $agesList[] = $roomAges ? implode(',', $roomAges) : '0';
+            $key = $hotel['booking_key'] ?? $hotelData['booking_key'];
+            $groups[$key][] = ['index' => $i, 'hotel' => $hotel];
         }
 
-        $typeStr     = htmlspecialchars(implode('|', $types));
-        $adultsStr   = implode('|', $adultsList);
-        $childrenStr = implode('|', $childrenList);
-        $agesStr     = implode('|', $agesList);
-        $rateStr     = implode('|', $ratesList);
-        $totalRooms  = count($bookingHotels);
+        $roomDetailsXml = '';
 
-        $roomDetailsXml = "
+        foreach ($groups as $bookingKey => $rooms) {
+            $types        = [];
+            $adultsList   = [];
+            $childrenList = [];
+            $agesList     = [];
+            $ratesList    = [];
+            $guestsXmlAll = '';
+
+            foreach ($rooms as $room) {
+                $i        = $room['index'];
+                $hotel    = $room['hotel'];
+                $adults   = $adultsPerRoom[$i]   ?? 1;
+                $children = $childrenPerRoom[$i] ?? 0;
+
+                $types[]        = $hotel['room_type'] ?? $hotelData['room_type'];
+                $adultsList[]   = $adults;
+                $childrenList[] = $children;
+                $ratesList[]    = $hotel['total_rate'] ?? 0;
+
+                $roomAges  = [];
+                $guestsXml = '<Guests>';
+
+                foreach ($hotel['guests'] as $guest) {
+                    if ($guest['type'] === 'ADULT') {
+                        $guestsXml .= '
+                <Guest>
+                    <Salutation>Mr</Salutation>
+                    <FirstName>' . htmlspecialchars($guest['first_name']) . '</FirstName>
+                    <LastName>'  . htmlspecialchars($guest['last_name'])  . '</LastName>
+                </Guest>';
+                    }
+
+                    if ($guest['type'] === 'CHILD') {
+                        $guestsXml .= '
+                <Guest>
+                    <Salutation>Child</Salutation>
+                    <FirstName>' . htmlspecialchars($guest['first_name']) . '</FirstName>
+                    <LastName>'  . htmlspecialchars($guest['last_name'])  . '</LastName>
+                    <IsChild>1</IsChild>
+                    <Age>' . (int) $guest['age'] . '</Age>
+                </Guest>';
+                        $roomAges[] = (int) $guest['age'];
+                    }
+                }
+
+                $guestsXml .= '</Guests>';
+                $guestsXmlAll .= $guestsXml;
+
+                // * between children in same room, fallback to session ages, then 0
+                $sessionAges = $childrenAgesAll[$i] ?? [];
+                if (!empty($roomAges)) {
+                    $agesStr = implode('*', $roomAges);
+                } elseif (!empty($sessionAges)) {
+                    $agesStr = implode('*', $sessionAges);
+                } else {
+                    $agesStr = '0';
+                }
+
+                $agesList[] = $agesStr;
+            }
+
+            $typeStr     = htmlspecialchars(implode('|', $types));
+            $adultsStr   = implode('|', $adultsList);
+            $childrenStr = implode('|', $childrenList);
+            $agesStr     = implode('|', $agesList);   // | between rooms
+            $rateStr     = implode('|', $ratesList);
+            $totalRooms  = count($rooms);
+
+            $roomDetailsXml .= "
         <RoomDetail>
             <Type>{$typeStr}</Type>
             <BookingKey>{$bookingKey}</BookingKey>
@@ -405,6 +542,7 @@ class RezliveServices
             <TotalRate>{$rateStr}</TotalRate>
             {$guestsXmlAll}
         </RoomDetail>";
+        }
 
         return "
 <BookingRequest>
@@ -429,7 +567,6 @@ class RezliveServices
     </Booking>
 </BookingRequest>";
     }
-
 
 
     private function handleBookingResponse($bookingCode, $responseJson, $rawResponse): array

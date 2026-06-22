@@ -24,6 +24,9 @@ class HotelSession extends Model
         'adults',
         'children',
         'nationality',
-        'search_session_id'
+        'search_session_id',
+        'rooms_adults',
+        'rooms_children',
+        'rooms_children_ages'
     ];
 }

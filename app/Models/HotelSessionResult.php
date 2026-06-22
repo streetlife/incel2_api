@@ -11,7 +11,7 @@ class HotelSessionResult extends Model
     protected $table = 'sessions_hotels_results';
     public $timestamps = false;
     protected $guarded = [];
-    
+
     protected $fillable = [
         'session_code',
         'hotel_id',
@@ -19,7 +19,8 @@ class HotelSessionResult extends Model
         'hotel_thumbs',
         'price',
         'room_count',
-        'amenities'
+        'amenities',
+
     ];
     protected $casts = [
         'amenities' => 'array'
