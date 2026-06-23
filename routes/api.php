@@ -100,7 +100,7 @@ Route::prefix('hotels')->group(function () {
     Route::get('/{sessionCode}/{hotelId}', [HotelController::class, 'hotelDetail']);
     Route::post('/create-booking', [HotelController::class, 'createBooking']);
     Route::post('/book-hotel', [HotelController::class, 'bookHotel']);
-    
+    Route::post("/prebook", [HotelController::class, 'prebook']);
 });
 Route::get('/rezlive/logs', [HotelController::class, 'fetchLog']);
 Route::prefix('tours')->group(function () {

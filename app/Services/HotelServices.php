@@ -535,7 +535,7 @@ class HotelServices
 
         // -----------------------------
         // Ensure same length as rooms
-        // -----------------------------
+       
         $roomCount = $session->rooms ?? 1;
 
         $roomsAdults = array_values(array_pad($roomsAdults, $roomCount, 1));
@@ -803,7 +803,7 @@ class HotelServices
             'rooms_children_ages' => $roomsChildrenAges,
         ]);
 
-        $rezliveResult = $this->rezlive->processBooking($bookingCode, $bookingHotels);
+         $rezliveResult = $this->rezlive->processBooking($bookingCode, $bookingHotels);
 
         if (!($rezliveResult['status'] ?? false)) {
             Log::error('Rezlive booking failed', [
@@ -855,6 +855,7 @@ class HotelServices
             'message'      => 'Booking created successfully',
         ];
     }
+    
     public function changeDateFormatHotel($date)
     {
         if (!$date) {
