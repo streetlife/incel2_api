@@ -232,13 +232,13 @@ class RequestServices
 
     public function createAddress(array $data)
     {
-        $req = Address::updateOrCreate(['id' => 1], $data);
+        $req = Address::updateOrCreate($data);
         return $req;
     }
 
     public function getAddress()
     {
-        $req = Address::firstOrFail();
+        $req = Address::get();
         return $req;
     }
 }
