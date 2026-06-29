@@ -62,9 +62,11 @@ Route::prefix('services')->group(function () {
     Route::get('/partner', [ServiceRequestController::class, 'getAllPartner']);
     Route::post('/hero-section', [ServiceRequestController::class, 'createHeroSection']);
     Route::get('/hero-section', [ServiceRequestController::class, 'getHeroSection']);
+    Route::get('/getAddress', [ServiceRequestController::class, 'getAddress']);
     Route::post('/testmonial', [ServiceRequestController::class, 'createVideoTestmonial']);
     Route::post('/package/{id}', [ServiceRequestController::class, 'update']);
     Route::post('/contact', [ServiceRequestController::class, 'store']);
+    Route::post('/address', [ServiceRequestController::class, 'createAddress']);
 });
 
 Route::prefix('flights')->group(function () {

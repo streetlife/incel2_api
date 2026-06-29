@@ -194,8 +194,8 @@ class HotelController extends Controller
     }
     public function prebook(Request $request)
     {
-        $rezlive   = app(\App\Services\RezliveServices::class);
-        $session   = HotelSession::where('session_code', $request->session_code)->first();
+        $rezlive = app(\App\Services\RezliveServices::class);
+        $session = HotelSession::where('session_code', $request->session_code)->first();
 
         if (!$session) {
             return response()->json(['status' => false, 'message' => 'Session not found']);
@@ -214,6 +214,8 @@ class HotelController extends Controller
             'country_code'        => $session->country_code,
             'city_code'           => $session->city_code,
             'hotel_id'            => $request->hotel_id,
+            'hotel_name'          => $request->hotel_name,
+            'hotel_address'       => $request->hotel_address,
             'rooms_adults'        => $roomsAdults,
             'rooms_children'      => $roomsChildren,
             'rooms_children_ages' => $roomsChildrenAges,

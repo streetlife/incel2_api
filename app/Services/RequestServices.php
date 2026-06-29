@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Http\Resources\PackageResource;
+use App\Models\Address;
 use App\Models\AirportProtocol;
 use App\Models\AirportTransfer;
 use App\Models\Contact;
@@ -227,5 +228,17 @@ class RequestServices
             'video_url'  => $videoUrl,
             'public_id'  => $publicId,
         ]);
+    }
+
+    public function createAddress(array $data)
+    {
+        $req = Address::updateOrCreate(['id' => 1], $data);
+        return $req;
+    }
+
+    public function getAddress()
+    {
+        $req = Address::firstOrFail();
+        return $req;
     }
 }

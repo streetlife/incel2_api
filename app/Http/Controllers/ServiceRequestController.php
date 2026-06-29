@@ -82,7 +82,7 @@ class ServiceRequestController extends Controller
     }
     public function update(Request $request, $id)
     {
-        
+
         $validated = $request->validate([
             'name' => 'sometimes|string',
             'description' => 'sometimes|string',
@@ -94,7 +94,7 @@ class ServiceRequestController extends Controller
             'poster'   => 'nullable|file|image',
         ]);
 
-        
+
         $files = [
             'picture1' => $request->file('picture1'),
             'picture2' => $request->file('picture2'),
@@ -104,7 +104,7 @@ class ServiceRequestController extends Controller
             'poster'   => $request->file('poster'),
         ];
 
-        
+
         $package = $this->service->updateTravelPackage(
             $validated,
             $id,
@@ -362,5 +362,48 @@ class ServiceRequestController extends Controller
             'message' => 'Video testmonials created successfully',
             'data' => $review
         ], 201);
+    }
+
+    public function createAddress(Request $request)
+    {
+        $validatedReq = $request->validate([
+            'title'   => 'required|string|max:255',
+            'address' => 'required|string',
+            'phone'   => 'required|string',
+            'hours'   => 'required|string',
+            'icon'    => 'required|string',
+        ]);
+
+        try {
+            $res = $this->service->createAddress($validatedReq);
+
+            if (!$res) {
+                return response()->json(['status' => false, 'message' => 'Something went wrong'], 400);
+            }
+
+            return response()->json(['status' => true, 'message' => 'Address created successfully', 'data' => $res]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Something went wrong: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+    public function getAddress()
+    {
+        try {
+            $res = $this->service->getAddress();
+
+            if (!$res) {
+                return response()->json(['status' => false, 'message' => 'Something went wrong'], 400);
+            }
+
+            return response()->json(['status' => true, 'message' => 'Address created successfully', 'data' => $res]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Something went wrong: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }
