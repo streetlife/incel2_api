@@ -7,11 +7,13 @@ use App\Models\Address;
 use App\Models\AirportProtocol;
 use App\Models\AirportTransfer;
 use App\Models\Contact;
+use App\Models\CurateTravelExperience;
 use App\Models\HeroSection;
 use App\Models\HotDeal;
 use App\Models\Hotel;
 use App\Models\InsuranceServiceRequest;
 use App\Models\Package;
+use App\Models\PackageQoute;
 use App\Models\Partners;
 use App\Models\Stats;
 use App\Models\TourGuide;
@@ -240,5 +242,14 @@ class RequestServices
     {
         $req = Address::get();
         return $req;
+    }
+
+    public function curateExperinceCreate(array $data)
+    {
+        return CurateTravelExperience::create($data);
+    }
+    public function createPackageQoute(array $data): PackageQoute
+    {
+        return PackageQoute::create($data);
     }
 }

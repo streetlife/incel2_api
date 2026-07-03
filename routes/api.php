@@ -67,6 +67,8 @@ Route::prefix('services')->group(function () {
     Route::post('/package/{id}', [ServiceRequestController::class, 'update']);
     Route::post('/contact', [ServiceRequestController::class, 'store']);
     Route::post('/address', [ServiceRequestController::class, 'createAddress']);
+    Route::post('/curate-experience', [ServiceRequestController::class, 'curateExperinceCreate']);
+    Route::post('/package-quotes', [ServiceRequestController::class, 'PackageQuoteRequest']);
 });
 
 Route::prefix('flights')->group(function () {
@@ -128,6 +130,11 @@ Route::prefix('bookings')->group(function () {
 Route::prefix('currencies')->group(function () {
     Route::get('/', [CurrencyController::class, 'index']);
     Route::post('/currency/convert', [CurrencyController::class, 'convert']);
+    Route::get('/rate', [CurrencyController::class, 'getRates']);
+    Route::get('/all-rates', [CurrencyController::class, 'fetchAllRates']);
+    Route::get('/{id}', [CurrencyController::class, 'fetchAllRatesById']);
+    Route::put('/{id}', [CurrencyController::class, 'updateRates']);
+    Route::patch('/{id}', [CurrencyController::class, 'updateRates']);
 });
 Route::prefix('paystack')->group(function () {
     Route::post('/payment/initialize', [PaystackController::class, 'initialize']);

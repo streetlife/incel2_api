@@ -11,6 +11,7 @@ use App\Models\Package;
 use App\Services\RequestServices;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use SebastianBergmann\Environment\Console;
 
 class ServiceRequestController extends Controller
@@ -405,5 +406,69 @@ class ServiceRequestController extends Controller
                 'message' => 'Something went wrong: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+
+    public function curateExperinceCreate(Request $request)
+    {
+        $validated = $request->validate([
+            'country' => ['required', 'string', 'max:255'],
+            'number_of_adults' => ['required', 'integer', 'min:1'],
+            'number_of_kids' => ['required', 'integer', 'min:0'],
+            'kids_ages' => ['nullable', 'array'],
+            'kids_ages.*' => ['integer', 'min:0', 'max:17'],
+            'hotel_category' => ['nullable', 'string', 'max:255'],
+            'flight_booking' => ['required', 'boolean'],
+            'airport_transfer' => ['required', 'boolean'],
+            'tour_and_activities' => ['required', 'boolean'],
+            'special_request' => ['nullable', 'string'],
+            'full_name' => ['required', 'string', 'max:255'],
+            'phone_number' => ['required', 'string', 'max:30'],
+            'email_address' => ['required', 'email', 'max:255'],
+        ]);
+
+        $experience = $this->service->curateExperinceCreate($validated);
+        //  Mail::from()to($experience->email_address)
+        if (!$experience) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unable to curate travel experience. Please try again.',
+            ], 500);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Travel experience curated successfully.',
+            'data' => $experience,
+        ], 201);
+    }
+
+    public function PackageQuoteRequest(Request $request)
+    {
+        $validated = $request->validate([
+            'package_name' => ['required', 'string', 'max:255'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'flight_booking' => ['required', 'boolean'],
+            'departure_date' => ['required', 'date', 'after_or_equal:today'],
+            'number_of_travelers' => ['required', 'integer', 'min:1'],
+            'full_name' => ['required', 'string', 'max:255'],
+            'phone_number' => ['required', 'string', 'max:30'],
+            'email_address' => ['required', 'email', 'max:255'],
+        ]);
+
+        try {
+            $quote = $this->service->createPackageQoute($validated);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unable to create package quote. Please try again.',
+            ], 500);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Package quote created successfully.',
+            'data' => $quote,
+        ], 201);
     }
 }

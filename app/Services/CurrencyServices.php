@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\CurrencyRates;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CurrencyServices
 {
@@ -13,7 +15,7 @@ class CurrencyServices
             ->toArray();
     }
 
-    
+
     public function convert(string $from, string $to, ?float $amount): float
     {
         $amount = $amount ?? 0;
@@ -34,23 +36,47 @@ class CurrencyServices
         return $to . ' ' . number_format($converted, 2);
     }
 
-  
-    public function getRate(string $from, string $to): float
+    public function getRate(string $from, string $to)
     {
-        if ($from === $to) {
-            return 1;
-        }
 
-        $rate = DB::table('currency_rates')
-            ->where('currency_from', $from)
-            ->where('currency_to', $to)
+        if ($from === $to) {
+            return 1.0;
+        }
+        $rate = CurrencyRates::where('currency_from', strtoupper($from))
+            ->where('currency_to', strtoupper($to))
             ->orderByDesc('conversion_date')
             ->value('conversion_rate');
 
-        return $rate ?? 1;
+        Log::info("rate", ["rate"=>$rate]);
+
+        if ($rate === null) {
+            throw new \Exception(
+                "Exchange rate not found for {$from} to {$to}"
+            );
+        }
+
+        return  $rate;
     }
 
- 
+    public function fetchAllRates()
+    {
+        return CurrencyRates::all();
+    }
+    public function fetchAllRatesById($id)
+    {
+        return CurrencyRates::where("id", "=", $id)->get();
+    }
+
+    public function updateRates($id, array $data)
+    {
+        $rate = CurrencyRates::findOrFail($id);
+
+        $rate->update($data);
+
+        return $rate->fresh();
+    }
+
+
     public function getMarkup(string $module, string $customerType = 'B2C'): ?object
     {
         return DB::table('markups')
