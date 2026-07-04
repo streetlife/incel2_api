@@ -33,6 +33,8 @@ class PackageResource extends JsonResource
             'picture3' => $this->picture3 ?  $this->picture3 : $this->picture3,
             'picture4' => $this->picture4 ?  $this->picture4 : $this->picture4,
             'banner' => $this->banner ?  $this->banner : $this->banner,
+            'price' => $this->price ? $this->price : '',
+            'symbol' => $this->symbol ? $this->symbol : "",
         ];
     }
 }
