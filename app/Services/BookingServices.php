@@ -635,7 +635,7 @@ class BookingServices extends FlightServices
             throw new \Exception('unable to create booking');
         }
         return [
-            'bookCode' => $bookingCode['booking_code']
+            'bookCode' => $bookingCode
         ];
     }
 }
