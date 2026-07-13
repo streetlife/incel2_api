@@ -192,30 +192,32 @@ class HotelController extends Controller
             'data' => $logs
         ]);
     }
+
     public function prebook(Request $request)
     {
         $rezlive = app(\App\Services\RezliveServices::class);
-        $session = HotelSession::where('session_code', $request->session_code)->first();
+        // $session = HotelSession::where('session_code', $request->session_code)->first();
 
-        if (!$session) {
-            return response()->json(['status' => false, 'message' => 'Session not found']);
-        }
+        // if (!$session) {
+        //     return response()->json(['status' => false, 'message' => 'Session not found']);
+        // }
 
-        $roomsAdults       = json_decode($session->rooms_adults, true);
-        $roomsChildren     = json_decode($session->rooms_children, true);
-        $roomsChildrenAges = json_decode($session->rooms_children_ages, true) ?? [];
+        $roomsAdults       = $request->rooms_adults ?? [];
+        $roomsChildren     = $request->rooms_children ?? [];
+        $roomsChildrenAges = $request->rooms_children_ages ?? [];
         $totalRooms        = count($roomsAdults);
 
         $hotelData = [
-            'search_session_id'   => $session->search_session_id,
-            'arrival_date'        => $session->arrival_date,
-            'departure_date'      => $session->departure_date,
-            'nationality'         => $session->nationality,
-            'country_code'        => $session->country_code,
-            'city_code'           => $session->city_code,
+            'search_session_id'   => $request->search_session_id,
+            'arrival_date'        => $request->arrival_date,
+            'departure_date'      => $request->departure_date,
+            'nationality'         => $request->nationality,
+            'country_code'        => $request->country_code,
+            'city_code'           => $request->city_code,
             'hotel_id'            => $request->hotel_id,
-            'hotel_name'          => $request->hotel_name,
-            'hotel_address'       => $request->hotel_address,
+            // 'hotel_name'          => $request->hotel_name,
+            // 'hotel_address'       => $request->hotel_address,
+            'currency'            => $request->currency,
             'rooms_adults'        => $roomsAdults,
             'rooms_children'      => $roomsChildren,
             'rooms_children_ages' => $roomsChildrenAges,
@@ -260,12 +262,12 @@ class HotelController extends Controller
             : array_fill(0, $totalRooms, $request->booking_key);
 
         $hotelData = [
-            'search_session_id'   => $session->search_session_id,
-            'arrival_date'        => $session->arrival_date,
-            'departure_date'      => $session->departure_date,
-            'nationality'         => $session->nationality,
-            'country_code'        => $session->country_code,
-            'city_code'           => $session->city_code,
+            'search_session_id'   => $request->search_session_id,
+            'arrival_date'        => $request->arrival_date,
+            'departure_date'      => $request->departure_date,
+            'nationality'         => $request->nationality,
+            'country_code'        => $request->country_code,
+            'city_code'           => $request->city_code,
             'hotel_id'            => $request->hotel_id,
             'rooms_adults'        => $roomsAdults,
             'rooms_children'      => $roomsChildren,

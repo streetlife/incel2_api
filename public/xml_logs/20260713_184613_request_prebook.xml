@@ -1,0 +1,30 @@
+
+<PreBookingRequest>
+    <Authentication>
+        <AgentCode>CD32280</AgentCode>
+        <UserName>Inceltourism</UserName>
+    </Authentication>
+    <PreBooking>
+        <SearchSessionId>178396800151317839680014046a5531</SearchSessionId>
+        <ArrivalDate>27/07/2026</ArrivalDate>
+        <DepartureDate>28/07/2026</DepartureDate>
+        <GuestNationality>AE</GuestNationality>
+        <CountryCode>USD</CountryCode>
+        <City>968</City>
+        <HotelId>292549</HotelId>
+        <Currency>USD</Currency>
+        <RoomDetails>
+            
+        <RoomDetail>
+            <Type>Standard Room, 2 Twin Beds, Non Smoking, 2 Twin Bed</Type>
+            <BookingKey>PcepEcAwEAPAijQj3We5A5dgGpz-eViWrZZzj0m1Un-KNU93CvfIDQWCMeCCCmp7G-8H</BookingKey>
+            <Adults>1</Adults>
+            <Children>0</Children>
+               <ChildrenAges>0</ChildrenAges>
+       
+            <TotalRooms>1</TotalRooms>
+            <TotalRate>24.14</TotalRate>
+        </RoomDetail>
+        </RoomDetails>
+    </PreBooking>
+</PreBookingRequest>
