@@ -391,7 +391,7 @@ class HotelServices
                 ],
 
                 'filters'    => $results['filters'],
-                'hotels'     => $results,
+                'hotels'     => $results['hotels'],
                 'bookingKey' => $result['booking_keys'],
             ];
         } catch (\Exception $e) {
