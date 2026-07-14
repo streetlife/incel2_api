@@ -250,6 +250,8 @@ class HotelController extends Controller
             $roomDetail = [$roomDetail];
         }
 
+        $room = $roomDetail[0] ?? [];
+
         $responseData = [
             'searchSessionId' => $preBooking['SearchSessionId'] ?? null,
             'arrivalDate'      => $preBooking['ArrivalDate'] ?? null,
@@ -257,18 +259,16 @@ class HotelController extends Controller
             'hotelId'          => $preBooking['HotelId'] ?? null,
             'currency'         => $preBooking['Currency'] ?? null,
 
-            'rooms' => array_map(function ($room) {
-                return [
-                    'type'       => $room['Type'] ?? null,
-                    'bookingKey' => $room['BookingKey'] ?? null,
-                    'adults'     => $room['Adults'] ?? null,
-                    'children'   => $room['Children'] ?? null,
-                    'totalRooms' => $room['TotalRooms'] ?? null,
-                    'totalRate'  => $room['TotalRate'] ?? null,
-                    'boardBasis' => $room['BoardBasis'] ?? null,
-                    'terms'      => $room['TermsAndConditions'] ?? null,
-                ];
-            }, $roomDetail),
+            'room' => [
+                'type'       => $room['Type'] ?? null,
+                'bookingKey' => $room['BookingKey'] ?? null,
+                'adults'     => $room['Adults'] ?? null,
+                'children'   => $room['Children'] ?? null,
+                'totalRooms' => $room['TotalRooms'] ?? null,
+                'totalRate'  => $room['TotalRate'] ?? null,
+                'boardBasis' => $room['BoardBasis'] ?? null,
+                'terms'      => $room['TermsAndConditions'] ?? null,
+            ],
 
             'beforePrice'     => $preBookingDetails['BookingBeforePrice'] ?? null,
             'afterPrice'      => $preBookingDetails['BookingAfterPrice'] ?? null,
