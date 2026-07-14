@@ -321,7 +321,7 @@ class RezliveServices
 
 
    
-private function buildPreBookXml(array $hotelData, array $bookingHotels): string
+private function buildPreBookXml($hotelData, $bookingHotels): string
 {
     $arrivalDate     = $hotelData['arrival_date'];
     $departureDate   = $hotelData['departure_date'];
@@ -332,6 +332,7 @@ private function buildPreBookXml(array $hotelData, array $bookingHotels): string
     $childrenAgesAll = $hotelData['rooms_children_ages'] ?? [];
     if (!is_array($adultsPerRoom))   $adultsPerRoom   = [$adultsPerRoom];
     if (!is_array($childrenPerRoom)) $childrenPerRoom = [$childrenPerRoom];
+    if (!is_array($childrenAgesAll)) $childrenAgesAll = [$childrenAgesAll];
     $groups = [];
     foreach ($bookingHotels as $i => $hotel) {
         $key = $hotel['booking_key'];
