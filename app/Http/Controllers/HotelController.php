@@ -232,8 +232,54 @@ class HotelController extends Controller
                 'guests'      => [],
             ];
         }
+        $result = $rezlive->preBook($hotelData, $bookingHotels);
 
-        return response()->json($rezlive->preBook($hotelData, $bookingHotels));
+        if (!($result['status'] ?? false)) {
+            return response()->json([
+                'status'  => false,
+                'message' => $result['message'] ?? 'PreBook failed',
+            ], 422);
+        }
+
+        $preBooking        = $result['data']['PreBookingRequest']['PreBooking'] ?? [];
+        $roomDetail         = $preBooking['RoomDetails']['RoomDetail'] ?? [];
+        $preBookingDetails  = $result['data']['PreBookingDetails'] ?? [];
+
+        // normalize single room -> array of rooms
+        if (isset($roomDetail['BookingKey'])) {
+            $roomDetail = [$roomDetail];
+        }
+
+        $responseData = [
+            'searchSessionId' => $preBooking['SearchSessionId'] ?? null,
+            'arrivalDate'      => $preBooking['ArrivalDate'] ?? null,
+            'departureDate'    => $preBooking['DepartureDate'] ?? null,
+            'hotelId'          => $preBooking['HotelId'] ?? null,
+            'currency'         => $preBooking['Currency'] ?? null,
+
+            'rooms' => array_map(function ($room) {
+                return [
+                    'type'       => $room['Type'] ?? null,
+                    'bookingKey' => $room['BookingKey'] ?? null,
+                    'adults'     => $room['Adults'] ?? null,
+                    'children'   => $room['Children'] ?? null,
+                    'totalRooms' => $room['TotalRooms'] ?? null,
+                    'totalRate'  => $room['TotalRate'] ?? null,
+                    'boardBasis' => $room['BoardBasis'] ?? null,
+                    'terms'      => $room['TermsAndConditions'] ?? null,
+                ];
+            }, $roomDetail),
+
+            'beforePrice'     => $preBookingDetails['BookingBeforePrice'] ?? null,
+            'afterPrice'      => $preBookingDetails['BookingAfterPrice'] ?? null,
+            'priceDifference' => $preBookingDetails['Difference'] ?? null,
+        ];
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'PreBook successful',
+            'data'    => $responseData,
+        ], 200);
     }
     public function prebooks(Request $request)
     {
