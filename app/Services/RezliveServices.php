@@ -501,7 +501,7 @@ class RezliveServices
         $roomDetailsXml = '';
 
         foreach ($groups as $bookingKey => $indices) {
-            $adultsList   = [];
+            $adultsList   = []; 
             $childrenList = [];
             $agesList     = [];
             $ratesList    = [];

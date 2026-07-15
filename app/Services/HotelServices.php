@@ -300,19 +300,19 @@ class HotelServices
                 }
 
                 $rooms = $hotel['RoomDetails']['RoomDetail'] ?? [];
-               
+
                 if (isset($rooms['RoomDescription'])) {
                     $rooms = [$rooms];
                 }
 
                 $boards    = [];
                 $roomTypes = [];
-                 $roomKey=[];
+                $roomKey = [];
                 foreach ($rooms as $room) {
-                   
-                    if(isset($room['BookingKey'])){
+
+                    if (isset($room['BookingKey'])) {
                         log::info($room['BookingKey']);
-                           $roomKey = $room['BookingKey'];
+                        $roomKey = $room['BookingKey'];
                     }
                     if (isset($room['RoomDescription'])) {
                         $roomDescription = $room['RoomDescription'];
@@ -496,72 +496,72 @@ class HotelServices
 
         ];
     }
-public function getHotelDetail($sessionCode, $hotelId)
-{
-    $hotel = DB::table('sessions_hotels_results as r')
-        ->join('hotels as h', 'r.hotel_id', '=', 'h.hotel_code')
-        ->leftJoin('hotels_images as t', 't.hotel_code', '=', 'h.hotel_code')
-        ->join('sessions_hotels as sh', 'sh.session_code', '=', 'r.session_code')
-        ->where('r.session_code', $sessionCode)
-        ->where('r.hotel_id', $hotelId)
-        ->select(
-            'r.hotel_id',
-            'r.price',
-            'r.room_count',
-            'r.amenities',
-            'r.booking_key',
-            'h.hotel_name',
-            'h.hotel_address',
-            'h.city',
-            'h.rating',
-            'sh.rooms',
-            'sh.departure_date',
-            'sh.arrival_date',
-            'sh.rooms_adults',
-            'sh.rooms_children',
-            'sh.rooms_children_ages',
-            DB::raw('COALESCE(t.thumbnail_image,"images/img5.jpg") as thumbnail')
-        )
-        ->first();
+    public function getHotelDetail($sessionCode, $hotelId)
+    {
+        $hotel = DB::table('sessions_hotels_results as r')
+            ->join('hotels as h', 'r.hotel_id', '=', 'h.hotel_code')
+            ->leftJoin('hotels_images as t', 't.hotel_code', '=', 'h.hotel_code')
+            ->join('sessions_hotels as sh', 'sh.session_code', '=', 'r.session_code')
+            ->where('r.session_code', $sessionCode)
+            ->where('r.hotel_id', $hotelId)
+            ->select(
+                'r.hotel_id',
+                'r.price',
+                'r.room_count',
+                'r.amenities',
+                'r.booking_key',
+                'h.hotel_name',
+                'h.hotel_address',
+                'h.city',
+                'h.rating',
+                'sh.rooms',
+                'sh.departure_date',
+                'sh.arrival_date',
+                'sh.rooms_adults',
+                'sh.rooms_children',
+                'sh.rooms_children_ages',
+                DB::raw('COALESCE(t.thumbnail_image,"images/img5.jpg") as thumbnail')
+            )
+            ->first();
 
-    if (!$hotel) {
+        if (!$hotel) {
+            return [
+                'status'  => false,
+                'message' => 'Hotel not found in this search session',
+            ];
+        }
+
+        $amenities = json_decode($hotel->amenities, true) ?? [];
+        if (is_string($amenities)) {
+            $amenities = json_decode($amenities, true) ?? [];
+        }
+
+        $boardBasis = $amenities['boardbasis'] ?? [];
+        $roomTypes  = $amenities['room_types'] ?? [];
+
         return [
-            'status'  => false,
-            'message' => 'Hotel not found in this search session',
+            'status' => true,
+            'hotel'  => [
+                'hotel_id'            => $hotel->hotel_id,
+                'hotel_name'          => $hotel->hotel_name,
+                'hotel_address'       => $hotel->hotel_address,
+                'city'                => $hotel->city,
+                'rating'              => $hotel->rating,
+                'thumbnail'           => $hotel->thumbnail,
+                'price'               => $hotel->price,
+                'room_count'          => $hotel->room_count,
+                'board_basis'         => $boardBasis,
+                'roomType'            => $roomTypes,
+                'BookingKey'          => $hotel->booking_key,
+                'totalRoom'           => $hotel->rooms,
+                'arrivalDate'         => $hotel->arrival_date,
+                'departureDate'       => $hotel->departure_date,
+                'roomsAdult'          => json_decode($hotel->rooms_adults, true) ?? [],
+                'roomsChildren'       => json_decode($hotel->rooms_children, true) ?? [],
+                'roomsChildrenAges'   => json_decode($hotel->rooms_children_ages, true) ?? [],
+            ],
         ];
     }
-
-    $amenities = json_decode($hotel->amenities, true) ?? [];
-    if (is_string($amenities)) {
-        $amenities = json_decode($amenities, true) ?? [];
-    }
-
-    $boardBasis = $amenities['boardbasis'] ?? [];
-    $roomTypes  = $amenities['room_types'] ?? [];
-
-    return [
-        'status' => true,
-        'hotel'  => [
-            'hotel_id'            => $hotel->hotel_id,
-            'hotel_name'          => $hotel->hotel_name,
-            'hotel_address'       => $hotel->hotel_address,
-            'city'                => $hotel->city,
-            'rating'              => $hotel->rating,
-            'thumbnail'           => $hotel->thumbnail,
-            'price'               => $hotel->price,
-            'room_count'          => $hotel->room_count,
-            'board_basis'         => $boardBasis,
-            'roomType'            => $roomTypes,
-            'BookingKey'          => $hotel->booking_key,
-            'totalRoom'           => $hotel->rooms,
-            'arrivalDate'         => $hotel->arrival_date,
-            'departureDate'       => $hotel->departure_date,
-            'roomsAdult'          => json_decode($hotel->rooms_adults, true) ?? [],
-            'roomsChildren'       => json_decode($hotel->rooms_children, true) ?? [],
-            'roomsChildrenAges'   => json_decode($hotel->rooms_children_ages, true) ?? [],
-        ],
-    ];
-}
     public function createHotelBooking($data)
     {
 
@@ -710,12 +710,6 @@ public function getHotelDetail($sessionCode, $hotelId)
         $totalRate     = $data['room_rates']      ?? 0;
         $hotelName     = $data['hotel_name']      ?? null;
 
-        $roomsAdults   = $data['rooms_adults']   ?? [1];
-        $roomsChildren = $data['rooms_children'] ?? [0];
-
-        if (!is_array($roomsAdults))   $roomsAdults   = [$roomsAdults];
-        if (!is_array($roomsChildren)) $roomsChildren = [$roomsChildren];
-
         if (!$sessionCode) {
             return ['status' => false, 'message' => 'Session code is required'];
         }
@@ -735,6 +729,27 @@ public function getHotelDetail($sessionCode, $hotelId)
         $countryCode     = $hotelSession->country_code;
         $cityCode        = $hotelSession->city_code;
 
+        // Adults/children MUST come from the search session, not the incoming
+        // booking payload — Rezlive validates booking counts against what was
+        // originally searched. sessions_hotels.rooms_adults / rooms_children
+        // are stored the same way as rooms_children_ages (JSON-encoded array,
+        // one entry per room, same order as search).
+        $roomsAdults = $hotelSession->rooms_adults ?? '[1]';
+        if (is_string($roomsAdults)) {
+            $roomsAdults = json_decode($roomsAdults, true) ?? [1];
+        }
+        if (!is_array($roomsAdults)) {
+            $roomsAdults = [$roomsAdults];
+        }
+
+        $roomsChildren = $hotelSession->rooms_children ?? '[0]';
+        if (is_string($roomsChildren)) {
+            $roomsChildren = json_decode($roomsChildren, true) ?? [0];
+        }
+        if (!is_array($roomsChildren)) {
+            $roomsChildren = [$roomsChildren];
+        }
+
         $roomsChildrenAges = $hotelSession->rooms_children_ages ?? '[]';
         if (is_string($roomsChildrenAges)) {
             $roomsChildrenAges = json_decode($roomsChildrenAges, true) ?? [];
@@ -751,19 +766,33 @@ public function getHotelDetail($sessionCode, $hotelId)
 
         $cursor        = 0;
         $bookingHotels = [];
-
         for ($i = 0; $i < $totalRoomCount; $i++) {
-            $roomSize       = ($roomsAdults[$i] ?? 1) + ($roomsChildren[$i] ?? 0);
+            $adultsCount   = $roomsAdults[$i]   ?? 1;
+            $childrenCount = $roomsChildren[$i] ?? 0;
+            $roomSize      = $adultsCount + $childrenCount;
+
             $roomTravellers = array_slice($travellers, $cursor, $roomSize);
             $cursor        += $roomSize;
 
+            if (count($roomTravellers) !== $roomSize) {
+                return [
+                    'status'  => false,
+                    'message' => "Room " . ($i + 1) . " expects {$roomSize} traveller(s) ({$adultsCount} adult(s), {$childrenCount} child(ren)) but received " . count($roomTravellers) . ".",
+                ];
+            }
+
             $guests = [];
-            foreach ($roomTravellers as $traveller) {
+            foreach ($roomTravellers as $index => $traveller) {
+                // First $adultsCount travellers in this room are adults,
+                // the remainder are children — assigned by position, not by
+                // trusting the frontend's 'type' field.
+                $isChild = $index >= $adultsCount;
+
                 $guests[] = [
-                    'type'       => strtoupper($traveller['type'] ?? 'ADULT'),
+                    'type'       => $isChild ? 'CHILD' : 'ADULT',
                     'first_name' => $traveller['first_name'] ?? '',
                     'last_name'  => $traveller['last_name']  ?? '',
-                    'age'        => $traveller['age']        ?? null,
+                    'age'        => $isChild ? ($traveller['age'] ?? null) : null,
                 ];
             }
 
@@ -775,6 +804,9 @@ public function getHotelDetail($sessionCode, $hotelId)
             ];
         }
 
+        // Full rooms_adults / rooms_children arrays go on $bookingHotels[0] —
+        // buildBookingXml()/buildPreBookXml() read $hotelData['rooms_adults'][$i]
+        // and $hotelData['rooms_children'][$i] directly by room position.
         $bookingHotels[0] = array_merge($bookingHotels[0], [
             'search_session_id'   => $searchSessionId,
             'hotel_id'            => $hotelId,
@@ -827,7 +859,7 @@ public function getHotelDetail($sessionCode, $hotelId)
                     'room_rate_markup'     => $roomRateMarkup,
                     'rooms_adults'         => $roomsAdults[$i]   ?? 1,
                     'rooms_children'       => $roomsChildren[$i] ?? 0,
-                    'total_rate'           => $totalRate,
+                    'total_rate'           => $roomRate,
                     'total_room_count'     => $totalRoomCount,
                     'provider_booking_ref' => $rezliveResult['provider_ref'] ?? null,
                 ]);
