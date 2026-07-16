@@ -10,6 +10,7 @@ use App\Services\RezliveServices;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
+use Psy\Util\Json;
 
 set_time_limit(0);
 ini_set('max_execution_time', 0);
@@ -176,12 +177,10 @@ class HotelController extends Controller
         ]);
 
         $result = $this->hotelService->createHotelsBooking($request->all());
-
         $statusCode = $result['status'] ? 200 : 422;
 
         return response()->json($result, $statusCode);
     }
-
     public function fetchLog()
     {
         $logs = RezliveLog::latest()->get();
@@ -196,12 +195,6 @@ class HotelController extends Controller
     public function prebook(Request $request)
     {
         $rezlive = app(\App\Services\RezliveServices::class);
-        // $session = HotelSession::where('session_code', $request->session_code)->first();
-
-        // if (!$session) {
-        //     return response()->json(['status' => false, 'message' => 'Session not found']);
-        // }
-
         $roomsAdults       = $request->rooms_adults ?? [];
         $roomsChildren     = $request->rooms_children ?? [];
         $roomsChildrenAges = $request->rooms_children_ages ?? [];
@@ -215,8 +208,6 @@ class HotelController extends Controller
             'country_code'        => $request->country_code,
             'city_code'           => $request->city_code,
             'hotel_id'            => $request->hotel_id,
-            // 'hotel_name'          => $request->hotel_name,
-            // 'hotel_address'       => $request->hotel_address,
             'currency'            => $request->currency,
             'rooms_adults'        => $roomsAdults,
             'rooms_children'      => $roomsChildren,
@@ -233,19 +224,18 @@ class HotelController extends Controller
             ];
         }
         $result = $rezlive->preBook($hotelData, $bookingHotels);
-
+        // log::info("controller",['result'=>$result]);
         if (!($result['status'] ?? false)) {
             return response()->json([
                 'status'  => false,
-                'message' => $result['message'] ?? 'PreBook failed',
-            ], 422);
+                'message' => $result['message'] ?? 'PreBook faileds',
+            ], 500);
         }
 
         $preBooking        = $result['data']['PreBookingRequest']['PreBooking'] ?? [];
         $roomDetail         = $preBooking['RoomDetails']['RoomDetail'] ?? [];
         $preBookingDetails  = $result['data']['PreBookingDetails'] ?? [];
 
-        // normalize single room -> array of rooms
         if (isset($roomDetail['BookingKey'])) {
             $roomDetail = [$roomDetail];
         }
@@ -281,55 +271,5 @@ class HotelController extends Controller
             'data'    => $responseData,
         ], 200);
     }
-    public function prebooks(Request $request)
-    {
-        $rezlive = app(\App\Services\RezliveServices::class);
-        $session = HotelSession::where('session_code', $request->session_code)->first();
-
-        if (!$session) {
-            return response()->json(['status' => false, 'message' => 'Session not found']);
-        }
-
-        $roomsAdults       = json_decode($session->rooms_adults, true);
-        $roomsChildren     = json_decode($session->rooms_children, true);
-        $roomsChildrenAges = json_decode($session->rooms_children_ages, true) ?? [];
-        $totalRooms        = count($roomsAdults);
-
-        $totalRates = is_array($request->total_rate)
-            ? $request->total_rate
-            : explode('|', $request->total_rate);
-
-        $roomTypes = is_array($request->room_type)
-            ? $request->room_type
-            : array_fill(0, $totalRooms, $request->room_type);
-
-        $bookingKeys = is_array($request->booking_key)
-            ? $request->booking_key
-            : array_fill(0, $totalRooms, $request->booking_key);
-
-        $hotelData = [
-            'search_session_id'   => $request->search_session_id,
-            'arrival_date'        => $request->arrival_date,
-            'departure_date'      => $request->departure_date,
-            'nationality'         => $request->nationality,
-            'country_code'        => $request->country_code,
-            'city_code'           => $request->city_code,
-            'hotel_id'            => $request->hotel_id,
-            'rooms_adults'        => $roomsAdults,
-            'rooms_children'      => $roomsChildren,
-            'rooms_children_ages' => $roomsChildrenAges,
-        ];
-
-        $bookingHotels = [];
-        for ($i = 0; $i < $totalRooms; $i++) {
-            $bookingHotels[] = [
-                'room_type'   => $roomTypes[$i]   ?? $roomTypes[0],
-                'booking_key' => $bookingKeys[$i] ?? $bookingKeys[0],
-                'total_rate'  => $totalRates[$i]  ?? $totalRates[0],
-                'guests'      => [],
-            ];
-        }
-
-        return response()->json($rezlive->preBook($hotelData, $bookingHotels));
-    }
+   
 }

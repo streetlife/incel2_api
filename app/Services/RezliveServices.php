@@ -195,43 +195,7 @@ class RezliveServices
         return ['status' => true, 'data' => $result];
     }
 
-    // public function processBooking($bookingCode, $bookingHotels): array
-    // {
-    //     Log::info('Processing Hotel Booking', ['booking_code' => $bookingCode]);
 
-    //     $hotelData = $bookingHotels[0];
-    //     $xml       = $this->buildBookingXml($hotelData, $bookingHotels);
-    //     $endpoint  = $this->url . "/bookhotel";
-
-    //     $this->saveXmlLog('booking', 'request', $xml);
-    //     Log::info('Rezlive Booking XML', ['xml' => $xml]);
-
-    //     $response = Http::withHeaders([
-    //         'Content-Type' => 'application/x-www-form-urlencoded',
-    //         'x-api-key'    => $this->apiKey,
-    //     ])->asForm()->post($endpoint, ['XML' => $xml]);
-
-    //     $body = trim($response->body());
-    //     $this->saveXmlLog('booking', 'response', $body);
-    //     Log::info('Rezlive Booking Response', ['response' => $body]);
-
-    //     if (empty($body) || stripos($body, '<html') !== false) {
-    //         return ['status' => false, 'message' => 'Booking returned invalid response from provider'];
-    //     }
-
-    //     libxml_use_internal_errors(true);
-    //     $xmlResponse = simplexml_load_string($body, 'SimpleXMLElement', LIBXML_NOCDATA);
-
-    //     if ($xmlResponse === false) {
-    //         libxml_clear_errors();
-    //         return ['status' => false, 'message' => 'Failed to parse booking response'];
-    //     }
-
-    //     libxml_clear_errors();
-    //     $responseJson = json_decode(json_encode($xmlResponse), true);
-
-    //     return $this->handleBookingResponse($bookingCode, $responseJson, $body);
-    // }
 
     public function processBooking($bookingCode, $bookingHotels): array
     {
@@ -239,17 +203,11 @@ class RezliveServices
 
         $hotelData = $bookingHotels[0];
 
-        // // Prebook first
-        // $preBookResult = $this->preBook($hotelData, $bookingHotels);
-        // if (!$preBookResult['status']) {
-        //     return ['status' => false, 'message' => 'Prebook failed: ' . $preBookResult['message']];
-        // }
-
         $xml      = $this->buildBookingXml($hotelData, $bookingHotels);
         $endpoint = $this->url . "/bookhotel";
 
         $this->saveXmlLog('booking', 'request', $xml);
-        Log::info('Rezlive Booking XML', ['xml' => $xml]);
+        // Log::info('Rezlive Booking XML', ['xml' => $xml]);
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/x-www-form-urlencoded',
@@ -258,7 +216,7 @@ class RezliveServices
 
         $body = trim($response->body());
         $this->saveXmlLog('booking', 'response', $body);
-        Log::info('Rezlive Booking Response', ['response' => $body]);
+        // Log::info('Rezlive Booking Response', ['response' => $body]);
 
         if (empty($body) || stripos($body, '<html') !== false) {
             return ['status' => false, 'message' => 'Booking returned invalid response from provider'];
@@ -289,10 +247,10 @@ class RezliveServices
             'Content-Type' => 'application/x-www-form-urlencoded',
             'x-api-key'    => $this->apiKey,
         ])->asForm()->post($endpoint, ['XML' => $xml]);
-        Log::info('PreBook XML', ['xml' => $xml]);
+        // Log::info('PreBook XML', ['xml' => $xml]);
         $body = trim($response->body());
         $this->saveXmlLog('prebook', 'response', $body);
-        Log::info('Rezlive PreBook Response', ['response' => $body]);
+        // Log::info('Rezlive PreBook Response', ['response' => $body]);
 
         if (empty($body) || stripos($body, '<html') !== false) {
             return ['status' => false, 'message' => 'Invalid prebook response from provider'];
@@ -308,11 +266,13 @@ class RezliveServices
 
         libxml_clear_errors();
         $responseJson = json_decode(json_encode($xmlResponse), true);
-
-
+        log::info($responseJson);
+        if (!empty($responseJson['error'])) {
+            return ['status' => false, 'message' => $responseJson['error']];
+        }
         $status = $responseJson['PreBookingDetails']['PreBookingStatus'] ?? null;
         if (strtolower($status) === 'fail') {
-            $reason = $responseJson['PreBookingDetails']['PreBookingReason'] ?? 'Prebook failed';
+            $reason = $responseJson['error'] ?? 'Prebook faileds';
             return ['status' => false, 'message' => $reason];
         }
 
@@ -501,7 +461,7 @@ class RezliveServices
         $roomDetailsXml = '';
 
         foreach ($groups as $bookingKey => $indices) {
-            $adultsList   = []; 
+            $adultsList   = [];
             $childrenList = [];
             $agesList     = [];
             $ratesList    = [];
@@ -850,8 +810,7 @@ class RezliveServices
 
         return [
             'status'   => false,
-            'message'  => 'Booking failed',
-            'response' => $rawResponse,
+            'message' => $rawResponse,
         ];
     }
 }
