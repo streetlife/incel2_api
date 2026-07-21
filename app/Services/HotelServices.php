@@ -235,7 +235,7 @@ class HotelServices
 
             $sessionCode = Str::uuid()->toString();
 
-            $result = $this->rezlive->searchHotels($params, $arrivalDate, $departureDate);
+            $result = $this->rezlive->searchHotels($params, $arrivalDate, $departureDate,$sessionCode);
 
             if (isset($result['error'])) {
                 throw new \Exception($result['error']);
@@ -601,6 +601,7 @@ class HotelServices
         $searchSessionId = $hotelSession->search_session_id ?? null;
         $countryCode     = $hotelSession->country_code;
         $cityCode        = $hotelSession->city_code;
+        $session_code    = $hotelSession->session_code;
 
        
         $roomsAdults = $hotelSession->rooms_adults ?? '[1]';
@@ -687,7 +688,7 @@ class HotelServices
             'rooms_children_ages' => $roomsChildrenAges,
         ]);
 
-        $rezliveResult = $this->rezlive->processBooking($bookingCode, $bookingHotels);
+        $rezliveResult = $this->rezlive->processBooking($bookingCode, $bookingHotels,$session_code);
 
         if (!($rezliveResult['status'] ?? false)) {
             Log::error('Rezlive booking failed', [

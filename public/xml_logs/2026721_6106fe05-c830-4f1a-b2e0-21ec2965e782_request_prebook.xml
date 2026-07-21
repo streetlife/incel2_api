@@ -1,0 +1,29 @@
+
+<PreBookingRequest>
+    <Authentication>
+        <AgentCode>CD32280</AgentCode>
+        <UserName>Inceltourism</UserName>
+    </Authentication>
+    <PreBooking>
+        <SearchSessionId>178465676914117846567694796a</SearchSessionId>
+        <ArrivalDate>28/07/2026</ArrivalDate>
+        <DepartureDate>29/07/2026</DepartureDate>
+        <GuestNationality>AE</GuestNationality>
+        <CountryCode>AE</CountryCode>
+        <City>22053</City>
+        <HotelId>270778</HotelId>
+        <Currency>USD</Currency>
+        <RoomDetails>
+            
+        <RoomDetail>
+            <Type>Standard Room, 1 King Bed</Type>
+            <BookingKey>PcexDQAgDAOwiyI1VUnKB5zAysz_OxveTHdpyJos8qc8dbAXe6CQkUIYSaTDbtwH_</BookingKey>
+            <Adults>2|1</Adults>
+            <Children>1|1</Children>
+            <ChildrenAges>2|2</ChildrenAges>
+            <TotalRooms>2</TotalRooms>
+            <TotalRate>238.92|238.92</TotalRate>
+        </RoomDetail>
+        </RoomDetails>
+    </PreBooking>
+</PreBookingRequest>

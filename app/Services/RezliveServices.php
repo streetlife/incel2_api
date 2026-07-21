@@ -36,11 +36,11 @@ class RezliveServices
      * @param string $content XML string to save
      */
 
-    private function saveXmlLog(string $type, string $label, string $content, int $requestId): void
+    private function saveXmlLog(string $type, string $label, string $content, string $sessionCode): void
     {
         try {
             $timestamp = now()->format('Ynj');
-            $filename  = "xml_logs/{$timestamp}_{$requestId}_{$label}_{$type}.xml";
+            $filename  = "xml_logs/{$timestamp}_{$sessionCode}_{$label}_{$type}.xml";
             $path = public_path($filename);
 
             if (!file_exists(public_path('xml_logs'))) {
@@ -51,28 +51,28 @@ class RezliveServices
 
             Log::info("XML log saved", [
                 'file'       => $filename,
-                'request_id' => $requestId,
+                'request_id' => $sessionCode,
                 'timestamp' => $timestamp
             ]);
         } catch (\Throwable $e) {
             Log::warning("Failed to save XML log", [
                 'type'       => $type,
                 'label'      => $label,
-                'request_id' => $requestId,
+                'request_id' => $sessionCode,
                 'error'      => $e->getMessage(),
             ]);
         }
     }
 
-    public function searchHotels(array $params, $arrivalDate, $departureDate): array
+    public function searchHotels(array $params, $arrivalDate, $departureDate, $sessionCode): array
     {
-        $requestId = $requestId ?? random_int(1000, 9999);
+
 
         Log::info("Rezlive Search Request", [
             'params'        => $params,
             'arrivalDate'   => $arrivalDate,
             'departureDate' => $departureDate,
-            'request' => $requestId
+            'request' => $sessionCode
         ]);
         // $convertedArrivalDate = \Carbon\Carbon::createFromFormat(
         //     'd/m/Y',
@@ -87,7 +87,7 @@ class RezliveServices
             $xml      = $this->buildSearchXml($params, $arrivalDate, $departureDate);
             $endpoint = $this->url . "/findhotel";
 
-            $this->saveXmlLog('search', 'request', $xml, $requestId);
+            $this->saveXmlLog('search', 'request', $xml, $sessionCode);
 
             // Log::info("Rezlive Request XML", ['xml' => $xml]);
 
@@ -98,7 +98,7 @@ class RezliveServices
 
             $body = $response->body();
 
-            $this->saveXmlLog('search', 'response', $body, $requestId);
+            $this->saveXmlLog('search', 'response', $body, $sessionCode);
 
             RezliveLog::create([
                 'type'             => 'hotel',
@@ -209,9 +209,8 @@ class RezliveServices
 
 
 
-    public function processBooking($bookingCode, $bookingHotels): array
+    public function processBooking($bookingCode, $bookingHotels, $sessionCode): array
     {
-        $requestId = $requestId ?? random_int(1000, 9999);
         Log::info('Processing Hotel Booking', ['booking_code' => $bookingCode]);
 
         $hotelData = $bookingHotels[0];
@@ -219,7 +218,7 @@ class RezliveServices
         $xml      = $this->buildBookingXml($hotelData, $bookingHotels);
         $endpoint = $this->url . "/bookhotel";
 
-        $this->saveXmlLog('booking', 'request', $xml, $requestId);
+        $this->saveXmlLog('booking', 'request', $xml, $sessionCode);
         // Log::info('Rezlive Booking XML', ['xml' => $xml]);
 
         $response = Http::withHeaders([
@@ -228,7 +227,7 @@ class RezliveServices
         ])->asForm()->post($endpoint, ['XML' => $xml]);
 
         $body = trim($response->body());
-        $this->saveXmlLog('booking', 'response', $body, $requestId);
+        $this->saveXmlLog('booking', 'response', $body, $sessionCode);
         // Log::info('Rezlive Booking Response', ['response' => $body]);
 
         if (empty($body) || stripos($body, '<html') !== false) {
@@ -249,13 +248,12 @@ class RezliveServices
         return $this->handleBookingResponse($bookingCode, $responseJson, $body);
     }
 
-    public function preBook(array $hotelData, array $bookingHotels): array
+    public function preBook(array $hotelData, array $bookingHotels, string $sessionCode): array
     {
-        $requestId = $requestId ?? random_int(1000, 9999);
         $xml = $this->buildPreBookXml($hotelData, $bookingHotels);
         $endpoint = $this->url . "/prebook";
 
-        $this->saveXmlLog('prebook', 'request', $xml, $requestId);
+        $this->saveXmlLog('prebook', 'request', $xml, $sessionCode);
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/x-www-form-urlencoded',
@@ -263,7 +261,7 @@ class RezliveServices
         ])->asForm()->post($endpoint, ['XML' => $xml]);
         // Log::info('PreBook XML', ['xml' => $xml]);
         $body = trim($response->body());
-        $this->saveXmlLog('prebook', 'response', $body, $requestId);
+        $this->saveXmlLog('prebook', 'response', $body, $sessionCode);
         // Log::info('Rezlive PreBook Response', ['response' => $body]);
 
         if (empty($body) || stripos($body, '<html') !== false) {

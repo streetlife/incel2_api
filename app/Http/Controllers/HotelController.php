@@ -86,20 +86,21 @@ class HotelController extends Controller
             ], 400);
         }
     }
-    public function bookHotel(Request $request)
-    {
-        $request->validate([
-            'booking_code' => 'required',
-            'hotels' => 'required|array'
-        ]);
+    // public function bookHotel(Request $request)
+    // {
+    //     $request->validate([
+    //         'booking_code' => 'required',
+    //         'hotels' => 'required|array'
+    //     ]);
 
-        $result = $this->rezliveBooking->processBooking(
-            $request->booking_code,
-            $request->hotels
-        );
+    //     $result = $this->rezliveBooking->processBooking(
+    //         $request->booking_code,
+    //         $request->hotels,
 
-        return response()->json($result);
-    }
+    //     );
+
+    //     return response()->json($result);
+    // }
     //   public function createBooking(Request $request)
     // {
     //     $request->validate([
@@ -199,7 +200,8 @@ class HotelController extends Controller
         $roomsChildren     = $request->rooms_children ?? [];
         $roomsChildrenAges = $request->rooms_children_ages ?? [];
         $totalRooms        = count($roomsAdults);
-
+        $data = HotelSession::where('search_session_id', $request->search_session_id)->first();
+        $sessionCode = $data->session_code;
         $hotelData = [
             'search_session_id'   => $request->search_session_id,
             'arrival_date'        => $request->arrival_date,
@@ -223,7 +225,7 @@ class HotelController extends Controller
                 'guests'      => [],
             ];
         }
-        $result = $rezlive->preBook($hotelData, $bookingHotels);
+        $result = $rezlive->preBook($hotelData, $bookingHotels,$sessionCode);
         // log::info("controller",['result'=>$result]);
         if (!($result['status'] ?? false)) {
             return response()->json([
@@ -271,5 +273,4 @@ class HotelController extends Controller
             'data'    => $responseData,
         ], 200);
     }
-   
 }
