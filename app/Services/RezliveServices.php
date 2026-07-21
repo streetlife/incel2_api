@@ -36,32 +36,43 @@ class RezliveServices
      * @param string $content XML string to save
      */
 
-    private function saveXmlLog(string $type, string $label, string $content): void
+    private function saveXmlLog(string $type, string $label, string $content, int $requestId): void
     {
         try {
-            $timestamp = now()->format('Ymd_His');
-            $filename  = "xml_logs/{$timestamp}_{$label}_{$type}.xml";
+            $timestamp = now()->format('Ynj');
+            $filename  = "xml_logs/{$timestamp}_{$requestId}_{$label}_{$type}.xml";
             $path = public_path($filename);
+
             if (!file_exists(public_path('xml_logs'))) {
                 mkdir(public_path('xml_logs'), 0755, true);
             }
+
             file_put_contents($path, $content);
-            Log::Info("XML log saved", ['file' => $filename]);
+
+            Log::info("XML log saved", [
+                'file'       => $filename,
+                'request_id' => $requestId,
+                'timestamp' => $timestamp
+            ]);
         } catch (\Throwable $e) {
             Log::warning("Failed to save XML log", [
-                'type'  => $type,
-                'label' => $label,
-                'error' => $e->getMessage(),
+                'type'       => $type,
+                'label'      => $label,
+                'request_id' => $requestId,
+                'error'      => $e->getMessage(),
             ]);
         }
     }
 
     public function searchHotels(array $params, $arrivalDate, $departureDate): array
     {
+        $requestId = $requestId ?? random_int(1000, 9999);
+
         Log::info("Rezlive Search Request", [
             'params'        => $params,
             'arrivalDate'   => $arrivalDate,
             'departureDate' => $departureDate,
+            'request' => $requestId
         ]);
         // $convertedArrivalDate = \Carbon\Carbon::createFromFormat(
         //     'd/m/Y',
@@ -76,7 +87,7 @@ class RezliveServices
             $xml      = $this->buildSearchXml($params, $arrivalDate, $departureDate);
             $endpoint = $this->url . "/findhotel";
 
-            $this->saveXmlLog('search', 'request', $xml);
+            $this->saveXmlLog('search', 'request', $xml, $requestId);
 
             // Log::info("Rezlive Request XML", ['xml' => $xml]);
 
@@ -87,7 +98,7 @@ class RezliveServices
 
             $body = $response->body();
 
-            $this->saveXmlLog('search', 'response', $body);
+            $this->saveXmlLog('search', 'response', $body, $requestId);
 
             RezliveLog::create([
                 'type'             => 'hotel',
@@ -156,10 +167,11 @@ class RezliveServices
 
     public function findHotelById($payload): array
     {
+        $requestId = random_int(1000, 9999);
         $xml      = $this->FindHotleXml($payload);
         $endpoint = $this->url . "/findhotelbyid";
 
-        $this->saveXmlLog('find_by_id', 'request', $xml);
+        $this->saveXmlLog('find_by_id', 'request', $xml, $requestId);
         Log::info('Rezlive Request', ['xml' => $xml]);
 
         $response = Http::withHeaders([
@@ -169,7 +181,7 @@ class RezliveServices
 
         $body = trim($response->body());
 
-        $this->saveXmlLog('find_by_id', 'response', $body);
+        $this->saveXmlLog('find_by_id', 'response', $body, $requestId);
         Log::info('Rezlive Response', ['body' => $body]);
 
         if (empty($body) || stripos($body, '<html') !== false) {
@@ -199,6 +211,7 @@ class RezliveServices
 
     public function processBooking($bookingCode, $bookingHotels): array
     {
+        $requestId = $requestId ?? random_int(1000, 9999);
         Log::info('Processing Hotel Booking', ['booking_code' => $bookingCode]);
 
         $hotelData = $bookingHotels[0];
@@ -206,7 +219,7 @@ class RezliveServices
         $xml      = $this->buildBookingXml($hotelData, $bookingHotels);
         $endpoint = $this->url . "/bookhotel";
 
-        $this->saveXmlLog('booking', 'request', $xml);
+        $this->saveXmlLog('booking', 'request', $xml, $requestId);
         // Log::info('Rezlive Booking XML', ['xml' => $xml]);
 
         $response = Http::withHeaders([
@@ -215,7 +228,7 @@ class RezliveServices
         ])->asForm()->post($endpoint, ['XML' => $xml]);
 
         $body = trim($response->body());
-        $this->saveXmlLog('booking', 'response', $body);
+        $this->saveXmlLog('booking', 'response', $body, $requestId);
         // Log::info('Rezlive Booking Response', ['response' => $body]);
 
         if (empty($body) || stripos($body, '<html') !== false) {
@@ -238,10 +251,11 @@ class RezliveServices
 
     public function preBook(array $hotelData, array $bookingHotels): array
     {
+        $requestId = $requestId ?? random_int(1000, 9999);
         $xml = $this->buildPreBookXml($hotelData, $bookingHotels);
         $endpoint = $this->url . "/prebook";
 
-        $this->saveXmlLog('prebook', 'request', $xml);
+        $this->saveXmlLog('prebook', 'request', $xml, $requestId);
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/x-www-form-urlencoded',
@@ -249,7 +263,7 @@ class RezliveServices
         ])->asForm()->post($endpoint, ['XML' => $xml]);
         // Log::info('PreBook XML', ['xml' => $xml]);
         $body = trim($response->body());
-        $this->saveXmlLog('prebook', 'response', $body);
+        $this->saveXmlLog('prebook', 'response', $body, $requestId);
         // Log::info('Rezlive PreBook Response', ['response' => $body]);
 
         if (empty($body) || stripos($body, '<html') !== false) {
@@ -261,12 +275,12 @@ class RezliveServices
 
         if ($xmlResponse === false) {
             libxml_clear_errors();
-            return ['status' => false, 'message' => 'Failed to parse prebook response'];
+            return ['status' => false, 'message' => ''];
         }
 
         libxml_clear_errors();
         $responseJson = json_decode(json_encode($xmlResponse), true);
-        log::info($responseJson);
+        // log::info($responseJson);
         if (!empty($responseJson['error'])) {
             return ['status' => false, 'message' => $responseJson['error']];
         }

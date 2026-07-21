@@ -1,0 +1,25 @@
+<HotelFindRequest>
+ <Authentication>
+        <AgentCode>CD32280</AgentCode>
+<UserName>Inceltourism</UserName>
+</Authentication>
+<Booking>
+<ArrivalDate>28/07/2026</ArrivalDate>
+<DepartureDate>29/07/2026</DepartureDate>
+<CountryCode>AE</CountryCode>
+<City>22053</City>
+<GuestNationality>AE</GuestNationality>
+<HotelRatings>
+<HotelRating>1</HotelRating>
+<HotelRating>2</HotelRating>
+<HotelRating>3</HotelRating>
+<HotelRating>4</HotelRating>
+<HotelRating>5</HotelRating>
+</HotelRatings>
+<Rooms><Room>
+<Type>Room-1</Type>
+<NoOfAdults>2</NoOfAdults>
+<NoOfChilds>1</NoOfChilds><ChildrenAges><ChildAge>2</ChildAge></ChildrenAges></Room><Room>
+<Type>Room-2</Type>
+<NoOfAdults>1</NoOfAdults>
+<NoOfChilds>1</NoOfChilds><ChildrenAges><ChildAge>2</ChildAge></ChildrenAges></Room></Rooms></Booking></HotelFindRequest>
