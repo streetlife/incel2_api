@@ -1,0 +1,29 @@
+
+<PreBookingRequest>
+    <Authentication>
+        <AgentCode>CD32280</AgentCode>
+        <UserName>Inceltourism</UserName>
+    </Authentication>
+    <PreBooking>
+        <SearchSessionId>178584376980017858437691326a71d</SearchSessionId>
+        <ArrivalDate>24/08/2026</ArrivalDate>
+        <DepartureDate>27/08/2026</DepartureDate>
+        <GuestNationality>AE</GuestNationality>
+        <CountryCode>GE</CountryCode>
+        <City>17122</City>
+        <HotelId>495969</HotelId>
+        <Currency>USD</Currency>
+        <RoomDetails>
+            
+        <RoomDetail>
+            <Type>Economy Double Room, 1 Double Bed</Type>
+            <BookingKey>Pce5DcAwDAPAiQiQst4NPILbAOm8f58u152qo31VTpP6o2X5lF6crQ44jJZggw6fmBzcDw</BookingKey>
+            <Adults>2|1</Adults>
+            <Children>1|2</Children>
+            <ChildrenAges>4|2*7</ChildrenAges>
+            <TotalRooms>2</TotalRooms>
+            <TotalRate>227.38|227.38</TotalRate>
+        </RoomDetail>
+        </RoomDetails>
+    </PreBooking>
+</PreBookingRequest>

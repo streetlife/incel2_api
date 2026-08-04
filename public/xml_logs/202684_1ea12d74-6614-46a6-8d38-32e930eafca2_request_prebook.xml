@@ -1,0 +1,29 @@
+
+<PreBookingRequest>
+    <Authentication>
+        <AgentCode>CD32280</AgentCode>
+        <UserName>Inceltourism</UserName>
+    </Authentication>
+    <PreBooking>
+        <SearchSessionId>178583581084917858358109866a71b</SearchSessionId>
+        <ArrivalDate>24/08/2026</ArrivalDate>
+        <DepartureDate>27/08/2026</DepartureDate>
+        <GuestNationality>AE</GuestNationality>
+        <CountryCode>GE</CountryCode>
+        <City>17122</City>
+        <HotelId>495969</HotelId>
+        <Currency>USD</Currency>
+        <RoomDetails>
+            
+        <RoomDetail>
+            <Type>Triple Room, Multiple Beds, Non Smoking (1 double bed and sofa bed), 3 Twin Bed,1 Sofa Bed</Type>
+            <BookingKey>PcexEYAwDAPAiXQnBduRNmAEWmjZv6fju9d2-2iLruhPPHNvPbhOuUEsrgENFiqdCd4P</BookingKey>
+            <Adults>2|1</Adults>
+            <Children>2|1</Children>
+            <ChildrenAges>4|2|3</ChildrenAges>
+            <TotalRooms>2</TotalRooms>
+            <TotalRate>255.73|255.73</TotalRate>
+        </RoomDetail>
+        </RoomDetails>
+    </PreBooking>
+</PreBookingRequest>

@@ -449,6 +449,92 @@ class RezliveServices
     //     </PreBooking>
     // </PreBookingRequest>";
     //     }
+    //     private function buildPreBookXml($hotelData, $bookingHotels): string
+    //     {
+    //         $arrivalDate     = $hotelData['arrival_date'];
+    //         $departureDate   = $hotelData['departure_date'];
+    //         $searchSessionId = $hotelData['search_session_id'];
+    //         $currency        = $hotelData['currency'];
+    //         $adultsPerRoom   = $hotelData['rooms_adults'];
+    //         $childrenPerRoom = $hotelData['rooms_children'];
+    //         $childrenAgesAll = $hotelData['rooms_children_ages'] ?? [];
+
+    //         if (!is_array($adultsPerRoom))   $adultsPerRoom   = [$adultsPerRoom];
+    //         if (!is_array($childrenPerRoom)) $childrenPerRoom = [$childrenPerRoom];
+    //         if (!is_array($childrenAgesAll)) $childrenAgesAll = [$childrenAgesAll];
+
+    //         // Group strictly by booking_key — rooms sharing a key get pipe-joined
+    //         $groups = [];
+    //         foreach ($bookingHotels as $i => $hotel) {
+    //             $key = $hotel['booking_key'];
+    //             $groups[$key][] = $i;
+    //         }
+
+    //         $roomDetailsXml = '';
+
+    //         foreach ($groups as $bookingKey => $indices) {
+    //             $adultsList   = [];
+    //             $childrenList = [];
+    //             $agesList     = [];
+    //             $ratesList    = [];
+
+    //             foreach ($indices as $i) {
+    //                 $adultsList[]   = $adultsPerRoom[$i]   ?? 1;
+    //                 $childrenList[] = $childrenPerRoom[$i] ?? 0;
+
+    //                 $sessionAges = $childrenAgesAll[$i] ?? [];
+    //                 if (!is_array($sessionAges)) {
+    //                     $sessionAges = ($sessionAges !== null && $sessionAges !== '')
+    //                         ? [$sessionAges]
+    //                         : [0];
+    //                 }
+    //                 $agesList[] = !empty($sessionAges) ? $sessionAges[0] : 0;
+
+    //                 $ratesList[] = $bookingHotels[$i]['total_rate'] ?? 0;
+    //             }
+
+    //             $first = $bookingHotels[$indices[0]];
+    //             $type  = htmlspecialchars($first['room_type'] ?? '');
+
+    //             $adultsStr   = implode('|', $adultsList);
+    //             $childrenStr = implode('|', $childrenList);
+    //             $agesStr     = implode('|', $agesList);
+    //             $rateStr     = implode('|', $ratesList);
+
+    //             $roomDetailsXml .= "
+    //         <RoomDetail>
+    //             <Type>{$type}</Type>
+    //             <BookingKey>{$bookingKey}</BookingKey>
+    //             <Adults>{$adultsStr}</Adults>
+    //             <Children>{$childrenStr}</Children>
+    //             <ChildrenAges>{$agesStr}</ChildrenAges>
+    //             <TotalRooms>" . count($indices) . "</TotalRooms>
+    //             <TotalRate>{$rateStr}</TotalRate>
+    //         </RoomDetail>";
+    //         }
+
+    //         return "
+    // <PreBookingRequest>
+    //     <Authentication>
+    //         <AgentCode>{$this->agent}</AgentCode>
+    //         <UserName>{$this->username}</UserName>
+    //     </Authentication>
+    //     <PreBooking>
+    //         <SearchSessionId>{$searchSessionId}</SearchSessionId>
+    //         <ArrivalDate>{$arrivalDate}</ArrivalDate>
+    //         <DepartureDate>{$departureDate}</DepartureDate>
+    //         <GuestNationality>{$hotelData['nationality']}</GuestNationality>
+    //         <CountryCode>{$hotelData['country_code']}</CountryCode>
+    //         <City>{$hotelData['city_code']}</City>
+    //         <HotelId>{$hotelData['hotel_id']}</HotelId>
+    //         <Currency>{$currency}</Currency>
+    //         <RoomDetails>
+    //             {$roomDetailsXml}
+    //         </RoomDetails>
+    //     </PreBooking>
+    // </PreBookingRequest>";
+    //     }
+
     private function buildPreBookXml($hotelData, $bookingHotels): string
     {
         $arrivalDate     = $hotelData['arrival_date'];
@@ -463,7 +549,14 @@ class RezliveServices
         if (!is_array($childrenPerRoom)) $childrenPerRoom = [$childrenPerRoom];
         if (!is_array($childrenAgesAll)) $childrenAgesAll = [$childrenAgesAll];
 
-        // Group strictly by booking_key — rooms sharing a key get pipe-joined
+        // rooms_children_ages is flat, in room order. Slice it per room using a running pointer.
+        $ageOffsets = [];
+        $pointer = 0;
+        foreach ($childrenPerRoom as $idx => $count) {
+            $ageOffsets[$idx] = array_slice($childrenAgesAll, $pointer, $count);
+            $pointer += $count;
+        }
+
         $groups = [];
         foreach ($bookingHotels as $i => $hotel) {
             $key = $hotel['booking_key'];
@@ -482,13 +575,8 @@ class RezliveServices
                 $adultsList[]   = $adultsPerRoom[$i]   ?? 1;
                 $childrenList[] = $childrenPerRoom[$i] ?? 0;
 
-                $sessionAges = $childrenAgesAll[$i] ?? [];
-                if (!is_array($sessionAges)) {
-                    $sessionAges = ($sessionAges !== null && $sessionAges !== '')
-                        ? [$sessionAges]
-                        : [0];
-                }
-                $agesList[] = !empty($sessionAges) ? $sessionAges[0] : 0;
+                $roomAges   = $ageOffsets[$i] ?? [];
+                $agesList[] = !empty($roomAges) ? implode('*', $roomAges) : '0';
 
                 $ratesList[] = $bookingHotels[$i]['total_rate'] ?? 0;
             }
@@ -498,7 +586,7 @@ class RezliveServices
 
             $adultsStr   = implode('|', $adultsList);
             $childrenStr = implode('|', $childrenList);
-            $agesStr     = implode('|', $agesList);
+            $agesStr     = implode('|', $agesList); // "4|2,7" for your test case
             $rateStr     = implode('|', $ratesList);
 
             $roomDetailsXml .= "

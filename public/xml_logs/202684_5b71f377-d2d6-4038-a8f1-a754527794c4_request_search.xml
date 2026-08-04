@@ -4,10 +4,10 @@
 <UserName>Inceltourism</UserName>
 </Authentication>
 <Booking>
-<ArrivalDate>28/07/2026</ArrivalDate>
-<DepartureDate>29/07/2026</DepartureDate>
-<CountryCode>AE</CountryCode>
-<City>22053</City>
+<ArrivalDate>24/08/2026</ArrivalDate>
+<DepartureDate>27/08/2026</DepartureDate>
+<CountryCode>GE</CountryCode>
+<City>17122</City>
 <GuestNationality>AE</GuestNationality>
 <HotelRatings>
 <HotelRating>1</HotelRating>
@@ -19,7 +19,7 @@
 <Rooms><Room>
 <Type>Room-1</Type>
 <NoOfAdults>2</NoOfAdults>
-<NoOfChilds>1</NoOfChilds><ChildrenAges><ChildAge>2</ChildAge></ChildrenAges></Room><Room>
+<NoOfChilds>1</NoOfChilds><ChildrenAges><ChildAge>4</ChildAge></ChildrenAges></Room><Room>
 <Type>Room-2</Type>
 <NoOfAdults>1</NoOfAdults>
-<NoOfChilds>1</NoOfChilds><ChildrenAges><ChildAge>2</ChildAge></ChildrenAges></Room></Rooms></Booking></HotelFindRequest>
+<NoOfChilds>2</NoOfChilds><ChildrenAges><ChildAge>2</ChildAge><ChildAge>7</ChildAge></ChildrenAges></Room></Rooms></Booking></HotelFindRequest>
