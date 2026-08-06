@@ -280,15 +280,15 @@ class RezliveServices
         $responseJson = json_decode(json_encode($xmlResponse), true);
         // log::info($responseJson);
         if (!empty($responseJson['error'])) {
-            return ['status' => false, 'message' => $responseJson['error']];
+            return ['status' => false, 'message' => 'Something went wrong while processing the prebooking request. Please try again.'];
         }
         $status = $responseJson['PreBookingDetails']['PreBookingStatus'] ?? null;
         if (strtolower($status) === 'fail') {
-            $reason = $responseJson['error'] ?? 'Prebook faileds';
+            $reason = 'Something went wrong while processing the prebooking request. Please try again.';
             return ['status' => false, 'message' => $reason];
         }
 
-        return ['status' => true, 'data' => $responseJson];
+        return ['status' => true, 'data' => 'Something went wrong while processing the prebooking request. Please try again.'];
     }
 
 
