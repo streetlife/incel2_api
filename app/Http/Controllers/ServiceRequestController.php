@@ -7,12 +7,10 @@ use App\Http\Requests\StoreAirportTransferRequest;
 use App\Http\Requests\StoreServiceRequest;
 use App\Http\Resources\HotdealResource;
 use App\Http\Resources\PackageResource;
-use App\Models\Package;
 use App\Services\RequestServices;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
-use SebastianBergmann\Environment\Console;
+use Illuminate\Support\Facades\File;
 
 class ServiceRequestController extends Controller
 {
@@ -470,5 +468,29 @@ class ServiceRequestController extends Controller
             'message' => 'Package quote created successfully.',
             'data' => $quote,
         ], 201);
+    }
+
+
+    public function xmlLogIndex()
+    {
+        $path = public_path('xml_logs');
+
+        $files = collect(File::files($path))->map(function ($file) {
+            return [
+                'name' => $file->getFilename(),
+                'size' => round($file->getSize() / 1024, 2) . ' KB',
+                'modified' => date('Y-m-d H:i:s', $file->getMTime()),
+            ];
+        })->sortByDesc('modified')->values();
+
+        return view('xml', compact('files'));
+    }
+    public function download($filename)
+    {
+        $path = public_path('xml_logs/' . $filename);
+
+        abort_unless(File::exists($path), 404);
+
+        return response()->download($path);
     }
 }

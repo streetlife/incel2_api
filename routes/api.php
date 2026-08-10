@@ -69,6 +69,8 @@ Route::prefix('services')->group(function () {
     Route::post('/address', [ServiceRequestController::class, 'createAddress']);
     Route::post('/curate-experience', [ServiceRequestController::class, 'curateExperinceCreate']);
     Route::post('/package-quotes', [ServiceRequestController::class, 'PackageQuoteRequest']);
+    Route::get('/xmllogs', [ServiceRequestController::class, 'xmlLogIndex']);
+    Route::get('/xmllogs/download/{filename}', [ServiceRequestController::class, 'download'])->name('xml_logs.download');
 });
 
 Route::prefix('flights')->group(function () {
