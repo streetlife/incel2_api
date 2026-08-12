@@ -288,7 +288,7 @@ class RezliveServices
             return ['status' => false, 'message' => $reason];
         }
 
-        return ['status' => true, 'data' => 'Something went wrong while processing the prebooking request. Please try again.'];
+        return ['status' => true, 'data' => $responseJson];
     }
 
 
