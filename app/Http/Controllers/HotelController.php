@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\BookingFlights;
+use App\Models\BookingHotel;
+use App\Models\BookingVisa;
 use App\Models\HotelSession;
 use App\Models\RezliveLog;
 use App\Services\HotelServices;
@@ -225,7 +228,7 @@ class HotelController extends Controller
                 'guests'      => [],
             ];
         }
-        $result = $rezlive->preBook($hotelData, $bookingHotels,$sessionCode);
+        $result = $rezlive->preBook($hotelData, $bookingHotels, $sessionCode);
         // log::info("controller",['result'=>$result]);
         if (!($result['status'] ?? false)) {
             return response()->json([

@@ -235,7 +235,7 @@ class HotelServices
 
             $sessionCode = Str::uuid()->toString();
 
-            $result = $this->rezlive->searchHotels($params, $arrivalDate, $departureDate,$sessionCode);
+            $result = $this->rezlive->searchHotels($params, $arrivalDate, $departureDate, $sessionCode);
 
             if (isset($result['error'])) {
                 throw new \Exception($result['error']);
@@ -568,7 +568,7 @@ class HotelServices
         return $hotel;
     }
 
-   
+
     public function createHotelsBooking($data)
     {
         $userCode = auth()->user()->usercode ?? "temp" . now()->format('ymdHis');
@@ -603,7 +603,7 @@ class HotelServices
         $cityCode        = $hotelSession->city_code;
         $session_code    = $hotelSession->session_code;
 
-       
+
         $roomsAdults = $hotelSession->rooms_adults ?? '[1]';
         if (is_string($roomsAdults)) {
             $roomsAdults = json_decode($roomsAdults, true) ?? [1];
@@ -653,11 +653,7 @@ class HotelServices
 
             $guests = [];
             foreach ($roomTravellers as $index => $traveller) {
-                // First $adultsCount travellers in this room are adults,
-                // the remainder are children — assigned by position, not by
-                // trusting the frontend's 'type' field.
                 $isChild = $index >= $adultsCount;
-
                 $guests[] = [
                     'type'       => $isChild ? 'CHILD' : 'ADULT',
                     'first_name' => $traveller['first_name'] ?? '',
@@ -688,7 +684,7 @@ class HotelServices
             'rooms_children_ages' => $roomsChildrenAges,
         ]);
 
-        $rezliveResult = $this->rezlive->processBooking($bookingCode, $bookingHotels,$session_code);
+        $rezliveResult = $this->rezlive->processBooking($bookingCode, $bookingHotels, $session_code);
 
         if (!($rezliveResult['status'] ?? false)) {
             Log::error('Rezlive booking failed', [
@@ -699,7 +695,7 @@ class HotelServices
             return [
                 'status'  => false,
                 'message' => $rezliveResult['message'] ?? 'Booking failed at provider',
-                
+
             ];
         }
 
@@ -718,15 +714,15 @@ class HotelServices
                     'hotel_id'             => $hotelId,
                     'country_code'         => $countryCode,
                     'city_code'            => $cityCode,
-                    'arrival_date'         => $arrivalDate,
-                    'departure_date'       => $departureDate,
+                    'date_to'         => $arrivalDate,
+                    'date_from'       => $departureDate,
                     'room_type'            => $room['room_type']   ?? null,
                     'nationality'          => $nationality,
                     'booking_key'          => $room['booking_key'] ?? null,
-                    'room_rate'            => $roomRate,
+                    'amount'            => $roomRate,
                     'room_rate_markup'     => $roomRateMarkup,
-                    'rooms_adults'         => $roomsAdults[$i]   ?? 1,
-                    'rooms_children'       => $roomsChildren[$i] ?? 0,
+                    'adults'         => $roomsAdults[$i]   ?? 1,
+                    'children'       => $roomsChildren[$i] ?? 0,
                     'total_rate'           => $roomRate,
                     'total_room_count'     => $totalRoomCount,
                     'provider_booking_ref' => $rezliveResult['provider_ref'] ?? null,

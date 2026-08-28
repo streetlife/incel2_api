@@ -7,6 +7,9 @@ use App\Http\Requests\StoreAirportTransferRequest;
 use App\Http\Requests\StoreServiceRequest;
 use App\Http\Resources\HotdealResource;
 use App\Http\Resources\PackageResource;
+use App\Models\BookingFlights;
+use App\Models\BookingHotel;
+use App\Models\BookingVisa;
 use App\Services\RequestServices;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -493,4 +496,47 @@ class ServiceRequestController extends Controller
 
         return response()->download($path);
     }
+    public function getBookingInfo(Request $request)
+    {
+        try {
+            $bookingCode = $request->bookingCode;
+            $type = $request->type;
+
+            $bookingInfo = match (strtolower($type)) {
+                "hotel" => (function () use ($bookingCode) {
+                    $hotelBookings = BookingHotel::where("booking_code", $bookingCode)->get();
+
+                    $results = [];
+                    foreach ($hotelBookings as $booking) {
+                        // e.g. enrich each booking with room/session details
+                        $results[] = $booking;
+                    }
+
+                    return $results;
+                })(),
+                "flight" => BookingFlights::where("booking_code", $bookingCode)->first(),
+                "visa" => BookingVisa::where("booking_code", $bookingCode)->first(),
+                default => throw new \InvalidArgumentException("Unsupported booking type: {$type}"),
+            };
+
+            if (!$bookingInfo) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'No booking found for the given booking code and type',
+                ], 404);
+            }
+
+            return response()->json([
+                'status'  => true,
+                'message' => 'Booking info retrieved successfully',
+                'data'    => $bookingInfo,
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status'  => false,
+                'message' => $th->getMessage(),
+            ], 500);
+        }
+    }
+    
 }

@@ -71,6 +71,7 @@ Route::prefix('services')->group(function () {
     Route::post('/package-quotes', [ServiceRequestController::class, 'PackageQuoteRequest']);
     Route::get('/xmllogs', [ServiceRequestController::class, 'xmlLogIndex']);
     Route::get('/xmllogs/download/{filename}', [ServiceRequestController::class, 'download'])->name('xml_logs.download');
+    Route::get('/booking-info', [ServiceRequestController::class, 'getBookingInfo']);
 });
 
 Route::prefix('flights')->group(function () {

@@ -1,0 +1,29 @@
+
+<PreBookingRequest>
+    <Authentication>
+        <AgentCode>CD32280</AgentCode>
+        <UserName>Inceltourism</UserName>
+    </Authentication>
+    <PreBooking>
+        <SearchSessionId>1785929775090178592977512</SearchSessionId>
+        <ArrivalDate>24/08/2026</ArrivalDate>
+        <DepartureDate>27/08/2026</DepartureDate>
+        <GuestNationality>AE</GuestNationality>
+        <CountryCode>GE</CountryCode>
+        <City>17122</City>
+        <HotelId>785190</HotelId>
+        <Currency>USD</Currency>
+        <RoomDetails>
+            
+        <RoomDetail>
+            <Type>Superior Apartment, Balcony, 1 King Bed,1 Queen Bed,2 Sofa Bed</Type>
+            <BookingKey>MzS3MLU0sjQ3NzWwNDCEcwyNdCM8DC1MdQ10jQyMzHQNLHQNTHWB0oaWBrrZAA</BookingKey>
+            <Adults>5|1|1</Adults>
+            <Children>0|0|1</Children>
+            <ChildrenAges>0|0|4</ChildrenAges>
+            <TotalRooms>3</TotalRooms>
+            <TotalRate>740.9|740.9|740.9</TotalRate>
+        </RoomDetail>
+        </RoomDetails>
+    </PreBooking>
+</PreBookingRequest>
