@@ -806,4 +806,5 @@ class HotelServices
 
         return round($newAmount, 2);
     }
+    
 }

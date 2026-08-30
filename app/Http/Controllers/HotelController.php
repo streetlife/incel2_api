@@ -276,4 +276,30 @@ class HotelController extends Controller
             'data'    => $responseData,
         ], 200);
     }
+    public function cancelBooking(Request $request)
+    {
+        $rezlive = app(\App\Services\RezliveServices::class);
+        $validated = $request->validate([
+            'booking_id'   => 'required|string',
+            'booking_code' => 'required|string',
+        ]);
+
+        $result = $rezlive->cancelHotel(
+            $validated['booking_id'],
+            $validated['booking_code'],
+            $validated['session_code'] ?? null
+        );
+
+        if (!$result['status']) {
+            return response()->json([
+                'status'  => false,
+                'message' => $result['message'],
+            ], 422);
+        }
+        return response()->json([
+            'status'  => true,
+            'message' => $result['message'],
+            'data'    => $result['data'],
+        ]);
+    }
 }

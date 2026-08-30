@@ -291,249 +291,81 @@ class RezliveServices
         return ['status' => true, 'data' => $responseJson];
     }
 
+    public function cancelHotel(string $bookingId, string $bookingCode, $sessionCode = null): array
+    {
+        Log::info("Rezlive Cancellation Request", [
+            'bookingId'   => $bookingId,
+            'bookingCode' => $bookingCode,
+            'request'     => $sessionCode,
+        ]);
 
+        try {
+            $xml      = $this->buildCancelXml($bookingId, $bookingCode);
+            $endpoint = $this->url . "/cancelhotel";
 
-    // private function buildPreBookXml($hotelData, $bookingHotels): string
-    // {
-    //     $arrivalDate     = $hotelData['arrival_date'];
-    //     $departureDate   = $hotelData['departure_date'];
-    //     $searchSessionId = $hotelData['search_session_id'];
-    //     $currency        = $hotelData['currency'];
-    //     $adultsPerRoom   = $hotelData['rooms_adults'];
-    //     $childrenPerRoom = $hotelData['rooms_children'];
-    //     $childrenAgesAll = $hotelData['rooms_children_ages'] ?? [];
-    //     if (!is_array($adultsPerRoom))   $adultsPerRoom   = [$adultsPerRoom];
-    //     if (!is_array($childrenPerRoom)) $childrenPerRoom = [$childrenPerRoom];
-    //     if (!is_array($childrenAgesAll)) $childrenAgesAll = [$childrenAgesAll];
-    //     $groups = [];
-    //     foreach ($bookingHotels as $i => $hotel) {
-    //         $key = $hotel['booking_key'];
-    //         $groups[$key][] = $i;
-    //     }
-    //     $roomDetailsXml = '';
-    //     foreach ($groups as $bookingKey => $indices) {
-    //         $ratesList = [];
-    //         foreach ($indices as $i) {
-    //             $ratesList[] = $bookingHotels[$i]['total_rate'] ?? 0;
-    //         }
-    //         $first    = $bookingHotels[$indices[0]];
-    //         $type     = htmlspecialchars($first['room_type'] ?? '');
-    //         $adults   = $adultsPerRoom[$indices[0]]   ?? 1;
-    //         $children = $childrenPerRoom[$indices[0]]  ?? 0;
-    //         $sessionAges = $childrenAgesAll[$indices[0]] ?? [];
-    //         if (!empty($sessionAges)) {
-    //             $agesXml = '';
-    //             foreach ($sessionAges as $age) {
-    //                 $agesXml .= "<ChildrenAges>{$age}</ChildrenAges>\n";
-    //             }
-    //         } else {
-    //             $agesXml ="<ChildrenAges>0</ChildrenAges>\n";
-    //         }
-    //         $totalRate = implode('|', $ratesList);
-    //         $roomDetailsXml .= "
-    //         <RoomDetail>
-    //             <Type>{$type}</Type>
-    //             <BookingKey>{$bookingKey}</BookingKey>
-    //             <Adults>{$adults}</Adults>
-    //             <Children>{$children}</Children>
-    //                {$agesXml}       
-    //             <TotalRooms>".count($indices)."</TotalRooms>
-    //             <TotalRate>{$totalRate}</TotalRate>
-    //         </RoomDetail>";
-    //     }
-    //     return "
-    // <PreBookingRequest>
-    //     <Authentication>
-    //         <AgentCode>{$this->agent}</AgentCode>
-    //         <UserName>{$this->username}</UserName>
-    //     </Authentication>
-    //     <PreBooking>
-    //         <SearchSessionId>{$searchSessionId}</SearchSessionId>
-    //         <ArrivalDate>{$arrivalDate}</ArrivalDate>
-    //         <DepartureDate>{$departureDate}</DepartureDate>
-    //         <GuestNationality>{$hotelData['nationality']}</GuestNationality>
-    //         <CountryCode>{$hotelData['country_code']}</CountryCode>
-    //         <City>{$hotelData['city_code']}</City>
-    //         <HotelId>{$hotelData['hotel_id']}</HotelId>
-    //         <Currency>{$currency}</Currency>
-    //         <RoomDetails>
-    //             {$roomDetailsXml}
-    //         </RoomDetails>
-    //     </PreBooking>
-    // </PreBookingRequest>";
-    // }
+            $this->saveXmlLog('cancel', 'request', $xml, $sessionCode);
 
-    //     private function buildPreBookXml($hotelData, $bookingHotels): string
-    //     {
-    //         $arrivalDate     = $hotelData['arrival_date'];
-    //         $departureDate   = $hotelData['departure_date'];
-    //         $searchSessionId = $hotelData['search_session_id'];
-    //         $currency        = $hotelData['currency'];
-    //         $adultsPerRoom   = $hotelData['rooms_adults'];
-    //         $childrenPerRoom = $hotelData['rooms_children'];
-    //         $childrenAgesAll = $hotelData['rooms_children_ages'] ?? [];
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/x-www-form-urlencoded',
+                'x-api-key'    => $this->apiKey,
+            ])->timeout(180)->asForm()->post($endpoint, ['XML' => $xml]);
 
-    //         if (!is_array($adultsPerRoom))   $adultsPerRoom   = [$adultsPerRoom];
-    //         if (!is_array($childrenPerRoom)) $childrenPerRoom = [$childrenPerRoom];
-    //         if (!is_array($childrenAgesAll)) $childrenAgesAll = [$childrenAgesAll];
+            $body = $response->body();
 
-    //         $groups = [];
-    //         foreach ($bookingHotels as $i => $hotel) {
-    //             $key = $hotel['booking_key'];
-    //             $groups[$key][] = $i;
-    //         }
+            $this->saveXmlLog('cancel', 'response', $body, $sessionCode);
 
-    //         $roomDetailsXml = '';
+            RezliveLog::create([
+                'type'            => 'cancellation',
+                'request_xml'     => $xml,
+                'response_xml'    => $body,
+                'request_payload' => [
+                    'bookingId'   => $bookingId,
+                    'bookingCode' => $bookingCode,
+                ],
+                'status_code'     => $response->status(),
+            ]);
 
-    //         foreach ($groups as $bookingKey => $indices) {
-    //             $ratesList = [];
-    //             foreach ($indices as $i) {
-    //                 $ratesList[] = $bookingHotels[$i]['total_rate'] ?? 0;
-    //             }
+            if ($response->failed()) {
+                return ['status' => false, 'message' => 'Rezlive cancellation request failed'];
+            }
 
-    //             $first    = $bookingHotels[$indices[0]];
-    //             $type     = htmlspecialchars($first['room_type'] ?? '');
-    //             $adults   = $adultsPerRoom[$indices[0]]   ?? 1;
-    //             $children = $childrenPerRoom[$indices[0]] ?? 0;
+            libxml_use_internal_errors(true);
+            $xmlResponse = simplexml_load_string($body, 'SimpleXMLElement', LIBXML_NOCDATA);
 
-    //             $sessionAges = $childrenAgesAll[$indices[0]] ?? [];
+            if ($xmlResponse === false) {
+                $errors = libxml_get_errors();
+                libxml_clear_errors();
+                return ['status' => false, 'message' => 'Invalid XML response', 'errors' => $errors];
+            }
 
-    //             // sessionAges might be a single int/string (one age) rather than an array
-    //             if (!is_array($sessionAges)) {
-    //                 $sessionAges = ($sessionAges !== null && $sessionAges !== '')
-    //                     ? [$sessionAges]
-    //                     : [];
-    //             }
+            $result = json_decode(json_encode($xmlResponse), true);
 
-    //             if (!empty($sessionAges)) {
-    //                 $agesXml = '';
-    //                 foreach ($sessionAges as $age) {
-    //                     $agesXml .= "<ChildrenAges>{$age}</ChildrenAges>\n";
-    //                 }
-    //             } else {
-    //                 $agesXml = "<ChildrenAges>0</ChildrenAges>\n";
-    //             }
+            Log::info("cancel-result", $result);
 
-    //             $totalRate = implode('|', $ratesList);
-
-    //             $roomDetailsXml .= "
-    //         <RoomDetail>
-    //             <Type>{$type}</Type>
-    //             <BookingKey>{$bookingKey}</BookingKey>
-    //             <Adults>{$adults}</Adults>
-    //             <Children>{$children}</Children>
-    //                {$agesXml}       
-    //             <TotalRooms>" . count($indices) . "</TotalRooms>
-    //             <TotalRate>{$totalRate}</TotalRate>
-    //         </RoomDetail>";
-    //         }
-
-    //         return "
-    // <PreBookingRequest>
-    //     <Authentication>
-    //         <AgentCode>{$this->agent}</AgentCode>
-    //         <UserName>{$this->username}</UserName>
-    //     </Authentication>
-    //     <PreBooking>
-    //         <SearchSessionId>{$searchSessionId}</SearchSessionId>
-    //         <ArrivalDate>{$arrivalDate}</ArrivalDate>
-    //         <DepartureDate>{$departureDate}</DepartureDate>
-    //         <GuestNationality>{$hotelData['nationality']}</GuestNationality>
-    //         <CountryCode>{$hotelData['country_code']}</CountryCode>
-    //         <City>{$hotelData['city_code']}</City>
-    //         <HotelId>{$hotelData['hotel_id']}</HotelId>
-    //         <Currency>{$currency}</Currency>
-    //         <RoomDetails>
-    //             {$roomDetailsXml}
-    //         </RoomDetails>
-    //     </PreBooking>
-    // </PreBookingRequest>";
-    //     }
-    //     private function buildPreBookXml($hotelData, $bookingHotels): string
-    //     {
-    //         $arrivalDate     = $hotelData['arrival_date'];
-    //         $departureDate   = $hotelData['departure_date'];
-    //         $searchSessionId = $hotelData['search_session_id'];
-    //         $currency        = $hotelData['currency'];
-    //         $adultsPerRoom   = $hotelData['rooms_adults'];
-    //         $childrenPerRoom = $hotelData['rooms_children'];
-    //         $childrenAgesAll = $hotelData['rooms_children_ages'] ?? [];
-
-    //         if (!is_array($adultsPerRoom))   $adultsPerRoom   = [$adultsPerRoom];
-    //         if (!is_array($childrenPerRoom)) $childrenPerRoom = [$childrenPerRoom];
-    //         if (!is_array($childrenAgesAll)) $childrenAgesAll = [$childrenAgesAll];
-
-    //         // Group strictly by booking_key — rooms sharing a key get pipe-joined
-    //         $groups = [];
-    //         foreach ($bookingHotels as $i => $hotel) {
-    //             $key = $hotel['booking_key'];
-    //             $groups[$key][] = $i;
-    //         }
-
-    //         $roomDetailsXml = '';
-
-    //         foreach ($groups as $bookingKey => $indices) {
-    //             $adultsList   = [];
-    //             $childrenList = [];
-    //             $agesList     = [];
-    //             $ratesList    = [];
-
-    //             foreach ($indices as $i) {
-    //                 $adultsList[]   = $adultsPerRoom[$i]   ?? 1;
-    //                 $childrenList[] = $childrenPerRoom[$i] ?? 0;
-
-    //                 $sessionAges = $childrenAgesAll[$i] ?? [];
-    //                 if (!is_array($sessionAges)) {
-    //                     $sessionAges = ($sessionAges !== null && $sessionAges !== '')
-    //                         ? [$sessionAges]
-    //                         : [0];
-    //                 }
-    //                 $agesList[] = !empty($sessionAges) ? $sessionAges[0] : 0;
-
-    //                 $ratesList[] = $bookingHotels[$i]['total_rate'] ?? 0;
-    //             }
-
-    //             $first = $bookingHotels[$indices[0]];
-    //             $type  = htmlspecialchars($first['room_type'] ?? '');
-
-    //             $adultsStr   = implode('|', $adultsList);
-    //             $childrenStr = implode('|', $childrenList);
-    //             $agesStr     = implode('|', $agesList);
-    //             $rateStr     = implode('|', $ratesList);
-
-    //             $roomDetailsXml .= "
-    //         <RoomDetail>
-    //             <Type>{$type}</Type>
-    //             <BookingKey>{$bookingKey}</BookingKey>
-    //             <Adults>{$adultsStr}</Adults>
-    //             <Children>{$childrenStr}</Children>
-    //             <ChildrenAges>{$agesStr}</ChildrenAges>
-    //             <TotalRooms>" . count($indices) . "</TotalRooms>
-    //             <TotalRate>{$rateStr}</TotalRate>
-    //         </RoomDetail>";
-    //         }
-
-    //         return "
-    // <PreBookingRequest>
-    //     <Authentication>
-    //         <AgentCode>{$this->agent}</AgentCode>
-    //         <UserName>{$this->username}</UserName>
-    //     </Authentication>
-    //     <PreBooking>
-    //         <SearchSessionId>{$searchSessionId}</SearchSessionId>
-    //         <ArrivalDate>{$arrivalDate}</ArrivalDate>
-    //         <DepartureDate>{$departureDate}</DepartureDate>
-    //         <GuestNationality>{$hotelData['nationality']}</GuestNationality>
-    //         <CountryCode>{$hotelData['country_code']}</CountryCode>
-    //         <City>{$hotelData['city_code']}</City>
-    //         <HotelId>{$hotelData['hotel_id']}</HotelId>
-    //         <Currency>{$currency}</Currency>
-    //         <RoomDetails>
-    //             {$roomDetailsXml}
-    //         </RoomDetails>
-    //     </PreBooking>
-    // </PreBookingRequest>";
-    //     }
+            return [
+                'status'  => true,
+                'message' => 'Success',
+                'data'    => $result,
+            ];
+        } catch (\Exception $e) {
+            Log::error('Rezlive Cancellation Error', ['message' => $e->getMessage()]);
+            return ['status' => false, 'message' => $e->getMessage()];
+        }
+    }
+    private function buildCancelXml(string $bookingId, string $bookingCode): string
+    {
+        return "
+<CancellationRequest>
+    <Authentication>
+        <AgentCode>{$this->agent}</AgentCode>
+        <UserName>{$this->username}</UserName>
+    </Authentication>
+    <Cancellation>
+        <BookingId>{$bookingId}</BookingId>
+        <BookingCode>{$bookingCode}</BookingCode>
+    </Cancellation>
+</CancellationRequest>";
+    }
 
     private function buildPreBookXml($hotelData, $bookingHotels): string
     {
