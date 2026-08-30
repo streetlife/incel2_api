@@ -554,8 +554,8 @@ class ServiceRequestController extends Controller
                         ? trim(($hotel->hotel_address ?? '') . ', ' . ($hotel->city ?? ''), ', ')
                         : null,
                     'image'     => $hotel->thumbnail ?? null,
-                    'arrival_date'   => $first->arrival_date,
-                    'departure_date'  => $first->departure_date,
+                    'arrival_date'   => $hotel->arrival_date,
+                    'departure_date'  => $hotel->departure_date,
                     'amount'    => (float) $first->amount,
                     'roomTypes' => $roomTypes,
                     'occupancy' => [
