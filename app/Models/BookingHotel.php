@@ -34,6 +34,6 @@ class BookingHotel extends Model
         'children',
         'totalRooms',
         'totalRates',
+   
     ];
-    
 }

@@ -720,11 +720,10 @@ class HotelServices
                     'nationality'          => $nationality,
                     'booking_key'          => $room['booking_key'] ?? null,
                     'amount'            => $roomRate,
-                    'room_rate_markup'     => $roomRateMarkup,
                     'adults'         => $roomsAdults[$i]   ?? 1,
                     'children'       => $roomsChildren[$i] ?? 0,
-                    'total_rate'           => $roomRate,
-                    'total_room_count'     => $totalRoomCount,
+                    'totalRates'           => $roomRate,
+                    'totalRooms'     => $totalRoomCount,
                     'provider_booking_ref' => $rezliveResult['provider_ref'] ?? null,
                 ]);
             }

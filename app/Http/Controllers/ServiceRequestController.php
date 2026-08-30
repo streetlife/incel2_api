@@ -10,8 +10,10 @@ use App\Http\Resources\PackageResource;
 use App\Models\BookingFlights;
 use App\Models\BookingHotel;
 use App\Models\BookingVisa;
+use App\Models\HotelSession;
 use App\Services\RequestServices;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
 
@@ -496,47 +498,103 @@ class ServiceRequestController extends Controller
 
         return response()->download($path);
     }
-    public function getBookingInfo(Request $request)
-    {
-        try {
-            $bookingCode = $request->bookingCode;
-            $type = $request->type;
+   public function getBookingInfo(Request $request)
+{
+    try {
+        $bookingCode = $request->bookingCode;
+        $type = $request->type;
 
-            $bookingInfo = match (strtolower($type)) {
-                "hotel" => (function () use ($bookingCode) {
-                    $hotelBookings = BookingHotel::where("booking_code", $bookingCode)->get();
+        $bookingInfo = match (strtolower($type)) {
+            "hotel" => (function () use ($bookingCode) {
+                $hotelBookings = BookingHotel::where("booking_code", $bookingCode)->get();
 
-                    $results = [];
-                    foreach ($hotelBookings as $booking) {
-                        // e.g. enrich each booking with room/session details
-                        $results[] = $booking;
-                    }
+                if ($hotelBookings->isEmpty()) {
+                    return null;
+                }
 
-                    return $results;
-                })(),
-                "flight" => BookingFlights::where("booking_code", $bookingCode)->first(),
-                "visa" => BookingVisa::where("booking_code", $bookingCode)->first(),
-                default => throw new \InvalidArgumentException("Unsupported booking type: {$type}"),
-            };
+                $first = $hotelBookings->first();
 
-            if (!$bookingInfo) {
-                return response()->json([
-                    'status'  => false,
-                    'message' => 'No booking found for the given booking code and type',
-                ], 404);
-            }
+                $hotel = DB::table('sessions_hotels_results as r')
+                    ->join('hotels as h', 'r.hotel_id', '=', 'h.hotel_code')
+                    ->leftJoin('hotels_images as t', 't.hotel_code', '=', 'h.hotel_code')
+                    ->join('sessions_hotels as sh', 'sh.session_code', '=', 'r.session_code')
+                    ->where('r.hotel_id', $first->hotel_id)
+                    ->where('r.hotel_id', $first->hotel_id)
+                    ->select(
+                        'h.hotel_name',
+                        'h.hotel_address',
+                        'h.city',
+                        'r.price',
+                        'r.hotel_thumbs',
+                        'sh.rooms',
+                        'sh.rooms_adults',
+                        'sh.rooms_children',
+                        'sh.rooms_children_ages',
+                        'sh.arrival_date',
+                        'sh.departure_date',
+                        'sh.children',
+                        DB::raw('COALESCE(t.thumbnail_image, r.hotel_thumbs, "images/img5.jpg") as thumbnail')
+                    )
+                    ->first();
 
-            return response()->json([
-                'status'  => true,
-                'message' => 'Booking info retrieved successfully',
-                'data'    => $bookingInfo,
-            ], 200);
-        } catch (\Throwable $th) {
+                $guests = $hotelBookings->map(function ($booking) {
+                    return [
+                        'title'     => $booking->traveller_title,
+                        'firstName' => $booking->first_name,
+                        'lastName'  => $booking->last_name,
+                    ];
+                })->values();
+
+                // room types actually booked (per guest row), deduped
+                $roomTypes = $hotelBookings->pluck('room_type')->filter()->unique()->values();
+
+                return [
+                    'hotelName' => $hotel->hotel_name ?? null,
+                    'location'  => $hotel
+                        ? trim(($hotel->hotel_address ?? '') . ', ' . ($hotel->city ?? ''), ', ')
+                        : null,
+                    'image'     => $hotel->thumbnail ?? null,
+                    'arrival_date'   => $first->arrival_date,
+                    'departure_date'  => $first->departure_date,
+                    'amount'    => (float) $first->amount,
+                    'roomTypes' => $roomTypes,
+                    'occupancy' => [
+                        'rooms'           => $hotel->rooms ?? null,
+                        'adultsPerRoom'   => json_decode($hotel->rooms_adults ?? '[]', true) ?? [],
+                        'childrenPerRoom' => json_decode($hotel->rooms_children ?? '[]', true) ?? [],
+                        'childrenAges'    => json_decode($hotel->rooms_children_ages ?? '[]', true) ?? [],
+                        'totalChildren'   => array_sum(json_decode($hotel->rooms_children ?? '[]', true) ?? []),
+                        
+                    ],
+                    'guests'    => $guests,
+                ];
+            })(),
+            "flight" => BookingFlights::where("booking_code", $bookingCode)->first(),
+            "visa" => BookingVisa::where("booking_code", $bookingCode)->first(),
+            default => throw new \InvalidArgumentException("Unsupported booking type: {$type}"),
+        };
+
+        if (!$bookingInfo) {
             return response()->json([
                 'status'  => false,
-                'message' => $th->getMessage(),
-            ], 500);
+                'message' => 'No booking found for the given booking code and type',
+            ], 404);
         }
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Booking info retrieved successfully',
+            'data'    => [
+                'bookingCode' => $bookingCode,
+                'type'        => strtolower($type),
+                'booking'     => $bookingInfo,
+            ],
+        ], 200);
+    } catch (\Throwable $th) {
+        return response()->json([
+            'status'  => false,
+            'message' => $th->getMessage(),
+        ], 500);
     }
-    
+}
 }
