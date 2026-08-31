@@ -112,10 +112,10 @@ class RezliveServices
                 'status_code'      => $response->status(),
             ]);
 
-            // Log::info("Rezlive Raw Response", [
-            //     'status' => $response->status(),
-            //     'body'   => $body,
-            // ]);
+            Log::info("Rezlive Raw Response", [
+                'status' => $response->status(),
+                'body'   => $body,
+            ]);
 
             if ($response->failed()) {
                 return ['status' => false, 'message' => 'Rezlive request failed'];
@@ -259,10 +259,10 @@ class RezliveServices
             'Content-Type' => 'application/x-www-form-urlencoded',
             'x-api-key'    => $this->apiKey,
         ])->asForm()->post($endpoint, ['XML' => $xml]);
-        // Log::info('PreBook XML', ['xml' => $xml]);
+        Log::info('PreBook XML', ['xml' => $xml]);
         $body = trim($response->body());
         $this->saveXmlLog('prebook', 'response', $body, $sessionCode);
-        // Log::info('Rezlive PreBook Response', ['response' => $body]);
+        Log::info('Rezlive PreBook Response', ['response' => $body]);
 
         if (empty($body) || stripos($body, '<html') !== false) {
             return ['status' => false, 'message' => 'Invalid prebook response from provider'];
@@ -278,7 +278,7 @@ class RezliveServices
 
         libxml_clear_errors();
         $responseJson = json_decode(json_encode($xmlResponse), true);
-        // log::info($responseJson);
+        log::info($responseJson);
         if (!empty($responseJson['error'])) {
             return ['status' => false, 'message' => 'Something went wrong while processing the prebooking request. Please try again.'];
         }

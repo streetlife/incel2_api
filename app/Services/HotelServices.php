@@ -724,6 +724,8 @@ class HotelServices
                     'children'       => $roomsChildren[$i] ?? 0,
                     'totalRates'           => $roomRate,
                     'totalRooms'     => $totalRoomCount,
+                    'rezlivebookingId'   => $rezliveResult['booking_id']   ?? null,
+                    'rezliveBookingCode' => $rezliveResult['booking_code'] ?? null,
                     'provider_booking_ref' => $rezliveResult['provider_ref'] ?? null,
                 ]);
             }
@@ -806,5 +808,4 @@ class HotelServices
 
         return round($newAmount, 2);
     }
-    
 }
