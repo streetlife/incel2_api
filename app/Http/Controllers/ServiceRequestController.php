@@ -498,105 +498,115 @@ class ServiceRequestController extends Controller
 
         return response()->download($path);
     }
-    public function getBookingInfo(Request $request)
-    {
-        try {
-            $bookingCode = $request->bookingCode;
-            $type = $request->type;
+public function getBookingInfo(Request $request)
+{
+    try {
+        $bookingCode = $request->bookingCode;
+        $type = $request->type;
 
-            $bookingInfo = match (strtolower($type)) {
-                "hotel" => (function () use ($bookingCode) {
-                    $hotelBookings = BookingHotel::where("booking_code", $bookingCode)->get();
+        $bookingInfo = match (strtolower($type)) {
+            "hotel" => (function () use ($bookingCode) {
+                $hotelBookings = BookingHotel::where("booking_code", $bookingCode)->get();
 
-                    if ($hotelBookings->isEmpty()) {
-                        return null;
-                    }
+                if ($hotelBookings->isEmpty()) {
+                    return null;
+                }
 
-                    $first = $hotelBookings->first();
+                $first = $hotelBookings->first();
 
-                    $hotel = DB::table('sessions_hotels_results as r')
-                        ->join('hotels as h', 'r.hotel_id', '=', 'h.hotel_code')
-                        ->leftJoin('hotels_images as t', 't.hotel_code', '=', 'h.hotel_code')
-                        ->join('sessions_hotels as sh', 'sh.session_code', '=', 'r.session_code')
-                        ->where('r.hotel_id', $first->hotel_id)
-                        ->where('r.hotel_id', $first->hotel_id)
-                        ->select(
-                            'h.hotel_name',
-                            'h.hotel_address',
-                            'h.city',
-                            'r.price',
-                            'r.hotel_thumbs',
-                            'sh.rooms',
-                            'sh.rooms_adults',
-                            'sh.rooms_children',
-                            'sh.rooms_children_ages',
-                            'sh.arrival_date',
-                            'sh.departure_date',
-                            'sh.children',
-                            DB::raw('COALESCE(t.thumbnail_image, r.hotel_thumbs, "images/img5.jpg") as thumbnail')
-                        )
-                        ->first();
+                $hotel = DB::table('sessions_hotels_results as r')
+                    ->join('hotels as h', 'r.hotel_id', '=', 'h.hotel_code')
+                    ->leftJoin('hotels_images as t', 't.hotel_code', '=', 'h.hotel_code')
+                    ->join('sessions_hotels as sh', 'sh.session_code', '=', 'r.session_code')
+                    ->where('r.hotel_id', $first->hotel_id)
+                    ->where('r.hotel_id', $first->hotel_id)
+                    ->select(
+                        'h.hotel_name',
+                        'h.hotel_address',
+                        'h.city',
+                        'r.price',
+                        'r.hotel_thumbs',
+                        'sh.rooms',
+                        'sh.rooms_adults',
+                        'sh.rooms_children',
+                        'sh.rooms_children_ages',
+                        'sh.arrival_date',
+                        'sh.departure_date',
+                        'sh.children',
+                        DB::raw('COALESCE(t.thumbnail_image, r.hotel_thumbs, "images/img5.jpg") as thumbnail')
+                    )
+                    ->first();
 
-                    $guests = $hotelBookings->map(function ($booking) {
-                        return [
-                            'title'     => $booking->traveller_title,
-                            'firstName' => $booking->first_name,
-                            'lastName'  => $booking->last_name,
-                        ];
-                    })->values();
-
-                    // room types actually booked (per guest row), deduped
-                    $roomTypes = $hotelBookings->pluck('room_type')->filter()->unique()->values();
-
+                $guests = $hotelBookings->map(function ($booking) {
                     return [
-                        'hotelName' => $hotel->hotel_name ?? null,
-                        'location'  => $hotel
-                            ? trim(($hotel->hotel_address ?? '') . ', ' . ($hotel->city ?? ''), ', ')
-                            : null,
-                        'image'     => $hotel->thumbnail ?? null,
-                        'arrival_date'   => $hotel->arrival_date,
-                        'departure_date'  => $hotel->departure_date,
-                        'amount'    => (float) $first->amount,
-                        'roomTypes' => $roomTypes,
-                        'occupancy' => [
-                            'rooms'           => $hotel->rooms ?? null,
-                            'adultsPerRoom'   => json_decode($hotel->rooms_adults ?? '[]', true) ?? [],
-                            'childrenPerRoom' => json_decode($hotel->rooms_children ?? '[]', true) ?? [],
-                            'childrenAges'    => json_decode($hotel->rooms_children_ages ?? '[]', true) ?? [],
-                            'totalChildren'   => array_sum(json_decode($hotel->rooms_children ?? '[]', true) ?? []),
-
-                        ],
-                        'guests'    => $guests,
-                        'rezliveBookingId' => $first->rezliveBookingId ?? null,
-                        'rezliveBookingCode' => $first->rezliveBookingCode ?? null,
+                        'title'     => $booking->traveller_title,
+                        'firstName' => $booking->first_name,
+                        'lastName'  => $booking->last_name,
                     ];
-                })(),
-                "flight" => BookingFlights::where("booking_code", $bookingCode)->first(),
-                "visa" => BookingVisa::where("booking_code", $bookingCode)->first(),
-                default => throw new \InvalidArgumentException("Unsupported booking type: {$type}"),
-            };
+                })->values();
 
-            if (!$bookingInfo) {
-                return response()->json([
-                    'status'  => false,
-                    'message' => 'No booking found for the given booking code and type',
-                ], 404);
-            }
+                // room types, sized to the actual room count — pad with the last unique
+                // type when there aren't enough distinct types to cover every room
+                $roomCount   = (int) ($hotel->rooms ?? 1);
+                $uniqueTypes = $hotelBookings->pluck('room_type')->unique()->values();
 
-            return response()->json([
-                'status'  => true,
-                'message' => 'Booking info retrieved successfully',
-                'data'    => [
-                    'bookingCode' => $bookingCode,
-                    'type'        => strtolower($type),
-                    'booking'     => $bookingInfo,
-                ],
-            ], 200);
-        } catch (\Throwable $th) {
+                if ($uniqueTypes->count() >= $roomCount) {
+                    $roomTypes = $uniqueTypes->take($roomCount)->values();
+                } else {
+                    $roomTypes = $uniqueTypes;
+                    while ($roomTypes->count() < $roomCount) {
+                        $roomTypes->push($uniqueTypes->last());
+                    }
+                }
+
+                return [
+                    'hotelName' => $hotel->hotel_name ?? null,
+                    'location'  => $hotel
+                        ? trim(($hotel->hotel_address ?? '') . ', ' . ($hotel->city ?? ''), ', ')
+                        : null,
+                    'image'     => $hotel->thumbnail ?? null,
+                    'arrival_date'   => $hotel->arrival_date,
+                    'departure_date'  => $hotel->departure_date,
+                    'amount'    => $first->amount,
+                    'roomTypes' => $roomTypes,
+                    'occupancy' => [
+                        'rooms'           => $hotel->rooms ?? null,
+                        'adultsPerRoom'   => json_decode($hotel->rooms_adults ?? '[]', true) ?? [],
+                        'childrenPerRoom' => json_decode($hotel->rooms_children ?? '[]', true) ?? [],
+                        'childrenAges'    => json_decode($hotel->rooms_children_ages ?? '[]', true) ?? [],
+                        'totalChildren'   => array_sum(json_decode($hotel->rooms_children ?? '[]', true) ?? []),
+                    ],
+                    'guests'    => $guests,
+                    'rezliveBookingId'   => $first->rezlivebookingId ?? null,
+                    'rezliveBookingCode' => $first->rezliveBookingCode ?? null,
+                ];
+            })(),
+            "flight" => BookingFlights::where("booking_code", $bookingCode)->first(),
+            "visa" => BookingVisa::where("booking_code", $bookingCode)->first(),
+            default => throw new \InvalidArgumentException("Unsupported booking type: {$type}"),
+        };
+
+        if (!$bookingInfo) {
             return response()->json([
                 'status'  => false,
-                'message' => $th->getMessage(),
-            ], 500);
+                'message' => 'No booking found for the given booking code and type',
+            ], 404);
         }
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Booking info retrieved successfully',
+            'data'    => [
+                'bookingCode' => $bookingCode,
+                'type'        => strtolower($type),
+                'booking'     => $bookingInfo,
+            ],
+        ], 200);
+    } catch (\Throwable $th) {
+        return response()->json([
+            'status'  => false,
+            'message' => $th->getMessage(),
+        ], 500);
     }
+}
 }
