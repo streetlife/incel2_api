@@ -291,19 +291,19 @@ class RezliveServices
         return ['status' => true, 'data' => $responseJson];
     }
 
-    public function cancelHotel(string $bookingId, string $bookingCode, $sessionCode = null): array
+    public function cancelHotel(string $bookingId, string $bookingCode): array
     {
-        Log::info("Rezlive Cancellation Request", [
-            'bookingId'   => $bookingId,
-            'bookingCode' => $bookingCode,
-            'request'     => $sessionCode,
-        ]);
+        // Log::info("Rezlive Cancellation Request", [
+        //     'bookingId'   => $bookingId,
+        //     'bookingCode' => $bookingCode,
+        //     'request'     => $sessionCode,
+        // ]);
 
         try {
             $xml      = $this->buildCancelXml($bookingId, $bookingCode);
             $endpoint = $this->url . "/cancelhotel";
 
-            $this->saveXmlLog('cancel', 'request', $xml, $sessionCode);
+            // $this->saveXmlLog('cancel', 'request', $xml, $sessionCode);
 
             $response = Http::withHeaders([
                 'Content-Type' => 'application/x-www-form-urlencoded',
@@ -312,7 +312,7 @@ class RezliveServices
 
             $body = $response->body();
 
-            $this->saveXmlLog('cancel', 'response', $body, $sessionCode);
+            // $this->saveXmlLog('cancel', 'response', $body, $sessionCode);
 
             RezliveLog::create([
                 'type'            => 'cancellation',

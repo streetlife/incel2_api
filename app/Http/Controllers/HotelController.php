@@ -286,8 +286,7 @@ class HotelController extends Controller
 
         $result = $rezlive->cancelHotel(
             $validated['booking_id'],
-            $validated['booking_code'],
-            $validated['session_code'] ?? null
+            $validated['booking_code']
         );
 
         if (!$result['status']) {
