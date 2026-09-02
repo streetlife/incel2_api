@@ -582,6 +582,7 @@ class HotelServices
         $bookingKey    = $data['rooms_key']       ?? null;
         $totalRate     = $data['room_rates']      ?? 0;
         $hotelName     = $data['hotel_name']      ?? null;
+        $amount        = $data['amount']          ?? 0;
 
         if (!$sessionCode) {
             return ['status' => false, 'message' => 'Session code is required'];
@@ -719,7 +720,7 @@ class HotelServices
                     'room_type'            => $room['room_type']   ?? null,
                     'nationality'          => $nationality,
                     'booking_key'          => $room['booking_key'] ?? null,
-                    'amount'            => $roomRate,
+                    'amount'            =>  $amount,
                     'adults'         => $roomsAdults[$i]   ?? 1,
                     'children'       => $roomsChildren[$i] ?? 0,
                     'totalRates'           => $roomRate,
@@ -730,7 +731,13 @@ class HotelServices
                 ]);
             }
         }
-
+        Booking::create([
+            'usercode' => $userCode,
+            'booking_code' => $bookingCode,
+            'booking_type' => 'Hotel',
+            'booking_status' => 'Booked',
+            'date_expiry' => Carbon::now()
+        ]);
         return [
             'status'       => true,
             'booking_code' => $bookingCode,

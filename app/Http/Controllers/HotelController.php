@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Booking;
 use App\Models\BookingFlights;
 use App\Models\BookingHotel;
 use App\Models\BookingVisa;
@@ -163,6 +164,7 @@ class HotelController extends Controller
             'departure_date' => 'required|string',
             'rooms_type'     => 'required|string',
             'rooms_key'      => 'required|string',
+            'amount'         => 'required',
 
             // per-room arrays
             'rooms_adults'            => 'required|array|min:1',
@@ -282,6 +284,7 @@ class HotelController extends Controller
         $validated = $request->validate([
             'booking_id'   => 'required|string',
             'booking_code' => 'required|string',
+            'code' => 'required|string'
         ]);
 
         $result = $rezlive->cancelHotel(
@@ -295,6 +298,8 @@ class HotelController extends Controller
                 'message' => $result['message'],
             ], 422);
         }
+        Booking::where('booking_code', $validated['code'])
+            ->update(['status' => 'cancelled']);
         return response()->json([
             'status'  => true,
             'message' => $result['message'],

@@ -7,6 +7,7 @@ use App\Http\Requests\StoreAirportTransferRequest;
 use App\Http\Requests\StoreServiceRequest;
 use App\Http\Resources\HotdealResource;
 use App\Http\Resources\PackageResource;
+use App\Models\Booking;
 use App\Models\BookingFlights;
 use App\Models\BookingHotel;
 use App\Models\BookingVisa;
@@ -507,7 +508,7 @@ public function getBookingInfo(Request $request)
         $bookingInfo = match (strtolower($type)) {
             "hotel" => (function () use ($bookingCode) {
                 $hotelBookings = BookingHotel::where("booking_code", $bookingCode)->get();
-
+                $bookingStatus = Booking::where("booking_code",$bookingCode)->first();
                 if ($hotelBookings->isEmpty()) {
                     return null;
                 }
@@ -560,6 +561,7 @@ public function getBookingInfo(Request $request)
                 }
 
                 return [
+                    'bookingCode'=>$bookingCode,
                     'hotelName' => $hotel->hotel_name ?? null,
                     'location'  => $hotel
                         ? trim(($hotel->hotel_address ?? '') . ', ' . ($hotel->city ?? ''), ', ')
@@ -579,6 +581,7 @@ public function getBookingInfo(Request $request)
                     'guests'    => $guests,
                     'rezliveBookingId'   => $first->rezlivebookingId ?? null,
                     'rezliveBookingCode' => $first->rezliveBookingCode ?? null,
+                    'status' => $bookingStatus->booking_status  ?? null,
                 ];
             })(),
             "flight" => BookingFlights::where("booking_code", $bookingCode)->first(),
