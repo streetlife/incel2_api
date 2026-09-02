@@ -299,7 +299,7 @@ class HotelController extends Controller
             ], 422);
         }
         Booking::where('booking_code', $validated['code'])
-            ->update(['status' => 'cancelled']);
+            ->update(['booking_status' => 'cancelled']);
         return response()->json([
             'status'  => true,
             'message' => $result['message'],
