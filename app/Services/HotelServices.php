@@ -695,7 +695,7 @@ class HotelServices
 
             return [
                 'status'  => false,
-                'message' => $rezliveResult['message'] ?? 'Booking failed at provider',
+                'message' => 'Something went wrong please try again later',
 
             ];
         }
