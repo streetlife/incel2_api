@@ -154,6 +154,14 @@ class HotelController extends Controller
     // }
     public function createBooking(Request $request)
     {
+          $travellers = collect($request->input('travellers', []))->map(function ($t) {
+        if (isset($t['age']) && (int) $t['age'] === 1) {
+            $t['age'] = 2;
+        }
+        return $t;
+    })->all();
+
+    $request->merge(['travellers' => $travellers]);
         $request->validate([
             'session_code'   => 'required|string',
             'hotel_id'       => 'required',
