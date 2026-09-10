@@ -57,7 +57,6 @@ class FlightController extends Controller
 
             $pnr = $this->bookingService->preProcessBookingFlight(
                 $bookingCode,
-                $bookingFlights
             );
 
             if (!$pnr) {
@@ -78,7 +77,7 @@ class FlightController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Something went wrong',
-                'error' => $e->getMessage()
+                // 'error' => $e->getMessage()
             ], 500);
         }
     }
@@ -121,7 +120,7 @@ class FlightController extends Controller
             );
             return response()->json(['status' => true, 'message' => 'Data fetched successfully', 'data' => $response], 200);
         } catch (Exception $e) {
-            return response()->json(['status'=>false,'message'=>$e->getMessage()], 500);
+            return response()->json(['status' => false, 'message' => "Something went wrong,please try again later"], 500);
         }
     }
 
@@ -132,7 +131,7 @@ class FlightController extends Controller
             $response = $this->FlightServices->getFlightSession($session_code);
             return response()->json(['status' => true, 'message' => 'Data fetched successfully', 'data' => $response], 200);
         } catch (Exception $e) {
-            return response()->json($e->getMessage(), 500);
+            return response()->json(['status' => false, 'message' => 'Something went wrong,please try again later'], 500);
         }
     }
     public function getCityFromAirportCode(string $code)
@@ -141,7 +140,7 @@ class FlightController extends Controller
             $response = $this->FlightServices->getCityFromAirportCode($code);
             return response()->json(['status' => true, 'message' => 'Data fetched successfully', 'data' => $response], 200);
         } catch (Exception $e) {
-            return response()->json($e->getMessage(), 500);
+            return response()->json(['status' => false, 'message' => 'Something went wrong,please try again later'], 500);
         }
     }
     public function getAirline(string $iataCode)
@@ -151,7 +150,7 @@ class FlightController extends Controller
             $response = $this->FlightServices->getAirline($iataCode);
             return response()->json(['status' => true, 'message' => 'Data fetched successfully',  $response], 200);
         } catch (Exception $e) {
-            return response()->json($e->getMessage(), 500);
+            return response()->json(['status' => false, 'message' => 'Something went wrong,please try again later'], 500);
         }
     }
     public function searchFlights(Request $request)
@@ -160,7 +159,7 @@ class FlightController extends Controller
             $response = $this->FlightServices->searchFlightResult($request->input('session_code'));
             return response()->json(['status' => true, 'message' => 'Data fetched successfully', 'data' => $response], 200);
         } catch (Exception $e) {
-            return response()->json($e->getMessage(), 500);
+            return response()->json(['status' => false, 'message' => 'Something went wrong,please try again later'], 500);
         }
     }
 }
