@@ -49,12 +49,11 @@ class InvoiceServices
             $getMark = Markup::where('customer_type', $customer)->where('module', $module)
                 ->where('currency_code', $currency_base)->first();
 
-            if (!$getMark) {
-                return ['status' => false, 'message' => 'No markup configuration found for this module and currency'];
-            }
-            $amount_markup_aed = $currency_base === "AED" ? $getMark->amount_markup : 0;
-            $amount_markup_usd =  $currency_base === "USD" ? $getMark->amount_markup : 0;
-            $amount_markup_ngn = $currency_base === "NGN" ? $getMark->amount_markup : 0;
+            $markupAmount = $getMark?->amount_markup ?? 0;
+
+            $amount_markup_aed = $currency_base === "AED" ? $markupAmount : 0;
+            $amount_markup_usd = $currency_base === "USD" ? $markupAmount : 0;
+            $amount_markup_ngn = $currency_base === "NGN" ? $markupAmount : 0;
 
             $invoice = Invoice::create([
                 'invoice_code' => $booking_code,
