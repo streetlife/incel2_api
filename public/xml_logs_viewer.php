@@ -1,6 +1,8 @@
 <?php
 $logDir = __DIR__ . '/xml_logs';
 $files = glob($logDir . '/*');
+// reverse sort the files to show the most recent first
+rsort($files);
 $selected = null;
 $content = null;
 
@@ -61,7 +63,8 @@ if (!empty($_GET['file'])) {
         <div class="content">
             <?php if ($selected !== null && $content !== null): ?>
                 <h2><?= htmlspecialchars($selected) ?> (<?= number_format(strlen($content)) ?> bytes)</h2>
-                <pre><?= htmlspecialchars($content) ?></pre>
+                <!-- display the contents with text wrapped -->
+                <pre style="white-space: pre-wrap; word-wrap: break-word;"><?= htmlspecialchars($content) ?></pre>
             <?php else: ?>
                 <h2>No file selected</h2>
                 <pre>Select a log file from the list on the left.</pre>
