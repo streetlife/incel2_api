@@ -58,7 +58,6 @@ class InvoiceServices
             $invoice = Invoice::create([
                 'invoice_code' => $booking_code,
                 'usercode' => $usercode,
-                'booking_code' => $booking_code,
                 'invoice_date' => Carbon::now(),
                 'invoice_due_date' => Carbon::now()->addHours(5),
                 'amount_total' => $amount_total,
