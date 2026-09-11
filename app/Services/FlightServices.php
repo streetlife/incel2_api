@@ -394,6 +394,7 @@ class FlightServices
         asort($filter_timeto);
 
         return [
+             'status' => true,
             'session_code' => $session?->session_code,
             'flight_count' => count($results),
             'payload' => $payload,
