@@ -1,6 +1,8 @@
 <?php
 $logDir = __DIR__ . '/xml_logs';
 $files = glob($logDir . '/*');
+// reverse sort the files to show the most recent first
+rsort($files);
 $selected = null;
 $content = null;
 
@@ -26,7 +28,7 @@ if (!empty($_GET['file'])) {
         .header { background: #24292f; color: #fff; padding: 14px 24px; }
         .header h1 { margin: 0; font-size: 18px; font-weight: 600; }
         .container { display: flex; gap: 16px; padding: 16px 24px; align-items: flex-start; }
-        .sidebar { width: 280px; flex-shrink: 0; background: #fff; border: 1px solid #e1e4e8; border-radius: 6px; overflow: hidden; }
+        .sidebar { width: 380px; flex-shrink: 0; background: #fff; border: 1px solid #e1e4e8; border-radius: 6px; overflow: hidden; }
         .sidebar h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .5px; color: #57606a; padding: 12px 14px 8px; margin: 0; border-bottom: 1px solid #e1e4e8; }
         .sidebar ul { list-style: none; margin: 0; padding: 6px 0; }
         .sidebar li a { display: block; padding: 8px 14px; color: #24292f; text-decoration: none; font-size: 14px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
@@ -61,7 +63,8 @@ if (!empty($_GET['file'])) {
         <div class="content">
             <?php if ($selected !== null && $content !== null): ?>
                 <h2><?= htmlspecialchars($selected) ?> (<?= number_format(strlen($content)) ?> bytes)</h2>
-                <pre><?= htmlspecialchars($content) ?></pre>
+                <!-- display the contents with text wrapped -->
+                <pre style="white-space: pre-wrap; word-wrap: break-word;"><?= htmlspecialchars($content) ?></pre>
             <?php else: ?>
                 <h2>No file selected</h2>
                 <pre>Select a log file from the list on the left.</pre>
