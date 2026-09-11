@@ -101,7 +101,7 @@ class FlightServices
                     $adults     = $searchParams['adult_number'];
                     $children   = $searchParams['child_number'] ?? 0;
                     $infants    = $searchParams['infants_number'] ?? 0;
-                    $travelDate = $searchParams['from'] ?? null;
+                    $travelDate = $searchParams['dateFrom'] ?? null;
 
                     session([
                         'flight.oneway' => [
