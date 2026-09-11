@@ -91,190 +91,204 @@ class FlightServices
 
         Log::info("Searching flight type: " . $searchType);
 
-        switch ($searchType) {
+        try {
+            switch ($searchType) {
 
-            case 'oneway':
+                case 'oneway':
 
-                $from       = $searchParams['from'];
-                $to         = $searchParams['to'];
-                $adults     = $searchParams['adult_number'];
-                $children   = $searchParams['child_number'] ?? 0;
-                $infants    = $searchParams['infants_number'] ?? 0;
-                $travelDate = $searchParams['dateFrom'];
-
-                session([
-                    'flight.oneway' => [
-                        'from'       => $from,
-                        'from_name'  => $searchParams['flight_from'] ?? null,
-                        'to'         => $to,
-                        'to_name'    => $searchParams['flight_to'] ?? null,
-                        'adults'     => $adults,
-                        'children'   => $children,
-                        'infants'    => $infants,
-                        'date'       => $travelDate,
-                    ]
-                ]);
-
-                $flightClass = $searchParams['flight_class'] ?? 'ECONOMY';
-                $flightConnection = isset($searchParams['flight_connection']) ? 0 : 'any';
-                $flexibleDates = isset($searchParams['flexible_dates']) &&
-                    $searchParams['flexible_dates'] === 'yes';
-
-                $payload = json_encode($searchParams);
-
-                $response = $this->amadeusService->searchFlightOffers(
-                    $from,
-                    $to,
-                    $adults,
-                    $children,
-                    $infants,
-                    $searchType,
-                    $travelDate,
-                    $travelDate,
-                    $flightClass,
-                    $flightConnection,
-                    'FSC',
-                    $flexibleDates
-                );
-
-                break;
-
-            case 'roundtrip':
-
-                $from     = $searchParams['from'];
-                $to       = $searchParams['to'];
-                $adults   = $searchParams['adult_number'];
-                $children = $searchParams['child_number'] ?? 0;
-                $infants  = $searchParams['infants_number'] ?? 0;
-
-                if (isset($searchParams['roundtrip-date'])) {
-                    $travelDateFrom = substr($searchParams['roundtrip-date'], 0, 10);
-                    $travelDateTo   = substr($searchParams['roundtrip-date'], 13, 10);
-                } else {
-                    $travelDateFrom = $searchParams['dateFrom'];
-                    $travelDateTo   = $searchParams['dateTo'];
-                }
-
-                session([
-                    'flight.roundtrip' => [
-                        'from'       => $from,
-                        'from_name'  => $searchParams['flight_from'] ?? null,
-                        'to'         => $to,
-                        'to_name'    => $searchParams['flight_to'] ?? null,
-                        'adults'     => $adults,
-                        'children'   => $children,
-                        'infants'    => $infants,
-                        'datefrom'   => $travelDateFrom,
-                        'dateto'     => $travelDateTo,
-                        'direct_flights' => $searchParams['direct_flights'] ?? null
-                    ]
-                ]);
-
-                $flightClass = $searchParams['flight_class'] ?? 'ECONOMY';
-
-                $flightConnection = isset($searchParams['flight_connection']) &&
-                    $searchParams['flight_connection'] == "0"
-                    ? 0 : 'any';
-
-                $flexibleDates = isset($searchParams['flexible_dates']) &&
-                    $searchParams['flexible_dates'] === 'yes';
-
-                $payload = json_encode($searchParams);
-
-                $response = $this->amadeusService->searchFlightOffers(
-                    $from,
-                    $to,
-                    $adults,
-                    $children,
-                    $infants,
-                    $searchType,
-                    $travelDateFrom,
-                    $travelDateTo,
-                    $flightClass,
-                    $flightConnection,
-                    $searchParams['flight_option'] ?? 'FSC',
-                    $flexibleDates
-                );
-
-                break;
-
-            case 'multi':
-
-                $froms  = $searchParams['from'];
-                $tos    = $searchParams['to'];
-                $dates  = $searchParams['daterange-single'];
-
-                $lastDate = $dates[0];
-                $travelFrom = [];
-                $travelTo   = [];
-                $travelDate = [];
-
-                foreach ($froms as $key => $from) {
+                    $from       = $searchParams['from'];
+                    $to         = $searchParams['to'];
+                    $adults     = $searchParams['adult_number'];
+                    $children   = $searchParams['child_number'] ?? 0;
+                    $infants    = $searchParams['infants_number'] ?? 0;
+                    $travelDate = $searchParams['from'] ?? null;
 
                     session([
-                        "flight.multi.$key" => [
-                            'from'      => $from,
-                            'from_name' => $searchParams['flight_from'][$key] ?? null,
-                            'to'        => $tos[$key] ?? null,
-                            'to_name'   => $searchParams['flight_to'][$key] ?? null,
-                            'date'      => $dates[$key]
+                        'flight.oneway' => [
+                            'from'       => $from,
+                            'from_name'  => $searchParams['flight_from'] ?? null,
+                            'to'         => $to,
+                            'to_name'    => $searchParams['flight_to'] ?? null,
+                            'adults'     => $adults,
+                            'children'   => $children,
+                            'infants'    => $infants,
+                            'date'       => $travelDate,
                         ]
                     ]);
 
-                    if (!empty($from) && !empty($tos[$key])) {
+                    $flightClass = $searchParams['flight_class'] ?? 'ECONOMY';
+                    $flightConnection = isset($searchParams['flight_connection']) ? 0 : 'any';
+                    $flexibleDates = isset($searchParams['flexible_dates']) &&
+                        $searchParams['flexible_dates'] === 'yes';
 
-                        $travelFrom[] = $from;
-                        $travelTo[]   = $tos[$key];
+                    $payload = json_encode($searchParams);
 
-                        $travelDate[] = $dates[$key] >= $lastDate
-                            ? $dates[$key]
-                            : $lastDate;
+                    $response = $this->amadeusService->searchFlightOffers(
+                        $from,
+                        $to,
+                        $adults,
+                        $children,
+                        $infants,
+                        $searchType,
+                        $travelDate,
+                        $travelDate,
+                        $flightClass,
+                        $flightConnection,
+                        'FSC',
+                        $flexibleDates
+                    );
 
-                        $lastDate = end($travelDate);
+                    break;
+
+                case 'roundtrip':
+
+                    $from     = $searchParams['from'];
+                    $to       = $searchParams['to'];
+                    $adults   = $searchParams['adult_number'];
+                    $children = $searchParams['child_number'] ?? 0;
+                    $infants  = $searchParams['infants_number'] ?? 0;
+
+                    if (isset($searchParams['roundtrip-date'])) {
+                        $travelDateFrom = substr($searchParams['roundtrip-date'], 0, 10);
+                        $travelDateTo   = substr($searchParams['roundtrip-date'], 13, 10);
+                    } else {
+                        $travelDateFrom = $searchParams['dateFrom'];
+                        $travelDateTo   = $searchParams['dateTo'];
                     }
-                }
 
-                $adults   = $searchParams['adult_number'];
-                $children = $searchParams['child_number'] ?? 0;
-                $infants  = $searchParams['infants_number'] ?? 0;
+                    session([
+                        'flight.roundtrip' => [
+                            'from'       => $from,
+                            'from_name'  => $searchParams['flight_from'] ?? null,
+                            'to'         => $to,
+                            'to_name'    => $searchParams['flight_to'] ?? null,
+                            'adults'     => $adults,
+                            'children'   => $children,
+                            'infants'    => $infants,
+                            'datefrom'   => $travelDateFrom,
+                            'dateto'     => $travelDateTo,
+                            'direct_flights' => $searchParams['direct_flights'] ?? null
+                        ]
+                    ]);
 
-                session([
-                    'flight.multi.adults'   => $adults,
-                    'flight.multi.children' => $children,
-                    'flight.multi.infants'  => $infants
-                ]);
+                    $flightClass = $searchParams['flight_class'] ?? 'ECONOMY';
 
-                $payload = json_encode($searchParams);
+                    $flightConnection = isset($searchParams['flight_connection']) &&
+                        $searchParams['flight_connection'] == "0"
+                        ? 0 : 'any';
 
-                $response = $this->amadeusService->searchMultiCityFlightOffers(
-                    $travelFrom,
-                    $travelTo,
-                    $travelDate,
-                    $adults,
-                    $children,
-                    $infants,
-                    $searchParams['flight_class'] ?? 'ECONOMY',
-                    $searchParams['flight_connection'] ?? 'any'
-                );
+                    $flexibleDates = isset($searchParams['flexible_dates']) &&
+                        $searchParams['flexible_dates'] === 'yes';
 
-                break;
+                    $payload = json_encode($searchParams);
 
-            default:
-                return [
-                    'status' => false,
-                    'message' => 'Invalid search type'
-                ];
+                    $response = $this->amadeusService->searchFlightOffers(
+                        $from,
+                        $to,
+                        $adults,
+                        $children,
+                        $infants,
+                        $searchType,
+                        $travelDateFrom,
+                        $travelDateTo,
+                        $flightClass,
+                        $flightConnection,
+                        $searchParams['flight_option'] ?? 'FSC',
+                        $flexibleDates
+                    );
+
+                    break;
+
+                case 'multi':
+
+                    $froms  = $searchParams['from'];
+                    $tos    = $searchParams['to'];
+                    $dates  = $searchParams['daterange-single'];
+
+                    $lastDate = $dates[0];
+                    $travelFrom = [];
+                    $travelTo   = [];
+                    $travelDate = [];
+
+                    foreach ($froms as $key => $from) {
+
+                        session([
+                            "flight.multi.$key" => [
+                                'from'      => $from,
+                                'from_name' => $searchParams['flight_from'][$key] ?? null,
+                                'to'        => $tos[$key] ?? null,
+                                'to_name'   => $searchParams['flight_to'][$key] ?? null,
+                                'date'      => $dates[$key]
+                            ]
+                        ]);
+
+                        if (!empty($from) && !empty($tos[$key])) {
+
+                            $travelFrom[] = $from;
+                            $travelTo[]   = $tos[$key];
+
+                            $travelDate[] = $dates[$key] >= $lastDate
+                                ? $dates[$key]
+                                : $lastDate;
+
+                            $lastDate = end($travelDate);
+                        }
+                    }
+
+                    $adults   = $searchParams['adult_number'];
+                    $children = $searchParams['child_number'] ?? 0;
+                    $infants  = $searchParams['infants_number'] ?? 0;
+
+                    session([
+                        'flight.multi.adults'   => $adults,
+                        'flight.multi.children' => $children,
+                        'flight.multi.infants'  => $infants
+                    ]);
+
+                    $payload = json_encode($searchParams);
+
+                    $response = $this->amadeusService->searchMultiCityFlightOffers(
+                        $travelFrom,
+                        $travelTo,
+                        $travelDate,
+                        $adults,
+                        $children,
+                        $infants,
+                        $searchParams['flight_class'] ?? 'ECONOMY',
+                        $searchParams['flight_connection'] ?? 'any'
+                    );
+
+                    break;
+
+                default:
+                    return [
+                        'status' => false,
+                        'message' => 'Invalid search type'
+                    ];
+            }
+
+            $this->saveSessionFlight(
+                $sessionCode,
+                $amadeusClientRef,
+                $searchType,
+                $payload,
+                $response
+            );
+
+            return $this->searchFlightResult($sessionCode);
+        } catch (\Throwable $e) {
+            Log::error('searchFlights failed', [
+                'search_type'        => $searchType,
+                'amadeus_client_ref' => $amadeusClientRef,
+                'session_code'       => $sessionCode,
+                'message'            => $e->getMessage(),
+            ]);
+
+            return [
+                'status'  => false,
+                'message' => 'Something went wrong while searching flights',
+            ];
         }
-
-        $this->saveSessionFlight(
-            $sessionCode,
-            $amadeusClientRef,
-            $searchType,
-            $payload,
-            $response
-        );
-
-        return $this->searchFlightResult($sessionCode);
     }
     public function searchFlightResult(string $session_code): array
     {
@@ -380,7 +394,7 @@ class FlightServices
         asort($filter_timeto);
 
         return [
-            'session_code'=>$session?->session_code,
+            'session_code' => $session?->session_code,
             'flight_count' => count($results),
             'payload' => $payload,
             'recommended' => [

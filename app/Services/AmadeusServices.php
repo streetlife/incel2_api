@@ -35,6 +35,7 @@ class AmadeusServices
     {
         return Cache::remember('amadeus_token', now()->addSeconds(1700), function () {
 
+            
             $response = Http::asForm()->post(
                 $this->baseUrl . 'v1/security/oauth2/token',
                 [
@@ -115,7 +116,6 @@ class AmadeusServices
             ],
         ];
 
-
         if ($tripMode === 'roundtrip' && $dateTo) {
             $payload['originDestinations'][] = [
                 'id' => '2',
@@ -142,14 +142,12 @@ class AmadeusServices
             ];
         }
 
-
         for ($i = 0; $i < $children; $i++) {
             $payload['travelers'][] = [
                 'id' => (string) $travelerId++,
                 'travelerType' => 'CHILD',
             ];
         }
-
 
         $adultIds = collect($payload['travelers'])
             ->where('travelerType', 'ADULT')
@@ -168,7 +166,6 @@ class AmadeusServices
             $adultIndex = ($adultIndex + 1) % max(count($adultIds), 1);
         }
 
-
         $cabinMap = [
             'economy'         => 'ECONOMY',
             'premium_economy' => 'PREMIUM_ECONOMY',
@@ -182,13 +179,11 @@ class AmadeusServices
             ];
         }
 
-
         if (in_array($flightConnection, ['0', '1', '2'])) {
             $payload['searchCriteria']['flightFilters']['connectionRestriction'] = [
                 'maxNumberOfConnections' => $flightConnection,
             ];
         }
-
 
         if ($flightOption === 'OWC') {
             $payload['searchCriteria']['addOneWayOffers'] = true;
@@ -196,18 +191,36 @@ class AmadeusServices
 
         Log::info('Amadeus Request', $payload);
 
-        $response = Http::withToken($token)
-            ->withHeaders([
-                'ama-client-ref' => $clientRef,
-            ])
-            ->post($this->baseUrl . 'v2/shopping/flight-offers', $payload)
-            ->throw();
+        try {
+            $response = Http::withToken($token)
+                ->withHeaders([
+                    'ama-client-ref' => $clientRef,
+                ])
+                ->post($this->baseUrl . 'v2/shopping/flight-offers', $payload)
+                ->throw();
 
-        Log::info('Amadeus Response', [
-            'status' => $response->status(),
-        ]);
+            Log::info('Amadeus Response', [
+                'status' => $response->status(),
+            ]);
 
-        return $response->json();
+            return $response->json();
+        } catch (\Illuminate\Http\Client\RequestException $e) {
+            Log::error('Amadeus Request Failed', [
+                'client_ref' => $clientRef,
+                'status'     => $e->response?->status(),
+                'body'       => $e->response?->json() ?? $e->response?->body(),
+                'message'    => $e->getMessage(),
+            ]);
+
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error('Amadeus Unexpected Error', [
+                'client_ref' => $clientRef,
+                'message'    => $e->getMessage(),
+            ]);
+
+            throw $e;
+        }
     }
 
     public function searchMultiCityFlightOffers(
@@ -237,7 +250,6 @@ class AmadeusServices
             ],
         ];
 
-
         foreach ($travelFrom as $key => $from) {
 
             $payload['originDestinations'][] = [
@@ -250,9 +262,7 @@ class AmadeusServices
             ];
         }
 
-
         $travelerId = 1;
-
 
         for ($i = 0; $i < $adults; $i++) {
             $payload['travelers'][] = [
@@ -261,14 +271,12 @@ class AmadeusServices
             ];
         }
 
-
         for ($i = 0; $i < $children; $i++) {
             $payload['travelers'][] = [
                 'id' => (string) $travelerId++,
                 'travelerType' => 'CHILD',
             ];
         }
-
 
         $adultIds = collect($payload['travelers'])
             ->where('travelerType', 'ADULT')
@@ -287,7 +295,6 @@ class AmadeusServices
 
             $adultIndex = ($adultIndex + 1) % max(count($adultIds), 1);
         }
-
 
         $cabinMap = [
             'economy' => 'ECONOMY',
@@ -310,18 +317,36 @@ class AmadeusServices
 
         Log::info('Amadeus Multi-City Request', $payload);
 
-        $response = Http::withToken($token)
-            ->withHeaders([
-                'ama-client-ref' => $clientRef,
-            ])
-            ->post($this->baseUrl . 'v2/shopping/flight-offers', $payload)
-            ->throw();
+        try {
+            $response = Http::withToken($token)
+                ->withHeaders([
+                    'ama-client-ref' => $clientRef,
+                ])
+                ->post($this->baseUrl . 'v2/shopping/flight-offers', $payload)
+                ->throw();
 
-        Log::info('Amadeus Multi-City Response', [
-            'status' => $response->status(),
-        ]);
+            Log::info('Amadeus Multi-City Response', [
+                'status' => $response->status(),
+            ]);
 
-        return $response->json();
+            return $response->json();
+        } catch (\Illuminate\Http\Client\RequestException $e) {
+            Log::error('Amadeus Multi-City Request Failed', [
+                'client_ref' => $clientRef,
+                'status'     => $e->response?->status(),
+                'body'       => $e->response?->json() ?? $e->response?->body(),
+                'message'    => $e->getMessage(),
+            ]);
+
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error('Amadeus Multi-City Unexpected Error', [
+                'client_ref' => $clientRef,
+                'message'    => $e->getMessage(),
+            ]);
+
+            throw $e;
+        }
     }
     // public function createFlightOrder($payload, $clientRef, $bookingCode, $bookingFlights)
     // {

@@ -81,7 +81,6 @@ class FlightController extends Controller
             ], 500);
         }
     }
-
     public function search(Request $request)
     {
         try {
@@ -96,7 +95,6 @@ class FlightController extends Controller
                 'flight_class'     => 'nullable|string',
                 'flight_connection' => 'nullable|string',
                 'flexible_dates'   => 'nullable|string',
-                // 'dateFrom' => 'nullable|string',
                 'roundtrip-date'   => 'nullable|string',
                 'dateFrom' => 'nullable|string',
                 'dateTo'   => 'nullable|string',
@@ -118,7 +116,19 @@ class FlightController extends Controller
                 $supplier,
                 $request->all()
             );
-            return response()->json(['status' => true, 'message' => 'Data fetched successfully', 'data' => $response], 200);
+
+            if (($response['status'] ?? false) === false) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => $response['message'] ?? 'Something went wrong,please try again later',
+                ], 422);
+            }
+
+            return response()->json([
+                'status'  => true,
+                'message' => 'Data fetched successfully',
+                'data'    => $response
+            ], 200);
         } catch (Exception $e) {
             return response()->json(['status' => false, 'message' => "Something went wrong,please try again later"], 500);
         }
