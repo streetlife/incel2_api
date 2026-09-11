@@ -28,7 +28,7 @@ if (!empty($_GET['file'])) {
         .header { background: #24292f; color: #fff; padding: 14px 24px; }
         .header h1 { margin: 0; font-size: 18px; font-weight: 600; }
         .container { display: flex; gap: 16px; padding: 16px 24px; align-items: flex-start; }
-        .sidebar { width: 280px; flex-shrink: 0; background: #fff; border: 1px solid #e1e4e8; border-radius: 6px; overflow: hidden; }
+        .sidebar { width: 380px; flex-shrink: 0; background: #fff; border: 1px solid #e1e4e8; border-radius: 6px; overflow: hidden; }
         .sidebar h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .5px; color: #57606a; padding: 12px 14px 8px; margin: 0; border-bottom: 1px solid #e1e4e8; }
         .sidebar ul { list-style: none; margin: 0; padding: 6px 0; }
         .sidebar li a { display: block; padding: 8px 14px; color: #24292f; text-decoration: none; font-size: 14px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
