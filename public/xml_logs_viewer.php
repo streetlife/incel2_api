@@ -2,7 +2,7 @@
 $logDir = __DIR__ . '/xml_logs';
 $files = glob($logDir . '/*');
 // reverse sort the files to show the most recent first
-$files = rsort($files);
+rsort($files);
 $selected = null;
 $content = null;
 
