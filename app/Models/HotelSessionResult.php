@@ -20,7 +20,8 @@ class HotelSessionResult extends Model
         'price',
         'room_count',
         'amenities',
-        'booking_key'
+        'booking_key',
+        'cancellation_policy'
 
     ];
     protected $casts = [

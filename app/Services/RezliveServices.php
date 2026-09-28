@@ -74,15 +74,7 @@ class RezliveServices
             'departureDate' => $departureDate,
             'request' => $sessionCode
         ]);
-        // $convertedArrivalDate = \Carbon\Carbon::createFromFormat(
-        //     'd/m/Y',
-        //     $arrivalDate
-        // )->format('d/m/Y');
-
-        // $convertedDepartureDate = \Carbon\Carbon::createFromFormat(
-        //     'd/m/Y',
-        //     $departureDate
-        // )->format('d/m/Y');
+       
         try {
             $xml      = $this->buildSearchXml($params, $arrivalDate, $departureDate);
             $endpoint = $this->url . "/findhotel";

@@ -331,18 +331,17 @@ class HotelServices
                 if (isset($rooms['RoomDescription'])) {
                     $rooms = [$rooms];
                 }
-
+              
                 $boards     = [];
                 $roomTypes  = [];
-                $bookingKey = null; // scoped to THIS hotel only — reset every iteration
+                $bookingKey = null; 
+                $cancellationPolicy = null;
 
                 foreach ($rooms as $room) {
 
-                    // Take only the FIRST booking key found for this hotel.
-                    // Once set, we don't overwrite it with a later room's key —
-                    // this guarantees exactly one key, sourced from this hotel.
                     if ($bookingKey === null && isset($room['BookingKey']) && is_string($room['BookingKey'])) {
                         $bookingKey = trim($room['BookingKey']);
+                         $cancellationPolicy = $room['CancellationPolicy'] ?? null;
                     }
 
                     if (isset($room['RoomDescription'])) {
@@ -397,7 +396,8 @@ class HotelServices
                     'price'        => $hotel['Price'] ?? 0,
                     'room_count'   => $hotel['Hotelwiseroomcount'] ?? count($rooms),
                     'amenities'    => json_encode($amenities),
-                    'booking_key'  => $bookingKey, // single string, belongs ONLY to hotel {$hotel['Id']}
+                    'booking_key'  => $bookingKey,
+                    'cancellation_policy' => $cancellationPolicy ? json_encode($cancellationPolicy) : null,
                 ]);
             }
 
@@ -447,6 +447,7 @@ class HotelServices
                 'r.room_count',
                 'r.amenities',
                 'r.booking_key',
+                'r.cancellation_policy',
                 'h.hotel_name',
                 'h.hotel_address',
                 'h.city',
@@ -505,7 +506,8 @@ class HotelServices
                 'room_count'    => $hotel->room_count,
                 'board_basis'   => $boardBasis,
                 'roomType'   =>  $roomTypes,
-                'BookingKey' => $hotel->booking_key
+                'BookingKey' => $hotel->booking_key,
+                'cancellation_policy' => json_decode($hotel->cancellation_policy)
             ];
         }
 
