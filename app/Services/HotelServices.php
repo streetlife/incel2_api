@@ -271,6 +271,15 @@ class HotelServices
                 $hotels = [$hotels];
             }
 
+            if (empty($hotels)) {
+                DB::rollBack();
+
+                return [
+                    'status'  => false,
+                    'statusCode' => 404,
+                    'message' => 'No hotels found for your search. Try different dates or a nearby city.',
+                ];
+            }
             $hotelCount = count($hotels);
 
             $roomNumber = $params['room_number'] ?? 1;
@@ -331,17 +340,19 @@ class HotelServices
                 if (isset($rooms['RoomDescription'])) {
                     $rooms = [$rooms];
                 }
-              
+
                 $boards     = [];
                 $roomTypes  = [];
-                $bookingKey = null; 
+                $bookingKey = null;
                 $cancellationPolicy = null;
+                $TermsAndConditions = null;
 
                 foreach ($rooms as $room) {
 
                     if ($bookingKey === null && isset($room['BookingKey']) && is_string($room['BookingKey'])) {
                         $bookingKey = trim($room['BookingKey']);
-                         $cancellationPolicy = $room['CancellationPolicy'] ?? null;
+                        $cancellationPolicy = $room['CancellationPolicy'] ?? null;
+                        $TermsAndConditions = $room['TermsAndConditions'] ?? null;
                     }
 
                     if (isset($room['RoomDescription'])) {
@@ -419,6 +430,7 @@ class HotelServices
                     'children'       => $totalChildren,
                     'currency'       => $result['data']['Currency'] ?? 'USD',
                     'result_count'   => $hotelCount,
+                    'TermsAndConditions' => $TermsAndConditions
                 ],
 
                 'filters' => $results['filters'],
@@ -430,7 +442,7 @@ class HotelServices
 
             return [
                 'status'  => false,
-                'message' => $e->getMessage(),
+                'message' => 'Something went wrong while searching for hotels. Please try again.',
             ];
         }
     }
@@ -515,7 +527,6 @@ class HotelServices
         asort($filterPrices);
         asort($filterCities);
         asort($filterBoardBasis);
-
 
         return [
             'filters' => [
