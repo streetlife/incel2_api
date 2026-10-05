@@ -325,10 +325,7 @@ class HotelServices
                 'search_session_id'   => $result['data']['SearchSessionId']  ?? null,
             ]);
 
-            // NOTE: $result['booking_keys'] (top-level, if it exists) is NEVER
-            // used below. Each hotel's booking_key comes ONLY from that
-            // hotel's own $rooms — this is what prevents key leakage across
-            // hotels and the resulting wrong-rate bug.
+            
             foreach ($hotels as $hotel) {
 
                 if (empty($hotel['Id'])) {
@@ -345,14 +342,14 @@ class HotelServices
                 $roomTypes  = [];
                 $bookingKey = null;
                 $cancellationPolicy = null;
-                $TermsAndConditions = null;
+                // $TermsAndConditions = null;
 
                 foreach ($rooms as $room) {
 
                     if ($bookingKey === null && isset($room['BookingKey']) && is_string($room['BookingKey'])) {
                         $bookingKey = trim($room['BookingKey']);
                         $cancellationPolicy = $room['CancellationPolicy'] ?? null;
-                        $TermsAndConditions = $room['TermsAndConditions'] ?? null;
+                        // $TermsAndConditions = $room['TermsAndConditions'] ?? null;
                     }
 
                     if (isset($room['RoomDescription'])) {
@@ -430,7 +427,7 @@ class HotelServices
                     'children'       => $totalChildren,
                     'currency'       => $result['data']['Currency'] ?? 'USD',
                     'result_count'   => $hotelCount,
-                    'TermsAndConditions' => $TermsAndConditions
+                   
                 ],
 
                 'filters' => $results['filters'],
