@@ -33,6 +33,14 @@ class PaystackController extends Controller
 
         if (!$payment['status']) {
             Log::info($payment);
+
+            audit_log(
+                'payment', 'init_failed', 'payment.paystack_init_failed',
+                'Paystack payment initialization failed',
+                metadata: ['amount' => $request->amount, 'invoice_code' => $request->invoice_code],
+                status: 'failure',
+            );
+
             return response()->json([
                 'status' => false,
                 'message' => $payment['message']
@@ -44,13 +52,12 @@ class PaystackController extends Controller
             $payment['transaction_reference']
         );
 
-        // $this->PaystackOrderServices->create(
-        //     $request->invoice_code,
-        //     $payment['amount'],
-        //     $payment['transaction_reference'],
-        //     $payment['access_code'],
-        //     $payment['reference']
-        // );
+        audit_log(
+            'payment', 'initialized', 'payment.paystack',
+            'Paystack payment initialized',
+            metadata: ['amount' => $request->amount, 'invoice_code' => $request->invoice_code, 'reference' => $payment['reference']],
+            status: 'success',
+        );
 
         return response()->json([
             'status' => true,

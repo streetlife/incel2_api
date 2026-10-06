@@ -54,12 +54,22 @@ class VisaController extends Controller
         try {
             $sessionCode = $this->visaService->createVisaSearchSession($validated);
 
+            audit_log(
+                'visa', 'search', 'visa.search',
+                'Visa search session created',
+                metadata: $validated,
+                status: 'success',
+            );
+
             return response()->json([
                 'status' => true,
                 'message' => 'Search session created successfully',
                 'session_code' => $sessionCode,
             ], 201);
         } catch (\Exception $e) {
+
+            audit_log('visa', 'search_failed', 'visa.search_failed', 'Visa search failed', metadata: $validated, status: 'failure');
+
             return response()->json([
                 'status' => false,
                 'message' => 'Error creating search session: ' . $e->getMessage(),
@@ -115,6 +125,14 @@ class VisaController extends Controller
             ? $getPaymentType['payment_link']
             : $getPaymentType['authorization_url'];
 
+        audit_log(
+            'payment', 'initialized', 'payment.visa',
+            'Visa payment initialized',
+            bookingCode: $validated['booking_code'],
+            metadata: ['amount' => $validated['amount'], 'type' => $validated['payment_type']],
+            status: 'success',
+        );
+
         return response()->json([
             'status' => true,
             'message' => 'Successful',
@@ -125,6 +143,13 @@ class VisaController extends Controller
 
     } catch (\Exception $e) {
         Log::error('Payment initialization failed: ' . $e->getMessage());
+
+        audit_log(
+            'payment', 'init_failed', 'payment.visa_init_failed',
+            'Visa payment initialization failed',
+            bookingCode: $request->input('booking_code') ?? null,
+            status: 'failure',
+        );
 
         return response()->json([
             "status" => false,

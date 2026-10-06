@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AboutusController;
 use App\Http\Controllers\AirportController;
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\FlightController;
@@ -40,6 +41,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/user-profile', [AuthController::class, 'getProfile']);
         Route::patch('/user-profile', [AuthController::class, 'updateProfile']);
     });
+});
+
+Route::middleware(['auth:sanctum', 'support'])->prefix('audit-logs')->group(function () {
+    Route::get('/', [AuditLogController::class, 'index']);
+    Route::get('/stats', [AuditLogController::class, 'stats']);
+    Route::get('/export', [AuditLogController::class, 'export']);
+    Route::get('/booking/{bookingCode}', [AuditLogController::class, 'byBooking']);
+    Route::get('/user/{usercode}', [AuditLogController::class, 'byUser']);
+    Route::get('/{id}', [AuditLogController::class, 'show']);
 });
 Route::get('/reviews', [UserController::class, 'index']);
 Route::post('/reviews', [UserController::class, 'store']);

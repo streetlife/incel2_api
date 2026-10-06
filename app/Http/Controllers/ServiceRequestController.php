@@ -30,12 +30,16 @@ class ServiceRequestController extends Controller
 
             $result = $this->service->createInsuranceService($data);
 
+            audit_log('service_request', 'created', 'service.insurance', 'Insurance service request created', newValues: ['booking_code' => $data['booking_code'] ?? null], status: 'success');
+
             return response()->json([
                 'status' => true,
                 'message' => 'Insurance service request created successfully',
                 'data' => $result
             ], 201);
         } catch (\Exception $e) {
+
+            audit_log('service_request', 'creation_failed', 'service.insurance_failed', 'Insurance service request failed', status: 'failure');
 
             return response()->json([
                 'status' => false,
@@ -52,6 +56,8 @@ class ServiceRequestController extends Controller
 
             $result = $this->service->airportTransfer($data);
 
+            audit_log('service_request', 'created', 'service.airport_transfer', 'Airport transfer request created', status: 'success');
+
             return response()->json([
                 'status' => true,
                 'message' => 'Airport transfer request created successfully',
@@ -59,6 +65,9 @@ class ServiceRequestController extends Controller
             ], 201);
         } catch (\Exception $e) {
             Log::error($e);
+
+            audit_log('service_request', 'creation_failed', 'service.airport_transfer_failed', 'Airport transfer request failed', status: 'failure');
+
             return response()->json([
                 'status' => false,
                 'message' => 'Something went wrong',
@@ -154,12 +163,16 @@ class ServiceRequestController extends Controller
 
             $contact = $this->service->createContact($validated);
 
+            audit_log('service_request', 'created', 'service.contact', 'Contact form submitted', newValues: $validated, status: 'success');
+
             return response()->json([
                 'status' => true,
                 'message' => 'Message sent successfully',
                 'data' => $contact
             ]);
         } catch (\Exception $e) {
+
+            audit_log('service_request', 'creation_failed', 'service.contact_failed', 'Contact form submission failed', status: 'failure');
 
             return response()->json([
                 'status' => false,

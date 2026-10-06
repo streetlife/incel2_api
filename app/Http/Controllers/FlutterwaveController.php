@@ -33,6 +33,13 @@ class FlutterwaveController extends Controller
         $payment = $this->flutterwaveService->initializePayment($request->all(), $request->callback_url);
 
         if (!$payment['status']) {
+            audit_log(
+                'payment', 'init_failed', 'payment.flutterwave_init_failed',
+                'Flutterwave payment initialization failed',
+                metadata: ['amount' => $request->amount, 'invoice_code' => $request->invoice_code],
+                status: 'failure',
+            );
+
             return response()->json($payment, 400);
         }
 
@@ -40,6 +47,13 @@ class FlutterwaveController extends Controller
         $this->invoiceService->updateTransactionReference(
             $request->invoice_code,
             $payment['transaction_reference']
+        );
+
+        audit_log(
+            'payment', 'initialized', 'payment.flutterwave',
+            'Flutterwave payment initialized',
+            metadata: ['amount' => $request->amount, 'invoice_code' => $request->invoice_code, 'reference' => $payment['transaction_reference'] ?? null],
+            status: 'success',
         );
 
         return response()->json([
@@ -52,11 +66,16 @@ class FlutterwaveController extends Controller
     {
         $data = $this->invoiceService->createInvoice($request->all());
         if (!$data) {
+            audit_log('invoice', 'creation_failed', 'invoice.creation_failed', 'Invoice creation failed', status: 'failure');
+
             return response()->json([
                 'status' => false,
                 'message' => 'Failed to create invoice'
             ], 400);
         }
+
+        audit_log('invoice', 'created', 'invoice.created', 'Invoice created', metadata: $request->only(['amount', 'description']), status: 'success');
+
         return response()->json([
             'status' => true,
             'invoice' => $data

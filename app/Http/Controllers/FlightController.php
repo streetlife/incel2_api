@@ -60,11 +60,23 @@ class FlightController extends Controller
             );
 
             if (!$pnr) {
+                audit_log(
+                    'flight', 'book_failed', 'flight.book_failed',
+                    'Flight booking failed', bookingCode: $bookingCode, status: 'failure',
+                );
+
                 return response()->json([
                     'status' => false,
                     'message' => 'Flight booking failed'
                 ], 400);
             }
+
+            audit_log(
+                'flight', 'booked', 'flight.booked',
+                'Flight booked successfully',
+                bookingCode: $bookingCode, status: 'success',
+                metadata: ['pnr' => $pnr],
+            );
 
             return response()->json([
                 'status' => true,
@@ -73,6 +85,8 @@ class FlightController extends Controller
                 'pnr' => $pnr
             ]);
         } catch (\Exception $e) {
+
+            audit_log('flight', 'book_error', 'flight.book_error', 'Flight booking error', bookingCode: $request->booking_code ?? null, status: 'failure');
 
             return response()->json([
                 'status' => false,
@@ -118,11 +132,20 @@ class FlightController extends Controller
             );
 
             if (($response['status'] ?? false) === false) {
+                audit_log(
+                    'flight', 'search_failed', 'flight.search_failed',
+                    'Flight search failed',
+                    metadata: $request->only(['from', 'to', 'search_type']),
+                    status: 'failure',
+                );
+
                 return response()->json([
                     'status'  => false,
                     'message' => $response['message'] ?? 'Something went wrong,please try again later',
                 ], 422);
             }
+
+            audit_log('flight', 'search', 'flight.search', 'Flight search performed', metadata: $request->only(['from', 'to', 'search_type']), status: 'success');
 
             return response()->json([
                 'status'  => true,

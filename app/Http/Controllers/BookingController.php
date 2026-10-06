@@ -44,6 +44,16 @@ class BookingController extends Controller
 
         );
 
+        audit_log(
+            'booking',
+            'flight_created',
+            'booking.flight_created',
+            'Flight booking created',
+            bookingCode: $validated['bookingCode'],
+            newValues: $booking,
+            status: 'success',
+        );
+
         return response()->json([
             'status' => true,
             'data'   => $booking
@@ -53,11 +63,23 @@ class BookingController extends Controller
     {
         $booking = $this->bookingService->generateBookingCode();
         if (!$booking) {
+            audit_log('booking', 'code_generation_failed', 'booking.generate_code', 'Booking code generation failed', status: 'failure');
+
             return response()->json([
                 'status' => false,
                 'message' => 'Booking not found'
             ], 404);
         }
+
+        audit_log(
+            'booking',
+            'code_generated',
+            'booking.generate_code',
+            'Booking code generated',
+            bookingCode: $booking['bookCode'] ?? null,
+            status: 'success',
+        );
+
         return response()->json([
             'status' => true,
             'message' => 'Booking created successfully',
@@ -112,6 +134,16 @@ class BookingController extends Controller
 
         $tour = $this->bookingService->createTourBooking($request->all());
 
+        audit_log(
+            'tour',
+            'booking_created',
+            'tour.booking_created',
+            'Tour booking created',
+            bookingCode: $tour->booking_code ?? null,
+            newValues: $request->only(['tour_id', 'travel_date', 'amount']),
+            status: 'success',
+        );
+
         return response()->json([
             'status' => true,
             'data' => $tour
@@ -127,12 +159,26 @@ class BookingController extends Controller
         if (!$visa) {
             Log::error("error");
             Log::info($visa);
+
+            audit_log('visa', 'booking_failed', 'visa.booking_failed', 'Visa booking creation failed', status: 'failure');
+
             return response()->json([
                 'status' => false,
                 'message' => 'Visa booking was not successfully',
 
             ], 400);
         }
+
+        audit_log(
+            'visa',
+            'booking_created',
+            'visa.booking_created',
+            'Visa booking created',
+            bookingCode: $visa['booking_code'] ?? null,
+            newValues: $request->only(['lastname', 'firstname', 'passport_number', 'nationality_id']),
+            status: 'success',
+        );
+
         return response()->json([
             'message' => 'Visa booking created successfully',
             'data' => $visa
@@ -182,6 +228,16 @@ class BookingController extends Controller
     {
         $hotel = $this->bookingService->createHotelBooking($request->all());
 
+        audit_log(
+            'hotel',
+            'booking_created',
+            'hotel.booking_created',
+            'Hotel booking created',
+            bookingCode: $request->input('booking_code'),
+            newValues: $request->only(['hotel_id', 'arrival_date', 'departure_date', 'amount']),
+            status: 'success',
+        );
+
         return response()->json(['status' => true, 'data' => $hotel]);
     }
 
@@ -220,6 +276,16 @@ class BookingController extends Controller
         if (!$payment) {
             return response()->json(['message' => 'Payment not found'], 404);
         }
+
+        audit_log(
+            'payment',
+            'lookup',
+            'payment.lookup',
+            'Payment record looked up',
+            metadata: ['payment_code' => $paymentCode],
+            status: 'success',
+        );
+
         return response()->json($payment);
     }
 

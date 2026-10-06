@@ -59,12 +59,19 @@ class HotelController extends Controller
 
     public function search(Request $request)
     {
-        // Log::info('Search request payload', $request->all());
         $data = $this->hotelService->search(
             $request->all(),
             $request->input('arrival_date'),
             $request->input('departure_date')
         );
+
+        audit_log(
+            'hotel', 'search', 'hotel.search',
+            'Hotel search performed',
+            metadata: $request->only(['country_code', 'city_code', 'arrival_date', 'departure_date']),
+            status: isset($data['status']) ? ($data['status'] ? 'success' : 'failure') : 'unknown',
+        );
+
         return $data;
     }
 
@@ -193,6 +200,14 @@ class HotelController extends Controller
         $result = $this->hotelService->createHotelsBooking($request->all());
         $statusCode = $result['status'] ? 200 : 422;
 
+        audit_log(
+            'hotel', 'booking_created', 'hotel.booking_created',
+            'Hotel booking created',
+            bookingCode: $request->input('booking_code') ?? $request->input('session_code'),
+            newValues: $request->only(['hotel_id', 'arrival_date', 'departure_date', 'amount']),
+            status: $result['status'] ? 'success' : 'failure',
+        );
+
         return response()->json($result, $statusCode);
     }
     public function fetchLog()
@@ -239,7 +254,15 @@ class HotelController extends Controller
             ];
         }
         $result = $rezlive->preBook($hotelData, $bookingHotels, $sessionCode);
-        // log::info("controller",['result'=>$result]);
+
+        audit_log(
+            'hotel', 'prebook', 'hotel.prebook',
+            'Hotel prebook requested',
+            bookingCode: $sessionCode,
+            metadata: ['hotel_id' => $request->hotel_id],
+            status: ($result['status'] ?? false) ? 'success' : 'failure',
+        );
+
         if (!($result['status'] ?? false)) {
             return response()->json([
                 'status'  => false,
@@ -301,6 +324,13 @@ class HotelController extends Controller
         );
 
         if (!$result['status']) {
+            audit_log(
+                'hotel', 'cancel_failed', 'hotel.cancel_failed',
+                'Hotel cancellation failed',
+                bookingCode: $validated['code'],
+                status: 'failure',
+            );
+
             return response()->json([
                 'status'  => false,
                 'message' => $result['message'],
@@ -308,6 +338,15 @@ class HotelController extends Controller
         }
         Booking::where('booking_code', $validated['code'])
             ->update(['booking_status' => 'cancelled']);
+
+        audit_log(
+            'hotel', 'cancelled', 'hotel.cancelled',
+            'Hotel booking cancelled',
+            bookingCode: $validated['code'],
+            metadata: ['rezlive_booking_id' => $validated['booking_id']],
+            status: 'success',
+        );
+
         return response()->json([
             'status'  => true,
             'message' => $result['message'],

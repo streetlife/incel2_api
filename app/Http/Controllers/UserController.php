@@ -63,6 +63,8 @@ class UserController extends Controller
 
         $review = Review::create($validated);
 
+        audit_log('review', 'created', 'review.created', 'User review submitted', newValues: $validated, status: 'success');
+
         return response()->json([
             'status' => true,
             'message' => 'Review created successfully',
