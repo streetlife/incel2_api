@@ -47,8 +47,13 @@ class TravelController extends Controller
         }
         $traveller = $this->service->createTraveller($data);
         if (!$traveller) {
+            audit_log('traveller', 'creation_failed', 'traveller.creation_failed', 'Traveller creation failed', status: 'failure');
+
             return response()->json(['status' => false, 'message' => 'failed'], 400);
         }
+
+        audit_log('traveller', 'created', 'traveller.created', 'Traveller created', newValues: $request->only(['firstname', 'surname', 'birth_date']), status: 'success');
+
         return response()->json(['status' => true, 'message' => 'successful', 'data' => $traveller], 201);
     }
     public function generateBookingCode(){
@@ -56,8 +61,13 @@ class TravelController extends Controller
         $userCode = auth()->user()->usercode ?? "temp" . now()->format('ymdHis');
         $bookingCode = $this->bookingServices->createBooking($userCode, 'VISA');
         if ($bookingCode === 0) {
+            audit_log('booking', 'code_generation_failed', 'booking.generate_code_failed', 'Visa booking code generation failed', status: 'failure');
+
             return response()->json(['status' => false, 'message' => 'failed'], 400);
         }
+
+        audit_log('booking', 'code_generated', 'booking.visa_code_generated', 'Visa booking code generated', bookingCode: $bookingCode, status: 'success');
+
         return response()->json(['status' => true, 'message' => 'successful', 'data' => $bookingCode], 201);
     }
 

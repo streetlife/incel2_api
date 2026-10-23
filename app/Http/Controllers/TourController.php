@@ -47,6 +47,13 @@ class TourController extends Controller
             $request->input('date'),
         );
 
+        audit_log(
+            'tour', 'search', 'tour.search',
+            'Tour search performed',
+            metadata: $request->only(['country_id', 'city_id', 'date']),
+            status: $result['status'] ? 'success' : 'failure',
+        );
+
         if (!$result['status']) {
             return response()->json([
                 'status'  => false,
@@ -135,6 +142,13 @@ class TourController extends Controller
         $result = $this->tourService->processBooking(
             bookingCode:  $request->booking_code,
             bookingTours: $request->booking_tours,
+        );
+
+        audit_log(
+            'tour', 'booking_processed', 'tour.booking_processed',
+            'Tour booking processed',
+            bookingCode: $request->booking_code,
+            status: $result['status'] ? 'success' : 'failure',
         );
 
         if (!$result['status']) {

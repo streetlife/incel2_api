@@ -33,12 +33,25 @@ class AuthController extends Controller
                 'registration_date' => now(),
             ]);
 
+            audit_log(
+                'auth',
+                'register',
+                'auth.register',
+                'New user registered',
+                subjectType: 'user',
+                subjectId: $user->usercode,
+                newValues: $user->only(['usercode', 'full_names', 'email_address', 'mobile_number']),
+                status: 'success',
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'Registration successful',
                 'data'    => $user
             ], 201);
         } catch (\Exception $e) {
+
+            audit_log('auth', 'register', 'auth.register', 'User registration failed', status: 'failure');
 
             return response()->json([
                 'success' => false,
@@ -75,6 +88,8 @@ class AuthController extends Controller
         $user = User::where('email_address', $request->email_address)->first();
 
         if (!$user) {
+            audit_log('auth', 'login', 'auth.login', 'Login attempt for unknown user', status: 'failure');
+
             return response()->json([
                 'success' => false,
                 'message' => 'User not found'
@@ -82,12 +97,33 @@ class AuthController extends Controller
         }
 
         if (!Hash::check($request->password, $user->password)) {
+            audit_log(
+                'auth',
+                'login',
+                'auth.login',
+                'Login attempt with invalid credentials',
+                subjectType: 'user',
+                subjectId: $user->usercode,
+                status: 'failure',
+            );
+
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid credentials'
             ], 401);
         }
         $token = $user->createToken('auth_token')->plainTextToken;
+
+        audit_log(
+            'auth',
+            'login',
+            'auth.login',
+            'User logged in',
+            subjectType: 'user',
+            subjectId: $user->usercode,
+            status: 'success',
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Login successful',
@@ -126,6 +162,17 @@ class AuthController extends Controller
 
         $user->password = Hash::make($request->new_password);
         $user->save();
+
+        audit_log(
+            'auth',
+            'change_password',
+            'auth.change_password',
+            'User changed password',
+            subjectType: 'user',
+            subjectId: $user->usercode,
+            status: 'success',
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Password changed successfully'
@@ -133,7 +180,20 @@ class AuthController extends Controller
     }
     public function logout(Request $request)
     {
+        $user = $request->user();
+
         $request->user()->currentAccessToken()->delete();
+
+        audit_log(
+            'auth',
+            'logout',
+            'auth.logout',
+            'User logged out',
+            subjectType: 'user',
+            subjectId: $user?->usercode,
+            status: 'success',
+        );
+
         return response()->json([
             'message' => 'Logged out successfully'
         ]);
