@@ -66,7 +66,9 @@ class HotelController extends Controller
         );
 
         audit_log(
-            'hotel', 'search', 'hotel.search',
+            'hotel',
+            'search',
+            'hotel.search',
             'Hotel search performed',
             metadata: $request->only(['country_code', 'city_code', 'arrival_date', 'departure_date']),
             status: isset($data['status']) ? ($data['status'] ? 'success' : 'failure') : 'unknown',
@@ -161,14 +163,14 @@ class HotelController extends Controller
     // }
     public function createBooking(Request $request)
     {
-          $travellers = collect($request->input('travellers', []))->map(function ($t) {
-        if (isset($t['age']) && (int) $t['age'] === 1) {
-            $t['age'] = 2;
-        }
-        return $t;
-    })->all();
+        $travellers = collect($request->input('travellers', []))->map(function ($t) {
+            if (isset($t['age']) && (int) $t['age'] === 1) {
+                $t['age'] = 2;
+            }
+            return $t;
+        })->all();
 
-    $request->merge(['travellers' => $travellers]);
+        $request->merge(['travellers' => $travellers]);
         $request->validate([
             'session_code'   => 'required|string',
             'hotel_id'       => 'required',
@@ -201,7 +203,9 @@ class HotelController extends Controller
         $statusCode = $result['status'] ? 200 : 422;
 
         audit_log(
-            'hotel', 'booking_created', 'hotel.booking_created',
+            'hotel',
+            'booking_created',
+            'hotel.booking_created',
             'Hotel booking created',
             bookingCode: $request->input('booking_code') ?? $request->input('session_code'),
             newValues: $request->only(['hotel_id', 'arrival_date', 'departure_date', 'amount']),
@@ -224,12 +228,15 @@ class HotelController extends Controller
     public function prebook(Request $request)
     {
         $rezlive = app(\App\Services\RezliveServices::class);
+
         $roomsAdults       = $request->rooms_adults ?? [];
         $roomsChildren     = $request->rooms_children ?? [];
         $roomsChildrenAges = $request->rooms_children_ages ?? [];
         $totalRooms        = count($roomsAdults);
+
         $data = HotelSession::where('search_session_id', $request->search_session_id)->first();
         $sessionCode = $data->session_code;
+
         $hotelData = [
             'search_session_id'   => $request->search_session_id,
             'arrival_date'        => $request->arrival_date,
@@ -253,10 +260,13 @@ class HotelController extends Controller
                 'guests'      => [],
             ];
         }
+
         $result = $rezlive->preBook($hotelData, $bookingHotels, $sessionCode);
 
         audit_log(
-            'hotel', 'prebook', 'hotel.prebook',
+            'hotel',
+            'prebook',
+            'hotel.prebook',
             'Hotel prebook requested',
             bookingCode: $sessionCode,
             metadata: ['hotel_id' => $request->hotel_id],
@@ -266,13 +276,13 @@ class HotelController extends Controller
         if (!($result['status'] ?? false)) {
             return response()->json([
                 'status'  => false,
-                'message' => $result['message'] ?? 'PreBook faileds',
+                'message' => $result['message'] ?? 'PreBook failed',
             ], 500);
         }
 
         $preBooking        = $result['data']['PreBookingRequest']['PreBooking'] ?? [];
-        $roomDetail         = $preBooking['RoomDetails']['RoomDetail'] ?? [];
-        $preBookingDetails  = $result['data']['PreBookingDetails'] ?? [];
+        $roomDetail        = $preBooking['RoomDetails']['RoomDetail'] ?? [];
+        $preBookingDetails = $result['data']['PreBookingDetails'] ?? [];
 
         if (isset($roomDetail['BookingKey'])) {
             $roomDetail = [$roomDetail];
@@ -280,23 +290,44 @@ class HotelController extends Controller
 
         $room = $roomDetail[0] ?? [];
 
+        $cancellationRaw = $preBooking['CancellationInformations'] ?? [];
+
+        $policies = $cancellationRaw['CancellationInformation'] ?? [];
+        
+        if (isset($policies['StartDate'])) {
+            $policies = [$policies];
+        }
+
+        $cancellationInformation = [
+            'policies' => array_map(fn($p) => [
+                'startDate'    => $p['StartDate'] ?? null,
+                'endDate'      => $p['EndDate'] ?? null,
+                'chargeType'   => $p['ChargeType'] ?? null,
+                'chargeAmount' => $p['ChargeAmount'] ?? null,
+                'currency'     => $p['Currency'] ?? null,
+            ], $policies),
+            'info' => $cancellationRaw['Info'] ?? null,
+        ];
+
         $responseData = [
             'searchSessionId' => $preBooking['SearchSessionId'] ?? null,
-            'arrivalDate'      => $preBooking['ArrivalDate'] ?? null,
-            'departureDate'    => $preBooking['DepartureDate'] ?? null,
-            'hotelId'          => $preBooking['HotelId'] ?? null,
-            'currency'         => $preBooking['Currency'] ?? null,
+            'arrivalDate'     => $preBooking['ArrivalDate'] ?? null,
+            'departureDate'   => $preBooking['DepartureDate'] ?? null,
+            'hotelId'         => $preBooking['HotelId'] ?? null,
+            'currency'        => $preBooking['Currency'] ?? null,
 
             'room' => [
-                'type'       => $room['Type'] ?? null,
-                'bookingKey' => $room['BookingKey'] ?? null,
-                'adults'     => $room['Adults'] ?? null,
-                'children'   => $room['Children'] ?? null,
-                'totalRooms' => $room['TotalRooms'] ?? null,
-                'totalRate'  => $room['TotalRate'] ?? null,
-                'boardBasis' => $room['BoardBasis'] ?? null,
-                'terms'      => $room['TermsAndConditions'] ?? null,
+                'type'               => $room['Type'] ?? null,
+                'bookingKey'         => $room['BookingKey'] ?? null,
+                'adults'             => $room['Adults'] ?? null,
+                'children'           => $room['Children'] ?? null,
+                'totalRooms'         => $room['TotalRooms'] ?? null,
+                'totalRate'          => $room['TotalRate'] ?? null,
+                'boardBasis'         => $room['BoardBasis'] ?? null,
+                'termsAndConditions' => $room['TermsAndConditions'] ?? null,
             ],
+
+            'cancellationInformation' => $cancellationInformation,
 
             'beforePrice'     => $preBookingDetails['BookingBeforePrice'] ?? null,
             'afterPrice'      => $preBookingDetails['BookingAfterPrice'] ?? null,
@@ -325,7 +356,9 @@ class HotelController extends Controller
 
         if (!$result['status']) {
             audit_log(
-                'hotel', 'cancel_failed', 'hotel.cancel_failed',
+                'hotel',
+                'cancel_failed',
+                'hotel.cancel_failed',
                 'Hotel cancellation failed',
                 bookingCode: $validated['code'],
                 status: 'failure',
@@ -340,7 +373,9 @@ class HotelController extends Controller
             ->update(['booking_status' => 'cancelled']);
 
         audit_log(
-            'hotel', 'cancelled', 'hotel.cancelled',
+            'hotel',
+            'cancelled',
+            'hotel.cancelled',
             'Hotel booking cancelled',
             bookingCode: $validated['code'],
             metadata: ['rezlive_booking_id' => $validated['booking_id']],
